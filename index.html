@@ -3273,11 +3273,11 @@ function renderIncassiStats() {
 
 // ============ INCASSI: Settimanale ============
 function getISOWeekInfo(date) {
-    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
     const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-    return { year: d.getUTCFullYear(), week: weekNo };
+    return { year: d.getFullYear(), week: weekNo };
 }
 function getCurrentISOWeekString() {
     const info = getISOWeekInfo(new Date());
@@ -3286,15 +3286,18 @@ function getCurrentISOWeekString() {
 function isoWeekToMonday(isoWeekStr) {
     const [yearStr, weekStr] = isoWeekStr.split('-W');
     const year = parseInt(yearStr, 10), week = parseInt(weekStr, 10);
-    const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
-    const dow = simple.getUTCDay();
+    const simple = new Date(year, 0, 1 + (week - 1) * 7);
+    const dow = simple.getDay();
     const monday = new Date(simple);
     const diff = (dow <= 4) ? (1 - dow) : (8 - dow);
-    monday.setUTCDate(simple.getUTCDate() + diff);
+    monday.setDate(simple.getDate() + diff);
     return monday;
 }
 function fmtDateISO(d) {
-    return d.toISOString().slice(0, 10);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
 }
 
 window.renderIncassiWeekly = () => {
@@ -3303,10 +3306,10 @@ window.renderIncassiWeekly = () => {
     if (!sel.value) sel.value = getCurrentISOWeekString();
     const monday = isoWeekToMonday(sel.value);
     const days = [];
-    for (let i = 0; i < 7; i++) { const d = new Date(monday); d.setUTCDate(monday.getUTCDate() + i); days.push(fmtDateISO(d)); }
-    const prevMonday = new Date(monday); prevMonday.setUTCDate(monday.getUTCDate() - 7);
+    for (let i = 0; i < 7; i++) { const d = new Date(monday); d.setDate(monday.getDate() + i); days.push(fmtDateISO(d)); }
+    const prevMonday = new Date(monday); prevMonday.setDate(monday.getDate() - 7);
     const prevDays = [];
-    for (let i = 0; i < 7; i++) { const d = new Date(prevMonday); d.setUTCDate(prevMonday.getUTCDate() + i); prevDays.push(fmtDateISO(d)); }
+    for (let i = 0; i < 7; i++) { const d = new Date(prevMonday); d.setDate(prevMonday.getDate() + i); prevDays.push(fmtDateISO(d)); }
 
     const byDate = {};
     dataIncassi.forEach(d => { byDate[d.date] = d; });
