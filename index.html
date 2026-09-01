@@ -2786,16 +2786,13 @@ function renderIncassiOverview() {
     const prevSeasonLabel = getSeasonLabel(currSeasonStart - 1);
     const seasonStartDate = `${currSeasonStart}-09-01`;
     const daysElapsedInSeason = Math.floor((new Date(lastDate) - new Date(seasonStartDate)) / 86400000) + 1;
-    const prevSeasonStartDate = `${currSeasonStart-1}-09-01`;
-    const prevSeasonCutoffDate = new Date(prevSeasonStartDate); prevSeasonCutoffDate.setDate(prevSeasonCutoffDate.getDate() + daysElapsedInSeason - 1);
-    const prevSeasonCutoffStr = fmtDateISO(prevSeasonCutoffDate);
 
     const currSeasonDays = dataIncassi.filter(d => getSeasonLabel(getSeasonStartYear(d.date)) === currSeasonLabel);
     let sumCurrSeason = 0, sumPrevSeasonToDate = 0;
     dataIncassi.forEach(d => {
         const s = getSeasonLabel(getSeasonStartYear(d.date));
         if (s === currSeasonLabel) sumCurrSeason += d.incasso_totale || 0;
-        if (s === prevSeasonLabel && d.date <= prevSeasonCutoffStr) sumPrevSeasonToDate += d.incasso_totale || 0;
+        if (s === prevSeasonLabel) sumPrevSeasonToDate += d.incasso_totale || 0;
     });
     document.getElementById('ov-season-tot-val').innerText = fmtEUR(sumCurrSeason);
     document.getElementById('ov-season-tot-sub').innerHTML = sumPrevSeasonToDate > 0
@@ -2960,29 +2957,24 @@ window.renderIncassiSeasonDetail = () => {
     const monthLabelsSeason = ['Set','Ott','Nov','Dic','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago'];
     const orderedMonthKeys = monthOrderSeason.map(m => `${m>=9?seasonStartY:seasonStartY+1}-${String(m).padStart(2,'0')}`);
 
-    // ===== Incasso Stagione (selezionata) vs stessi giorni della stagione precedente =====
+    // ===== Incasso Stagione (selezionata) vs stagione precedente (valore totale in €) =====
     const yoySD = (c, p) => { if (!p) return ''; const delta = ((c-p)/p)*100; const sign = delta>=0?'+':''; const col = delta>=0?'#16a34a':'#dc2626'; const arr = delta>=0?'\u25b2':'\u25bc'; return `<span style="color:${col}">${arr} ${sign}${delta.toFixed(1)}%</span>`; };
-    const selSeasonStartDate = `${seasonStartY}-09-01`;
     const todaySD = new Date();
     const todayStrSD = fmtDateISO(todaySD);
     const isCurrentSeasonSelected = (getSeasonLabel(getSeasonStartYear(todayStrSD)) === selectedSeason);
     const cutoffStrSD = isCurrentSeasonSelected ? todayStrSD : `${seasonStartY+1}-08-31`;
-    const daysElapsedSD = Math.max(Math.floor((new Date(cutoffStrSD) - new Date(selSeasonStartDate)) / 86400000) + 1, 1);
 
     const prevSeasonLabelSD = getSeasonLabel(seasonStartY - 1);
-    const prevSeasonStartDateSD = `${seasonStartY-1}-09-01`;
-    const prevSeasonCutoffDateSD = new Date(prevSeasonStartDateSD); prevSeasonCutoffDateSD.setDate(prevSeasonCutoffDateSD.getDate() + daysElapsedSD - 1);
-    const prevSeasonCutoffStrSD = fmtDateISO(prevSeasonCutoffDateSD);
 
     let sumSelSeasonToDate = 0, sumPrevSelSeasonToDate = 0;
     dataIncassi.forEach(d => {
         const s = getSeasonLabel(getSeasonStartYear(d.date));
         if (s === selectedSeason && d.date <= cutoffStrSD) sumSelSeasonToDate += d.incasso_totale || 0;
-        if (s === prevSeasonLabelSD && d.date <= prevSeasonCutoffStrSD) sumPrevSelSeasonToDate += d.incasso_totale || 0;
+        if (s === prevSeasonLabelSD) sumPrevSelSeasonToDate += d.incasso_totale || 0;
     });
     document.getElementById('sd-season-tot-val').innerText = fmtEUR(sumSelSeasonToDate);
     document.getElementById('sd-season-tot-sub').innerHTML = sumPrevSelSeasonToDate > 0
-        ? `${yoySD(sumSelSeasonToDate, sumPrevSelSeasonToDate)} vs Stagione ${prevSeasonLabelSD} (stessi giorni)`
+        ? `${yoySD(sumSelSeasonToDate, sumPrevSelSeasonToDate)} vs Stagione ${prevSeasonLabelSD}`
         : `Stagione ${selectedSeason}`;
 
     // ===== Media per Giorno Aperto e Miglior Giorno Settimana (stagione selezionata) =====
