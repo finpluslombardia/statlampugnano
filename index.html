@@ -191,6 +191,10 @@
     <ul class="nav-links">
         <li class="nav-item" id="nav-module-incassi" onclick="switchModule('incassi')">💰 Incassi</li>
     </ul>
+    <div class="nav-section-title" style="margin-top:20px">Bacheca</div>
+    <ul class="nav-links">
+        <li class="nav-item" id="nav-module-note" onclick="switchModule('note')">📝 Note</li>
+    </ul>
     <div class="sidebar-footer">
         <div style="font-size:0.85rem; margin-bottom:15px; color:#cbd5e1; font-weight:600" id="user-display">User</div>
         <button class="btn" style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:0.8rem; height:38px" onclick="doLogout()">Disconnetti</button>
@@ -1386,6 +1390,74 @@
     </div>
 </div>
 
+<!-- ============ MODULO: NOTE (Bacheca collaboratori) ============ -->
+<div id="module-note" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
+    <div class="control-bar">
+        <div class="cb-header"><span class="cb-title">📝 Nuova Nota</span></div>
+        <div class="cb-row" style="flex-wrap:wrap">
+            <div class="inp-field" style="flex:0.6"><label>Data</label><input type="text" id="note-date" class="inp-locked" readonly></div>
+            <div class="inp-field" style="flex:0.5"><label>Ora</label><input type="text" id="note-time" class="inp-locked" readonly></div>
+            <div class="inp-field" style="flex:1"><label>Cognome Operatore</label>
+                <select id="note-operatore">
+                    <option value="Andrea">Andrea</option>
+                    <option value="Russo">Russo</option>
+                    <option value="Baccheschi">Baccheschi</option>
+                    <option value="Pezzano">Pezzano</option>
+                    <option value="Sangiorgi">Sangiorgi</option>
+                </select>
+            </div>
+            <div class="inp-field" style="flex:1.2"><label>Rivolto a</label>
+                <select id="note-destinatario">
+                    <option value="Tutti">Tutti</option>
+                    <option value="Apertura">Apertura</option>
+                    <option value="Chiusura">Chiusura</option>
+                    <option value="Turno mattino">Turno mattino</option>
+                    <option value="Turno Centrale">Turno Centrale</option>
+                    <option value="Turno pomeridiano">Turno pomeridiano</option>
+                    <option value="Turno Serale">Turno Serale</option>
+                    <option value="Russo">Russo</option>
+                    <option value="Baccheschi">Baccheschi</option>
+                    <option value="Pezzano">Pezzano</option>
+                    <option value="Sangiorgi">Sangiorgi</option>
+                </select>
+            </div>
+            <div class="inp-field" style="flex:0.7"><label>Scadenza</label><input type="date" id="note-scadenza"></div>
+        </div>
+        <div class="cb-row">
+            <div class="inp-field" style="flex:1"><label>Nota</label><textarea id="note-testo" rows="2" placeholder="Scrivi qui il messaggio per i colleghi..." style="width:100%; resize:vertical; font-family:inherit; font-size:0.9rem; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.1); background:rgba(255,255,255,0.7)"></textarea></div>
+            <div class="group-actions"><button class="btn btn-primary" style="height:44px; min-width:120px" onclick="saveNota()">📌 PUBBLICA</button></div>
+        </div>
+    </div>
+    <div class="scroll-area">
+        <h2 class="page-title">📌 Bacheca</h2>
+
+        <div class="archive-toolbar" style="margin-bottom: 15px; background: rgba(255,255,255,0.5); flex-wrap:wrap; gap:12px">
+            <div class="arch-group">
+                <span class="arch-label">Rivolto a:</span>
+                <select id="note-filter-destinatario" class="arch-input" onchange="renderNote()">
+                    <option value="all">Tutti i destinatari</option>
+                    <option value="Tutti">Tutti</option>
+                    <option value="Apertura">Apertura</option>
+                    <option value="Chiusura">Chiusura</option>
+                    <option value="Turno mattino">Turno mattino</option>
+                    <option value="Turno Centrale">Turno Centrale</option>
+                    <option value="Turno pomeridiano">Turno pomeridiano</option>
+                    <option value="Turno Serale">Turno Serale</option>
+                    <option value="Russo">Russo</option>
+                    <option value="Baccheschi">Baccheschi</option>
+                    <option value="Pezzano">Pezzano</option>
+                    <option value="Sangiorgi">Sangiorgi</option>
+                </select>
+            </div>
+            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#475569; cursor:pointer">
+                <input type="checkbox" id="note-show-expired" onchange="renderNote()"> Mostra anche le note scadute
+            </label>
+        </div>
+
+        <div id="note-feed" style="display:flex; flex-direction:column; gap:12px"></div>
+    </div>
+</div>
+
 </div>
 
 <script type="module">
@@ -1395,7 +1467,7 @@ import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc
 
 const firebaseConfig = { apiKey: "AIzaSyCfXF61GUht7VPwkRTTiAn-nlhqEhDTW-0", authDomain: "piscinastats-64519.firebaseapp.com", projectId: "piscinastats-64519", storageBucket: "piscinastats-64519.firebasestorage.app", messagingSenderId: "297663099794", appId: "1:297663099794:web:edd9ffc2f7a90f7549c74b" };
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
-let dataIngressi=[], dataDae=[], dataUtenze=[], dataIncassi=[]; let editIdIngressi=null, editIdUtenze=null, editIdIncassi=null;
+let dataIngressi=[], dataDae=[], dataUtenze=[], dataIncassi=[], dataNote=[]; let editIdIngressi=null, editIdUtenze=null, editIdIncassi=null;
 let isRestrictedIncassiUser = false; // seg.cflampugnano@gmail.com: collaboratore, vede solo Archivio e Registra Incasso nel modulo Incassi
 let limitIngressi = 200;
 let limitUtenze = 200;
@@ -1481,6 +1553,11 @@ function startListening() {
         onSnapshot(query(collection(db, "incassi_log"), orderBy("date", "desc"), limit(4000)), (snap) => {
             dataIncassi = snap.docs.map(d=>({id:d.id,...d.data()}));
             if(!document.getElementById('module-incassi').classList.contains('hidden')) debouncedRefresh();
+        }, errHandler);
+
+        onSnapshot(query(collection(db, "note_log"), orderBy("createdAt", "desc"), limit(1000)), (snap) => {
+            dataNote = snap.docs.map(d=>({id:d.id,...d.data()}));
+            if(!document.getElementById('module-note').classList.contains('hidden')) renderNote();
         }, errHandler);
     } catch(e) { console.error(e); showToast("Errore Init: " + e.message, "error"); }
 }
@@ -2366,6 +2443,69 @@ function renderFasceTrendChart(dataset, startDate, endDate) {
 }
 
 window.saveDae = async () => { const d=document.getElementById('d-date').value||new Date().toISOString().split('T')[0]; const a=document.getElementById('d-ass').value; const o=document.getElementById('d-op').value; const tVal = document.getElementById('d-time').value; if(!a||!o) return showToast("Compila nomi","error"); try { await addDoc(collection(db,"dae_log"),{date:d,time:tVal,ass:a,op:o,status:document.getElementById('d-status').value}); document.getElementById('d-ass').value=""; document.getElementById('d-op').value=""; showToast("DAE Registrato!"); } catch(e){ showToast(e.message,"error"); } };
+
+// ============ NOTE (Bacheca) ============
+window.saveNota = async () => {
+    const testo = document.getElementById('note-testo').value.trim();
+    if (!testo) return showToast("Scrivi il testo della nota", "error");
+    const now = new Date();
+    const payload = {
+        date: document.getElementById('note-date').value,
+        time: document.getElementById('note-time').value,
+        operatore: document.getElementById('note-operatore').value,
+        destinatario: document.getElementById('note-destinatario').value,
+        scadenza: document.getElementById('note-scadenza').value || null,
+        testo,
+        createdAt: now.toISOString(),
+    };
+    try {
+        await addDoc(collection(db, "note_log"), payload);
+        document.getElementById('note-testo').value = '';
+        document.getElementById('note-scadenza').value = '';
+        showToast("Nota pubblicata!");
+    } catch (e) { showToast(e.message, "error"); }
+};
+
+const NOTE_DEST_COLORS = {
+    'Tutti': '#2563eb', 'Apertura': '#16a34a', 'Chiusura': '#dc2626',
+    'Turno mattino': '#ea580c', 'Turno Centrale': '#7c3aed', 'Turno pomeridiano': '#0891b2', 'Turno Serale': '#a16207',
+    'Russo': '#64748b', 'Baccheschi': '#64748b', 'Pezzano': '#64748b', 'Sangiorgi': '#64748b'
+};
+
+window.renderNote = () => {
+    if (!dataNote) return;
+    const filterDest = document.getElementById('note-filter-destinatario').value;
+    const showExpired = document.getElementById('note-show-expired').checked;
+    const todayStr = fmtDateISO(new Date());
+
+    let list = [...dataNote];
+    if (filterDest !== 'all') list = list.filter(n => n.destinatario === filterDest);
+    if (!showExpired) list = list.filter(n => !n.scadenza || n.scadenza >= todayStr);
+    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+    const feed = document.getElementById('note-feed');
+    if (list.length === 0) { feed.innerHTML = '<div class="glass-card" style="padding:30px; text-align:center; color:#94a3b8">Nessuna nota da mostrare.</div>'; return; }
+
+    feed.innerHTML = list.map(n => {
+        const dateLabel = n.date ? n.date.split('-').reverse().join('/') : '-';
+        const isExpired = n.scadenza && n.scadenza < todayStr;
+        const destColor = NOTE_DEST_COLORS[n.destinatario] || '#64748b';
+        const scadenzaLabel = n.scadenza ? n.scadenza.split('-').reverse().join('/') : null;
+        return `<div class="glass-card" style="padding:16px 18px; ${isExpired ? 'opacity:0.55' : ''}">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; flex-wrap:wrap">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+                    <span style="font-weight:800; color:#1e293b">${n.operatore || '-'}</span>
+                    <span style="font-size:0.75rem; color:#94a3b8">${dateLabel} · ${n.time || '-'}</span>
+                    <span style="font-size:0.72rem; font-weight:700; color:#fff; background:${destColor}; padding:2px 10px; border-radius:20px">${n.destinatario || 'Tutti'}</span>
+                    ${isExpired ? '<span style="font-size:0.72rem; font-weight:700; color:#dc2626">⏱️ Scaduta</span>' : ''}
+                </div>
+                <button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="delDoc('note_log','${n.id}')">🗑️</button>
+            </div>
+            <div style="white-space:pre-wrap; color:#334155; line-height:1.5">${n.testo || ''}</div>
+            ${scadenzaLabel ? `<div style="margin-top:8px; font-size:0.75rem; color:#94a3b8">Scade il ${scadenzaLabel}</div>` : ''}
+        </div>`;
+    }).join('');
+};
 window.renderDae = () => {
     const searchDate = document.getElementById('d-search-date') ? document.getElementById('d-search-date').value : null;
     const t = document.getElementById('tbody-dae');
@@ -4602,11 +4742,11 @@ window.downloadRiepilogoCSV = () => {
     document.body.removeChild(link);
 };
 
-window.switchModule=(m)=>{ document.querySelectorAll('.module-container').forEach(e=>e.classList.add('hidden')); document.getElementById('module-'+m).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('nav-module-'+m).classList.add('active'); if(m==='ingressi')debouncedRefresh(); if(m==='dae')renderDae(); if(m==='utenze')renderUtenze(); if(m==='incassi'){ switchSubViewIncassi(isRestrictedIncassiUser ? 'archive' : 'overview'); } };
+window.switchModule=(m)=>{ document.querySelectorAll('.module-container').forEach(e=>e.classList.add('hidden')); document.getElementById('module-'+m).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('nav-module-'+m).classList.add('active'); if(m==='ingressi')debouncedRefresh(); if(m==='dae')renderDae(); if(m==='utenze')renderUtenze(); if(m==='incassi'){ switchSubViewIncassi(isRestrictedIncassiUser ? 'archive' : 'overview'); } if(m==='note')renderNote(); };
 window.switchSubView=(s)=>{ ['overview','stats','riepilogo','archive'].forEach(v=>{ document.getElementById('sub-'+v).classList.add('hidden'); document.getElementById('btn-sub-'+v).classList.remove('btn-primary'); }); document.getElementById('sub-'+s).classList.remove('hidden'); document.getElementById('btn-sub-'+s).classList.add('btn-primary'); debouncedRefresh(); };
 function refreshCurrentView(){ if(!document.getElementById('sub-overview').classList.contains('hidden')) renderOverview(); if(!document.getElementById('sub-stats').classList.contains('hidden')) renderStats(); if(!document.getElementById('sub-riepilogo').classList.contains('hidden')) renderRiepilogoMensile(); if(!document.getElementById('sub-archive').classList.contains('hidden')) renderIngressiArchive(); }
-setInterval(()=>{ const n=new Date(); const s=n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'); if(document.getElementById('d-time')) document.getElementById('d-time').value=s; },1000);
-const today=new Date().toISOString().split('T')[0]; document.getElementById('i-date').value=today; document.getElementById('d-date').value=today; document.getElementById('u-date').value=today; document.getElementById('inc-date').value=today;
+setInterval(()=>{ const n=new Date(); const s=n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'); if(document.getElementById('d-time')) document.getElementById('d-time').value=s; if(document.getElementById('note-time')) document.getElementById('note-time').value=s; },1000);
+const today=new Date().toISOString().split('T')[0]; document.getElementById('i-date').value=today; document.getElementById('d-date').value=today; document.getElementById('u-date').value=today; document.getElementById('inc-date').value=today; document.getElementById('note-date').value=fmtDateISO(new Date());
 window.downloadCSV = () => { const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const filtered = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && d.meteo !== meteo) return false; return true; }); if(!filtered.length) return showToast("Nessun dato da scaricare", "error"); let csvContent = "data:text/csv;charset=utf-8,Data;Tipo;Fascia;Meteo;EsclusoMedia;Intero;Ridotto;Abbonamenti;Gratuiti;Totale\n"; filtered.forEach(row => { csvContent += `${row.date};${row.type||'standard'};${row.fascia};${row.meteo};${row.excludeStats?'SI':'NO'};${row.int};${row.rid};${row.abb_int + row.abb_rid};${row.grat};${row.totale}\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "archivio_ingressi.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); };
 window.resetArchiveFilters = () => { document.getElementById('arch-date-start').value=""; document.getElementById('arch-date-end').value=""; document.getElementById('arch-filter-fascia').value="all"; document.getElementById('arch-filter-meteo').value="all"; limitIngressi = 200; renderIngressiArchive(); };
 </script>
