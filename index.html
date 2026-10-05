@@ -2992,8 +2992,11 @@ function renderIncassiOverview() {
 
     const monthNameNow = realToday.toLocaleString('it-IT', {month:'long'});
     document.getElementById('ov-month-mtd-val').innerText = fmtEUR(mtdCurrSum);
-    document.getElementById('ov-month-mtd-sub').innerHTML = `${monthNameNow.charAt(0).toUpperCase()+monthNameNow.slice(1)} 1-${curDay} &middot; ${mtdPrevSum>0 ? yoy(mtdCurrSum, mtdPrevSum)+' vs '+prevY : 'nessun dato anno prec.'}`
-        + (mtdPrevSum>0 ? `<div style="margin-top:4px; font-size:0.85rem; font-weight:700; color:#64748b">${prevY}, stessi giorni: ${fmtEUR(mtdPrevSum)}</div>` : '');
+    const mtdMonthLabel = monthNameNow.charAt(0).toUpperCase()+monthNameNow.slice(1);
+    document.getElementById('ov-month-mtd-sub').innerHTML = `<div style="display:flex; flex-direction:column; gap:3px; align-items:flex-start">
+        <div>${mtdMonthLabel} 1-${curDay}${mtdPrevSum>0 ? ' &middot; ' + yoy(mtdCurrSum, mtdPrevSum) + ' vs ' + prevY : ' &middot; nessun dato anno prec.'}</div>
+        ${mtdPrevSum>0 ? `<div style="font-size:0.8rem; font-weight:700; color:#64748b">${prevY}, stessi giorni: ${fmtEUR(mtdPrevSum)}</div>` : ''}
+    </div>`;
 
     // ===== Incasso Stagione Corrente + Media per Giorno Aperto + Miglior Giorno Settimana =====
     const lastDate = sorted[sorted.length-1].date;
