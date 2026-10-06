@@ -147,6 +147,25 @@
     .bg-sub-blue { background-color: rgba(59, 130, 246, 0.05); }
     .bg-sub-purp { background-color: rgba(168, 85, 247, 0.05); }
 
+
+    /* ===== BACHECA NOTE ===== */
+    #note-board { background-color:#c8a171; background-image: radial-gradient(rgba(90,55,20,.22) 1px, transparent 1.6px), radial-gradient(rgba(255,255,255,.18) 1px, transparent 1.6px), radial-gradient(rgba(90,55,20,.12) 2px, transparent 2.6px); background-size: 7px 7px, 11px 11px, 17px 17px; background-position: 0 0, 3px 5px, 8px 2px; border: 12px solid #7c4a1e; border-radius: 14px; box-shadow: inset 0 0 40px rgba(60,30,5,.45), 0 6px 20px rgba(0,0,0,.25); padding: 34px 28px 40px; min-height: 360px; }
+    #note-feed { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 34px 26px; }
+    .postit { position:relative; aspect-ratio:1/1; padding:26px 16px 12px; display:flex; flex-direction:column; gap:6px; border-radius:3px 3px 12px 3px; box-shadow: 2px 5px 10px rgba(0,0,0,.32), inset 0 -18px 22px -18px rgba(0,0,0,.12); transform: rotate(var(--rot, 0deg)); transition: transform .18s ease, box-shadow .18s ease; color:#1e293b; }
+    .postit:hover { transform: rotate(0deg) scale(1.04); z-index:5; box-shadow: 4px 10px 18px rgba(0,0,0,.4); }
+    .postit.pinned { box-shadow: 3px 7px 14px rgba(0,0,0,.4), inset 0 -18px 22px -18px rgba(0,0,0,.12); outline: 2px dashed rgba(185,28,28,.55); outline-offset: -6px; }
+    .postit.faded { opacity:.55; filter:saturate(.6); }
+    .postit .pin-head { position:absolute; top:-12px; left:50%; transform:translateX(-50%); font-size:1.5rem; line-height:1; filter: drop-shadow(1px 3px 2px rgba(0,0,0,.4)); pointer-events:none; }
+    .postit .tape { position:absolute; top:-10px; left:50%; width:70px; height:20px; transform:translateX(-50%) rotate(-3deg); background:rgba(255,255,255,.55); box-shadow:0 1px 3px rgba(0,0,0,.15); pointer-events:none; }
+    .postit .p-top { display:flex; flex-wrap:wrap; gap:5px; align-items:center; }
+    .postit .p-chip { font-size:.68rem; font-weight:800; padding:2px 9px; border-radius:20px; white-space:nowrap; }
+    .postit .p-body { flex:1; min-height:0; overflow-y:auto; white-space:pre-wrap; word-break:break-word; font-size:.92rem; line-height:1.4; font-weight:500; padding-right:2px; }
+    .postit .p-body::-webkit-scrollbar { width:4px; } .postit .p-body::-webkit-scrollbar-thumb { background:rgba(0,0,0,.25); border-radius:4px; }
+    .postit .p-foot { display:flex; flex-direction:column; gap:5px; border-top:1px dashed rgba(0,0,0,.2); padding-top:6px; }
+    .postit .p-meta { font-size:.7rem; line-height:1.3; color:rgba(30,41,59,.8); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .postit .p-act { display:flex; gap:4px; justify-content:space-between; }
+    .postit .p-act button { border:none; background:rgba(255,255,255,.55); border-radius:8px; flex:1; height:26px; cursor:pointer; font-size:.82rem; padding:0; }
+    .postit .p-act button:hover { background:rgba(255,255,255,.95); }
     .hidden { display: none !important; }
     #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-body); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     #login-box { @extend .glass-card; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border-radius: 24px; box-shadow: var(--glass-shadow); border: var(--glass-border); padding: 40px; text-align: center; width: 400px; display: flex; flex-direction: column; }
@@ -1429,7 +1448,7 @@
         </div>
     </div>
     <div class="scroll-area">
-        <div id="note-feed" style="display:flex; flex-direction:column; gap:12px"></div>
+        <div id="note-board"><div id="note-feed"></div></div>
     </div>
 </div>
 
@@ -1437,7 +1456,7 @@
 <div id="note-modal-overlay" class="hidden" style="position:fixed; inset:0; background:rgba(15,23,42,0.55); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px" onclick="if(event.target===this) closeNoteModal()">
     <div class="glass-card" style="width:100%; max-width:640px; max-height:90vh; overflow-y:auto; padding:24px; background:rgba(255,255,255,0.97)">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px">
-            <h3 style="margin:0; font-size:1.15rem">📝 Nuova Nota</h3>
+            <h3 id="note-modal-title" style="margin:0; font-size:1.15rem">📝 Nuova Nota</h3>
             <button class="btn btn-icon" style="background:rgba(0,0,0,0.05)" onclick="closeNoteModal()">✕</button>
         </div>
         <div class="cb-row" style="flex-wrap:wrap">
@@ -1474,8 +1493,13 @@
         <div class="cb-row">
             <div class="inp-field" style="flex:1"><label>Nota</label><textarea id="note-testo" rows="3" placeholder="Scrivi qui il messaggio per i colleghi..." style="width:100%; resize:vertical; font-family:inherit; font-size:0.9rem; padding:10px 12px; border-radius:10px; border:1px solid rgba(0,0,0,0.1); background:rgba(255,255,255,0.7)"></textarea></div>
         </div>
+        <div class="cb-row" style="margin-bottom:0">
+            <label style="display:flex; align-items:center; gap:8px; font-size:0.9rem; font-weight:700; color:#334155; cursor:pointer">
+                <input type="checkbox" id="note-fissata" style="width:18px; height:18px"> 📍 Fissa in cima alla bacheca
+            </label>
+        </div>
         <div style="display:flex; justify-content:flex-end; margin-top:10px">
-            <button class="btn btn-primary" style="height:44px; min-width:140px" onclick="saveNota()">📌 PUBBLICA</button>
+            <button id="note-save-btn" class="btn btn-primary" style="height:44px; min-width:140px" onclick="saveNota()">📌 PUBBLICA</button>
         </div>
     </div>
 </div>
@@ -2475,7 +2499,17 @@ function fmtDateIT(d) {
     return `${day}-${m}-${y}`;
 }
 
+let editIdNote = null;
+const escNote = (t) => String(t == null ? '' : t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function setNoteModalMode(editing) {
+    document.getElementById('note-modal-title').innerText = editing ? '✏️ Modifica Nota' : '📝 Nuova Nota';
+    document.getElementById('note-save-btn').innerText = editing ? '💾 SALVA MODIFICHE' : '📌 PUBBLICA';
+}
+
 window.openNoteModal = () => {
+    editIdNote = null;
+    setNoteModalMode(false);
     document.getElementById('note-date').value = fmtDateIT(new Date());
     const now = new Date();
     document.getElementById('note-time').value = now.getHours().toString().padStart(2,'0')+":"+now.getMinutes().toString().padStart(2,'0');
@@ -2483,30 +2517,58 @@ window.openNoteModal = () => {
     document.getElementById('note-destinatario').value = 'Tutti';
     document.getElementById('note-scadenza').value = '';
     document.getElementById('note-testo').value = '';
+    document.getElementById('note-fissata').checked = false;
+    document.getElementById('note-modal-overlay').classList.remove('hidden');
+};
+window.editNota = (id) => {
+    const n = dataNote.find(x => x.id === id);
+    if (!n) return;
+    editIdNote = id;
+    setNoteModalMode(true);
+    document.getElementById('note-date').value = n.date || '';
+    document.getElementById('note-time').value = n.time || '';
+    document.getElementById('note-operatore').value = n.operatore || 'Andrea';
+    document.getElementById('note-destinatario').value = n.destinatario || 'Tutti';
+    document.getElementById('note-scadenza').value = n.scadenza || '';
+    document.getElementById('note-testo').value = n.testo || '';
+    document.getElementById('note-fissata').checked = !!n.fissata;
     document.getElementById('note-modal-overlay').classList.remove('hidden');
 };
 window.closeNoteModal = () => {
     document.getElementById('note-modal-overlay').classList.add('hidden');
+    editIdNote = null;
 };
 
 window.saveNota = async () => {
     const testo = document.getElementById('note-testo').value.trim();
     if (!testo) return showToast("Scrivi il testo della nota", "error");
-    const now = new Date();
-    const payload = {
-        date: document.getElementById('note-date').value,
-        time: document.getElementById('note-time').value,
+    const common = {
         operatore: document.getElementById('note-operatore').value,
         destinatario: document.getElementById('note-destinatario').value,
         scadenza: document.getElementById('note-scadenza').value || null,
+        fissata: document.getElementById('note-fissata').checked,
         testo,
-        createdAt: now.toISOString(),
     };
     try {
-        await addDoc(collection(db, "note_log"), payload);
-        showToast("Nota pubblicata!");
+        if (editIdNote) {
+            await updateDoc(doc(db, "note_log", editIdNote), { ...common, modificataAt: new Date().toISOString() });
+            showToast("Nota aggiornata!");
+        } else {
+            await addDoc(collection(db, "note_log"), {
+                ...common,
+                date: document.getElementById('note-date').value,
+                time: document.getElementById('note-time').value,
+                createdAt: new Date().toISOString(),
+            });
+            showToast("Nota pubblicata!");
+        }
         closeNoteModal();
     } catch (e) { showToast(e.message, "error"); }
+};
+
+window.toggleNotaFissata = async (id, current) => {
+    try { await updateDoc(doc(db, "note_log", id), { fissata: !current }); }
+    catch (e) { showToast(e.message, "error"); }
 };
 
 const NOTE_DEST_COLORS = {
@@ -2515,12 +2577,23 @@ const NOTE_DEST_COLORS = {
     'Russo': '#64748b', 'Baccheschi': '#64748b', 'Pezzano': '#64748b', 'Sangiorgi': '#64748b'
 };
 
+const NOTE_POSTIT_BG = {
+    'Tutti': '#fef08a', 'Apertura': '#bbf7d0', 'Chiusura': '#fecaca',
+    'Turno mattino': '#fed7aa', 'Turno centrale': '#ddd6fe', 'Turno pomeriggio': '#a5f3fc', 'Turno sera': '#c7d2fe',
+    'Russo': '#f5d0fe', 'Baccheschi': '#e7e5e4', 'Pezzano': '#d9f99d', 'Sangiorgi': '#fbcfe8'
+};
+function noteRotation(id) {
+    let h = 0; const str = String(id || '');
+    for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+    return ((h % 7) - 3) * 0.7;
+}
+
 function updateNoteBadge() {
     const badge = document.getElementById('note-badge');
     const expToday = document.getElementById('note-expiring-today');
     if (!badge || !dataNote) return;
     const todayStr = fmtDateISO(new Date());
-    const activeCount = dataNote.filter(n => !n.scadenza || n.scadenza >= todayStr).length;
+    const activeCount = dataNote.filter(n => !n.scadenza || n.scadenza >= todayStr || n.fissata).length;
     if (activeCount > 0) { badge.innerText = activeCount; badge.classList.remove('hidden'); }
     else { badge.classList.add('hidden'); }
 
@@ -2545,39 +2618,49 @@ window.renderNote = () => {
 
     let list = [...dataNote];
     if (filterDest !== 'all') list = list.filter(n => n.destinatario === filterDest);
-    if (!showExpired) list = list.filter(n => !n.scadenza || n.scadenza >= todayStr);
-    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    if (!showExpired) list = list.filter(n => n.fissata || !n.scadenza || n.scadenza >= todayStr);
+    list.sort((a, b) => ((b.fissata ? 1 : 0) - (a.fissata ? 1 : 0)) || (b.createdAt || '').localeCompare(a.createdAt || ''));
 
     const feed = document.getElementById('note-feed');
-    if (list.length === 0) { feed.innerHTML = '<div class="glass-card" style="padding:30px; text-align:center; color:#94a3b8">Nessuna nota da mostrare.</div>'; return; }
+    if (list.length === 0) {
+        feed.style.display = 'block';
+        feed.innerHTML = '<div style="text-align:center; color:#fff; font-weight:700; padding:60px 0; text-shadow:0 1px 3px rgba(0,0,0,.5)">📌 La bacheca è vuota.<br><span style="font-weight:500; opacity:.85">Premi “+ Nuova Nota” per appendere la prima nota.</span></div>';
+        return;
+    }
+    feed.style.display = '';
 
     feed.innerHTML = list.map(n => {
-        const dateLabel = n.date || '-';
+        const isPinned = !!n.fissata;
         const isExpired = n.scadenza && n.scadenza < todayStr;
         const isDone = !!n.completata;
+        const bg = NOTE_POSTIT_BG[n.destinatario] || '#fef08a';
         const destColor = NOTE_DEST_COLORS[n.destinatario] || '#64748b';
         const scadenzaLabel = n.scadenza ? n.scadenza.split('-').reverse().join('-') : null;
-        let scadenzaBadge = '';
+        let scadenzaChip = '';
         if (scadenzaLabel) {
-            scadenzaBadge = isExpired
-                ? `<span style="font-size:0.72rem; font-weight:700; color:#fff; background:#dc2626; padding:2px 10px; border-radius:20px">⏱️ Scaduta il ${scadenzaLabel}</span>`
-                : `<span style="font-size:0.72rem; font-weight:700; color:#92400e; background:#fef3c7; border:1px solid #fde68a; padding:2px 10px; border-radius:20px">📅 Scade il ${scadenzaLabel}</span>`;
+            scadenzaChip = isExpired
+                ? `<span class="p-chip" style="color:#fff; background:#dc2626">⏱️ Scaduta ${scadenzaLabel}</span>`
+                : `<span class="p-chip" style="color:#92400e; background:#fff7d6; border:1px solid #f5c542">📅 Scade ${scadenzaLabel}</span>`;
         }
-        return `<div class="glass-card" style="padding:16px 18px; ${(isExpired || isDone) ? 'opacity:0.55' : ''}">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; flex-wrap:wrap">
-                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
-                    <span style="font-weight:800; color:#1e293b">${n.operatore || '-'}</span>
-                    <span style="font-size:0.75rem; color:#94a3b8">${dateLabel} · ${n.time || '-'}</span>
-                    <span style="font-size:0.72rem; font-weight:700; color:#fff; background:${destColor}; padding:2px 10px; border-radius:20px">${n.destinatario || 'Tutti'}</span>
-                    ${scadenzaBadge}
-                    ${isDone ? '<span style="font-size:0.72rem; font-weight:700; color:#16a34a">✅ Completata</span>' : ''}
-                </div>
-                <div style="display:flex; gap:6px">
-                    <button class="btn btn-icon" style="color:${isDone ? '#64748b' : '#16a34a'}; background:${isDone ? 'rgba(0,0,0,0.05)' : '#f0fdf4'}" title="${isDone ? 'Riapri' : 'Segna come completata'}" onclick="toggleNotaCompletata('${n.id}', ${isDone})">${isDone ? '↩️' : '✅'}</button>
-                    <button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="delDoc('note_log','${n.id}')">🗑️</button>
+        const rot = isPinned ? 0 : noteRotation(n.id);
+        const faded = (isExpired || isDone) ? ' faded' : '';
+        return `<div class="postit${isPinned ? ' pinned' : ''}${faded}" style="background:${bg}; --rot:${rot}deg">
+            ${isPinned ? '<span class="pin-head">📌</span>' : '<span class="tape"></span>'}
+            <div class="p-top">
+                <span class="p-chip" style="color:#fff; background:${destColor}">${escNote(n.destinatario || 'Tutti')}</span>
+                ${scadenzaChip}
+                ${isDone ? '<span class="p-chip" style="color:#fff; background:#16a34a">✅ Fatta</span>' : ''}
+            </div>
+            <div class="p-body">${escNote(n.testo)}</div>
+            <div class="p-foot">
+                <div class="p-meta"><b>${escNote(n.operatore || '-')}</b> · ${escNote(n.date || '-')} ${escNote(n.time || '-')}${n.modificataAt ? ' · <i>✏️ mod.</i>' : ''}</div>
+                <div class="p-act">
+                    <button title="${isPinned ? 'Stacca dalla cima' : 'Fissa in cima'}" onclick="toggleNotaFissata('${n.id}', ${isPinned})">${isPinned ? '📍' : '📌'}</button>
+                    <button title="Modifica" onclick="editNota('${n.id}')">✏️</button>
+                    <button title="${isDone ? 'Riapri' : 'Segna come completata'}" onclick="toggleNotaCompletata('${n.id}', ${isDone})">${isDone ? '↩️' : '✅'}</button>
+                    <button title="Elimina" onclick="delDoc('note_log','${n.id}')">🗑️</button>
                 </div>
             </div>
-            <div style="white-space:pre-wrap; color:#334155; line-height:1.5">${n.testo || ''}</div>
         </div>`;
     }).join('');
 };
