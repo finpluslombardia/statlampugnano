@@ -3090,15 +3090,23 @@ function renderIncassiOverview() {
     const daysElapsedInSeason = Math.floor((new Date(lastDate) - new Date(seasonStartDate)) / 86400000) + 1;
 
     const currSeasonDays = dataIncassi.filter(d => getSeasonLabel(getSeasonStartYear(d.date)) === currSeasonLabel);
+    // Riferimento: oggi (se rientra nella stagione corrente), altrimenti l'ultimo giorno con dati
+    const refDateStr = (getSeasonStartYear(todayStr) === currSeasonStart) ? todayStr : lastDate;
+    const refD = new Date(refDateStr + 'T00:00:00');
+    const prevRefStr = fmtDateISO(new Date(refD.getFullYear() - 1, refD.getMonth(), refD.getDate()));
     let sumCurrSeason = 0, sumPrevSeasonToDate = 0;
     dataIncassi.forEach(d => {
         const s = getSeasonLabel(getSeasonStartYear(d.date));
         if (s === currSeasonLabel) sumCurrSeason += d.incasso_totale || 0;
-        if (s === prevSeasonLabel) sumPrevSeasonToDate += d.incasso_totale || 0;
+        if (s === prevSeasonLabel && d.date <= prevRefStr) sumPrevSeasonToDate += d.incasso_totale || 0;
     });
+    const refDM = `${String(refD.getDate()).padStart(2,'0')}-${String(refD.getMonth()+1).padStart(2,'0')}`;
     document.getElementById('ov-season-tot-val').innerText = fmtEUR(sumCurrSeason);
     document.getElementById('ov-season-tot-sub').innerHTML = sumPrevSeasonToDate > 0
-        ? `${yoy(sumCurrSeason, sumPrevSeasonToDate)} vs Stagione ${prevSeasonLabel}`
+        ? `<div style="display:flex; flex-direction:column; gap:3px; align-items:flex-start">
+            <div>${yoy(sumCurrSeason, sumPrevSeasonToDate)} vs ${prevSeasonLabel}</div>
+            <div style="font-size:0.8rem; font-weight:700; color:#64748b">${prevSeasonLabel}, al ${refDM}: ${fmtEUR(sumPrevSeasonToDate)}</div>
+        </div>`
         : `Stagione ${currSeasonLabel} in corso`;
 
     const openDaysCount = currSeasonDays.filter(d => (d.incasso_totale||0) > 0).length;
