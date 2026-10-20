@@ -2901,6 +2901,7 @@ window.switchSubViewIncassi=(s)=>{
     if (isRestrictedIncassiUser && ['overview','seasondetail','stats','riepilogo'].includes(s)) s = 'archive';
     ['overview','seasondetail','stats','riepilogo','archive','register'].forEach(v=>{ document.getElementById('sub-inc-'+v).classList.add('hidden'); document.getElementById('btn-sub-inc-'+v).classList.remove('btn-primary'); });
     document.getElementById('sub-inc-'+s).classList.remove('hidden'); document.getElementById('btn-sub-inc-'+s).classList.add('btn-primary');
+    if (s === 'register' && !editIdIncassi) loadIncassiDayIntoForm();
     renderIncassi();
 };
 
@@ -3486,23 +3487,154 @@ window.deleteUtenzeDate = async (date) => {
     } catch (e) { showToast(e.message, "error"); }
 };
 
-// Registrazione incassi temporaneamente sospesa (funzioni in ripristino)
-const incassiRegisterOff = () => {
-    const box = document.getElementById('sub-inc-register');
-    if (box && !document.getElementById('inc-restore-banner')) {
-        const b = document.createElement('div');
-        b.id = 'inc-restore-banner';
-        b.style.cssText = 'background:#fef3c7; border:2px solid #f59e0b; color:#92400e; font-weight:700; padding:14px 18px; border-radius:14px; margin-bottom:16px';
-        b.innerText = '⚠️ Registrazione incassi momentaneamente non disponibile: è in corso il ripristino. I dati salvati sono al sicuro e restano consultabili in Panoramica, Statistiche, Riepilogo e Archivio.';
-        box.prepend(b);
-    }
+// ============ REGISTRAZIONE INCASSI ============
+const INC_EPS = 0.01;
+// campo del modulo -> campo salvato su Firebase
+const INC_FIXED = {
+    'inc-n4-tot': 'corsi_n4_tot', 'inc-ss-tot': 'societa_sportive_tot',
+    'inc-n4-pos': 'corsi_n4_pos', 'inc-n4-satispay': 'corsi_n4_satispay', 'inc-n4-bonifico': 'corsi_n4_bonifico', 'inc-n4-contanti': 'corsi_n4_contanti',
+    'inc-acc-crediti': 'acc_crediti', 'inc-acc-tessere': 'acc_tessere', 'inc-acc-cuffie': 'acc_cuffie', 'inc-acc-noleggio': 'acc_noleggio', 'inc-acc-altro': 'acc_altro',
+    'inc-fat-spazi-acqua': 'fatture_spazi_acqua', 'inc-fat-altro': 'fatture_altro',
+    'inc-iva-pos': 'iva_pos', 'inc-iva-satispay': 'iva_satispay', 'inc-iva-bonifico': 'iva_bonifico', 'inc-iva-contanti': 'iva_contanti',
+    'inc-borsellini-correzioni': 'borsellini_correzioni'
 };
-window.toggleSeasonalFields = () => incassiRegisterOff();
-window.updateIncassiLiveTotal = () => incassiRegisterOff();
-window.loadIncassiDayIntoForm = () => incassiRegisterOff();
-window.saveIncassi = () => { incassiRegisterOff(); showToast("Registrazione incassi in ripristino: non salvato", "error"); };
-window.editIncassi = () => { switchSubViewIncassi('register'); incassiRegisterOff(); };
-window.cancelEditIncassi = () => incassiRegisterOff();
+const INC_ING_IDS = ['inc-ing-int-intero','inc-ing-int-ridotto','inc-ing-estfer-intero','inc-ing-estfer-ridotto','inc-ing-estsab-intero','inc-ing-estsab-ridotto','inc-ing-estdom-intero','inc-ing-estdom-ridotto'];
+const INC_ABB_IDS = ['inc-abb11-intero','inc-abb11-ridotto','inc-abb-mensile-intero','inc-abb-mensile-ridotto','inc-abb-trim-intero','inc-abb-trim-ridotto','inc-abb-sem-intero','inc-abb-sem-ridotto','inc-abb-ann-intero','inc-abb-ann-ridotto','inc-abb-estivi'];
+const INC_GRAN_IDS = [...INC_ING_IDS, ...INC_ABB_IDS];
+const incKey = (id) => INC_FIXED[id] || id.replace(/^inc-/, '').replace(/-/g, '_');
+const incVal = (id) => { const el = document.getElementById(id); if (!el) return 0; const v = parseFloat(String(el.value).replace(',', '.')); return isNaN(v) ? 0 : v; };
+const incSum = (ids) => ids.reduce((s, id) => s + incVal(id), 0);
+let incLegacy = null; // giorno registrato con la versione precedente: dettaglio ingressi/abbonamenti non leggibile
+
+function incAllIds() { return [...Object.keys(INC_FIXED), ...INC_GRAN_IDS]; }
+
+function incTotals() {
+    const corsi = incVal('inc-n4-tot'), ss = incVal('inc-ss-tot');
+    const ingressi = incLegacy ? incLegacy.ingressi_tot : incSum(INC_ING_IDS);
+    const abbonamenti = incLegacy ? incLegacy.abbonamenti_tot : incSum(INC_ABB_IDS);
+    const accessori = incSum(['inc-acc-crediti','inc-acc-tessere','inc-acc-cuffie','inc-acc-noleggio','inc-acc-altro']);
+    const fatture = incSum(['inc-fat-spazi-acqua','inc-fat-altro']);
+    const borsellini = incVal('inc-borsellini-correzioni');
+    const esente = corsi + ss;
+    const ivaDetail = ingressi + abbonamenti + accessori + fatture;
+    const ivaTarget = ivaDetail - borsellini;
+    const esentePay = incSum(['inc-n4-pos','inc-n4-satispay','inc-n4-bonifico','inc-n4-contanti']);
+    const ivaPay = incSum(['inc-iva-pos','inc-iva-satispay','inc-iva-bonifico','inc-iva-contanti']);
+    return { corsi, ss, ingressi, abbonamenti, accessori, fatture, borsellini, esente, ivaDetail, ivaTarget, esentePay, ivaPay, totale: esente + ivaDetail - borsellini };
+}
+
+function incCheckHtml(pay, target, label) {
+    if (Math.abs(pay) < INC_EPS && Math.abs(target) < INC_EPS) return '';
+    const diff = pay - target;
+    if (Math.abs(diff) < INC_EPS) return `<span style="color:#16a34a">✅ ${label}: i metodi di pagamento tornano</span>`;
+    return `<span style="color:#dc2626">❌ ${label}: metodi di pagamento ${fmtEUR(pay)} — atteso ${fmtEUR(target)} (differenza ${diff > 0 ? '+' : ''}${fmtEUR(diff)})</span>`;
+}
+
+window.updateIncassiLiveTotal = () => {
+    const t = incTotals();
+    const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+    set('inc-live-total', fmtEUR(t.totale));
+    set('inc-esente-calc-tot', fmtEUR(t.esente));
+    set('inc-accessori-calc-tot', fmtEUR(t.accessori));
+    set('inc-fatture-calc-tot', fmtEUR(t.fatture));
+    set('inc-iva-calc-tot', fmtEUR(t.ivaDetail) + (t.borsellini ? ` − borsellini ${fmtEUR(t.borsellini)} = <b>${fmtEUR(t.ivaTarget)}</b>` : ''));
+    set('inc-n4-check', incCheckHtml(t.esentePay, t.esente, 'Esente IVA'));
+    set('inc-iva-check', incCheckHtml(t.ivaPay, t.ivaTarget, 'Parte IVA'));
+};
+
+window.toggleSeasonalFields = () => {
+    const d = document.getElementById('inc-date').value;
+    const m = d ? parseInt(d.slice(5, 7), 10) : 0;
+    const sec = document.getElementById('inc-seasonal-section');
+    const hasValues = ['inc-ing-estfer-intero','inc-ing-estfer-ridotto','inc-ing-estsab-intero','inc-ing-estsab-ridotto','inc-ing-estdom-intero','inc-ing-estdom-ridotto','inc-abb-estivi'].some(id => incVal(id) !== 0);
+    if (sec) sec.classList.toggle('hidden', !(m >= 5 && m <= 9) && !hasValues);
+};
+
+function incSetLegacyNotice(doc) {
+    let n = document.getElementById('inc-legacy-notice');
+    INC_GRAN_IDS.forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = !!doc; el.style.opacity = doc ? '0.5' : ''; } });
+    if (!doc) { if (n) n.remove(); return; }
+    if (!n) {
+        n = document.createElement('div'); n.id = 'inc-legacy-notice';
+        n.style.cssText = 'background:#fef3c7; border:1.5px solid #f59e0b; color:#92400e; font-size:0.82rem; font-weight:700; padding:10px 14px; border-radius:10px; margin-bottom:10px';
+        const anchor = document.getElementById('inc-ing-int-intero').closest('div[style*="padding:12px"]');
+        anchor.parentNode.insertBefore(n, anchor);
+    }
+    n.innerHTML = `ℹ️ Questo giorno è stato registrato con la versione precedente: il dettaglio di ingressi e abbonamenti non è modificabile qui. Restano invariati Ingressi ${fmtEUR(doc.ingressi_tot)} e Abbonamenti ${fmtEUR(doc.abbonamenti_tot)}; tutto il resto si può modificare.`;
+}
+
+function incClearForm() {
+    incAllIds().forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('inc-note').value = '';
+    incLegacy = null; incSetLegacyNotice(null);
+}
+
+function incSetEditMode(on) {
+    document.getElementById('title-incassi').innerText = on ? '✏️ Modifica Incasso' : '➕ Registra Incasso';
+    const btn = document.getElementById('btn-save-incassi');
+    btn.innerText = on ? 'AGGIORNA' : 'SALVA';
+    btn.style.background = on ? '#f59e0b' : '';
+    document.getElementById('cancel-incassi').classList.toggle('hidden', !on);
+}
+
+function incFillFromDoc(d) {
+    incClearForm();
+    document.getElementById('inc-note').value = d.note || '';
+    Object.entries(INC_FIXED).forEach(([id, key]) => { const el = document.getElementById(id); if (el && d[key] != null && d[key] !== 0) el.value = d[key]; });
+    const hasGranular = INC_GRAN_IDS.some(id => d[incKey(id)] != null);
+    if (hasGranular) {
+        INC_GRAN_IDS.forEach(id => { const v = d[incKey(id)]; if (v != null && v !== 0) document.getElementById(id).value = v; });
+    } else if ((d.ingressi_tot || 0) !== 0 || (d.abbonamenti_tot || 0) !== 0) {
+        incLegacy = { ingressi_tot: d.ingressi_tot || 0, abbonamenti_tot: d.abbonamenti_tot || 0 };
+        incSetLegacyNotice(d);
+    }
+}
+
+window.loadIncassiDayIntoForm = () => {
+    const date = document.getElementById('inc-date').value;
+    const existing = date ? dataIncassi.find(x => x.date === date) : null;
+    if (existing) { editIdIncassi = existing.id; incFillFromDoc(existing); incSetEditMode(true); }
+    else { editIdIncassi = null; incClearForm(); incSetEditMode(false); }
+    toggleSeasonalFields(); updateIncassiLiveTotal();
+};
+
+window.editIncassi = (id) => {
+    const d = dataIncassi.find(x => x.id === id); if (!d) return;
+    switchSubViewIncassi('register');
+    document.getElementById('inc-date').value = d.date;
+    editIdIncassi = id; incFillFromDoc(d); incSetEditMode(true);
+    toggleSeasonalFields(); updateIncassiLiveTotal();
+};
+
+window.cancelEditIncassi = () => {
+    editIdIncassi = null; incClearForm(); incSetEditMode(false);
+    document.getElementById('inc-date').value = fmtDateISO(new Date());
+    loadIncassiDayIntoForm();
+};
+
+window.saveIncassi = async () => {
+    const date = document.getElementById('inc-date').value;
+    if (!date) return showToast("Data mancante", "error");
+    const t = incTotals();
+    if (Math.abs(t.esentePay - t.esente) >= INC_EPS) return showToast(`Esente IVA: i metodi di pagamento (${fmtEUR(t.esentePay)}) non corrispondono a Corsi + Società Sportive (${fmtEUR(t.esente)})`, "error");
+    if (Math.abs(t.ivaPay - t.ivaTarget) >= INC_EPS) return showToast(`Parte IVA: i metodi di pagamento (${fmtEUR(t.ivaPay)}) non corrispondono al totale atteso (${fmtEUR(t.ivaTarget)})`, "error");
+
+    const p = { date, note: document.getElementById('inc-note').value || '' };
+    Object.entries(INC_FIXED).forEach(([id, key]) => { p[key] = incVal(id); });
+    if (!incLegacy) INC_GRAN_IDS.forEach(id => { p[incKey(id)] = incVal(id); });
+    p.ingressi_tot = t.ingressi; p.abbonamenti_tot = t.abbonamenti;
+    p.accessori_tot = t.accessori; p.fatture_tot = t.fatture;
+    p.incasso_totale = t.totale;
+
+    // stesso giorno gia' presente? aggiorna quello invece di crearne un doppione
+    const targetId = editIdIncassi || (dataIncassi.find(x => x.date === date) || {}).id || null;
+    try {
+        if (targetId) { await updateDoc(doc(db, "incassi_log", targetId), p); showToast("Incasso aggiornato"); }
+        else { await addDoc(collection(db, "incassi_log"), { ...p, createdAt: new Date().toISOString() }); showToast("Incasso salvato"); }
+        editIdIncassi = null; incClearForm(); incSetEditMode(false);
+        toggleSeasonalFields(); updateIncassiLiveTotal();
+    } catch (e) { showToast(e.message, "error"); }
+};
 
 function fmtDateISO(d) {
     const y = d.getFullYear();
