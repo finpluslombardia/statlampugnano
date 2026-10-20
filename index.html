@@ -3469,6 +3469,41 @@ function isoWeekToMonday(isoWeekStr) {
     monday.setDate(simple.getDate() + diff);
     return monday;
 }
+// ============ RIPRISTINO: formattazione euro ============
+function fmtEUR(n) {
+    const v = Number(n) || 0;
+    return '€ ' + v.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Elimina tutte le letture utenze di un giorno
+window.deleteUtenzeDate = async (date) => {
+    if(!confirm(`Vuoi cancellare TUTTI i dati del giorno ${date.split('-').reverse().join('/')}?`)) return;
+    const toDelete = dataUtenze.filter(d => d.date === date);
+    if (toDelete.length === 0) return;
+    try {
+        await Promise.all(toDelete.map(d => deleteDoc(doc(db, "utenze_log", d.id))));
+        showToast("Giorno eliminato");
+    } catch (e) { showToast(e.message, "error"); }
+};
+
+// Registrazione incassi temporaneamente sospesa (funzioni in ripristino)
+const incassiRegisterOff = () => {
+    const box = document.getElementById('sub-inc-register');
+    if (box && !document.getElementById('inc-restore-banner')) {
+        const b = document.createElement('div');
+        b.id = 'inc-restore-banner';
+        b.style.cssText = 'background:#fef3c7; border:2px solid #f59e0b; color:#92400e; font-weight:700; padding:14px 18px; border-radius:14px; margin-bottom:16px';
+        b.innerText = '⚠️ Registrazione incassi momentaneamente non disponibile: è in corso il ripristino. I dati salvati sono al sicuro e restano consultabili in Panoramica, Statistiche, Riepilogo e Archivio.';
+        box.prepend(b);
+    }
+};
+window.toggleSeasonalFields = () => incassiRegisterOff();
+window.updateIncassiLiveTotal = () => incassiRegisterOff();
+window.loadIncassiDayIntoForm = () => incassiRegisterOff();
+window.saveIncassi = () => { incassiRegisterOff(); showToast("Registrazione incassi in ripristino: non salvato", "error"); };
+window.editIncassi = () => { switchSubViewIncassi('register'); incassiRegisterOff(); };
+window.cancelEditIncassi = () => incassiRegisterOff();
+
 function fmtDateISO(d) {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
