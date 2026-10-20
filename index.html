@@ -55,7 +55,16 @@
     /* CB-ROW BASE */
     .cb-row { display: flex; gap: 15px; align-items: flex-end; width: 100%; }
     #cb-utenze .cb-row { flex-wrap: wrap; }
-    #cb-ingressi .cb-row { flex-wrap: nowrap; gap: 15px; }
+    .cb-title-lg { font-size: 1.2rem; opacity: 1; letter-spacing: 0.6px; }
+    #cb-ingressi-form .cb-row { gap: 15px; margin-bottom: 14px; }
+    #cb-ingressi-form .cb-row.ctx { flex-wrap: wrap; }
+    #cb-ingressi-form .group-ctx { flex: 1 1 100%; }
+    #cb-ingressi-form.editing { background: rgba(254, 243, 199, 0.9); border: 2px solid #f59e0b; }
+    #meteo-suggest { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin: -4px 0 16px; padding:10px 14px; border-radius:12px; background:rgba(255,255,255,0.55); border:1px dashed rgba(37,99,235,0.35); font-size:0.85rem; color:#334155; }
+    #meteo-suggest .ms-chip { border:1.5px solid rgba(37,99,235,0.35); background:#fff; color:#1e3a8a; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:20px; cursor:pointer; font-family:inherit; }
+    #meteo-suggest .ms-chip:hover { background:#eff6ff; }
+    #meteo-suggest .ms-chip.primary { background:#2563eb; border-color:#2563eb; color:#fff; }
+    #meteo-suggest .ms-chip.active { box-shadow:0 0 0 3px rgba(22,163,74,.35); border-color:#16a34a; }
         
     /* INPUT FIELDS STANDARD */
     .inp-field { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -232,14 +241,31 @@
 <div class="main-content">
 
 <div id="module-ingressi" class="module-container" style="display:flex; flex-direction:column; height:100%">
-    <div class="control-bar" id="cb-ingressi">
-        <div class="cb-header">
-            <span class="cb-title" id="title-ingressi">Registrazione Ingressi</span>
-            <button class="btn btn-danger hidden" id="cancel-ingressi" style="height:30px; font-size:0.7rem; padding:0 15px" onclick="cancelEditIngressi()">Annulla Modifica</button>
+    <div class="control-bar" id="cb-ingressi" style="padding:16px 20px">
+        <div class="cb-header" style="margin:0">
+            <span class="cb-title cb-title-lg">🎫 Nuoto Libero</span>
         </div>
-        <div class="cb-row">
-            <div class="group-ctx">
-                <div class="inp-field" style="flex:1.2"><label>Data</label><input type="date" id="i-date"></div>
+    </div>
+
+    <div class="scroll-area">
+        <div class="filter-row" style="margin-bottom:20px; justify-content:center">
+            <button class="btn btn-primary" id="btn-sub-overview" onclick="switchSubView('overview')">Panoramica</button>
+            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-stats" onclick="switchSubView('stats')">Statistiche</button>
+            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-riepilogo" onclick="switchSubView('riepilogo')">Riepilogo</button>
+            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-archive" onclick="switchSubView('archive')">Archivio</button>
+            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-register" onclick="switchSubView('register')">➕ Registra Ingressi</button>
+        </div>
+
+        <!-- Sub-View: Registrazione ingressi -->
+        <div id="sub-register" class="hidden">
+            <div class="glass-card" id="cb-ingressi-form" style="padding:20px">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+                    <h3 style="margin:0; font-size:1.1rem" id="title-ingressi">➕ Registra Ingressi</h3>
+                    <button class="btn btn-danger hidden" id="cancel-ingressi" style="height:34px; font-size:0.75rem; padding:0 15px" onclick="cancelEditIngressi()">Annulla Modifica</button>
+                </div>
+                <div class="cb-row ctx">
+                    <div class="group-ctx">
+                <div class="inp-field" style="flex:1.2"><label>Data</label><input type="date" id="i-date" onchange="updateMeteoSuggestion()"></div>
                 <div class="inp-field" style="flex:1.3"><label>Tipo Giorno</label>
                     <select id="i-type">
                         <option value="standard">🏢 Standard</option>
@@ -253,7 +279,7 @@
                     <select id="i-fascia"><optgroup label="🏊 Vasca Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="☀️ Vasca Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
                 </div>
                 <div class="inp-field" style="flex:1.2"><label>Meteo</label>
-                    <select id="i-meteo"><option value="☀️ Sole">☀️ Sole</option><option value="🔥 Sole + Caldo">🔥 Sole + Caldo</option><option value="❄️ Sole + Freddo">❄️ Sole + Freddo</option><option value="🌦️ Variabile">🌦️ Variabile</option><option value="🌤️ Parz Nuvoloso">🌤️ Parz Nuvoloso</option><option value="☁️ Nuvoloso">☁️ Nuvoloso</option><option value="🌥️ Nuv + Freddo">🌥️ Nuv + Freddo</option><option value="🌧️ Pioggia">🌧️ Pioggia</option><option value="🌨️ Piog + Freddo">🌨️ Piog + Freddo</option><option value="⛈️ Temporale">⛈️ Temporale</option><option value="❓ N/D">❓ N/D</option></select>
+                    <select id="i-meteo" onchange="applyMeteoOption(this.value)"><option value="☀️ Sole">☀️ Sole</option><option value="🔥 Sole + Caldo">🔥 Sole + Caldo</option><option value="❄️ Sole + Freddo">❄️ Sole + Freddo</option><option value="🌦️ Variabile">🌦️ Variabile</option><option value="🌤️ Parz Nuvoloso">🌤️ Parz Nuvoloso</option><option value="☁️ Nuvoloso">☁️ Nuvoloso</option><option value="🌥️ Nuv + Freddo">🌥️ Nuv + Freddo</option><option value="🌧️ Pioggia">🌧️ Pioggia</option><option value="🌨️ Piog + Freddo">🌨️ Piog + Freddo</option><option value="⛈️ Temporale">⛈️ Temporale</option><option value="❓ N/D">❓ N/D</option></select>
                 </div>
                 <div class="inp-field" style="flex:0.3; align-items:center; justify-content:center; padding-bottom:8px">
                     <label style="cursor:pointer; display:flex; flex-direction:column; align-items:center; color:#ef4444" title="Escludi">
@@ -262,27 +288,21 @@
                     </label>
                 </div>
             </div>
-
-            <div class="group-tickets">
+                </div>
+                <div id="meteo-suggest" class="hidden"></div>
+                <div class="cb-row" style="margin-bottom:0">
+                    <div class="group-tickets">
                 <div class="t-box"><label>INTERO</label><input type="number" id="q-intero" value="0" onfocus="this.select()"></div>
                 <div class="t-box"><label>RIDOTTO</label><input type="number" id="q-ridotto" value="0" onfocus="this.select()"></div>
                 <div class="t-box"><label>ABB. PER.</label><input type="number" id="q-abb-int" value="0" onfocus="this.select()"></div>
                 <div class="t-box"><label>ABB. 11</label><input type="number" id="q-abb-rid" value="0" onfocus="this.select()"></div>
                 <div class="t-box"><label>GRATUITO</label><input type="number" id="q-gratuito" value="0" onfocus="this.select()"></div>
             </div>
-
-            <div class="group-actions">
+                    <div class="group-actions">
                 <button id="btn-save-ingressi" class="btn btn-primary" style="height:44px; min-width:100px" onclick="saveIngressi()">SALVA</button>
             </div>
-        </div>
-    </div>
-
-    <div class="scroll-area">
-        <div class="filter-row" style="margin-bottom:20px; justify-content:center">
-            <button class="btn btn-primary" id="btn-sub-overview" onclick="switchSubView('overview')">Panoramica</button>
-            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-stats" onclick="switchSubView('stats')">Statistiche</button>
-            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-riepilogo" onclick="switchSubView('riepilogo')">Riepilogo</button>
-            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-archive" onclick="switchSubView('archive')">Archivio</button>
+                </div>
+            </div>
         </div>
 
         <div id="sub-overview">
@@ -877,7 +897,7 @@
 <div id="module-incassi" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
     <div class="control-bar" id="cb-incassi" style="padding:16px 20px">
         <div class="cb-header" style="margin:0">
-            <span class="cb-title">💰 Incassi</span>
+            <span class="cb-title cb-title-lg">💰 Incassi</span>
         </div>
     </div>
 
@@ -1422,7 +1442,7 @@
 <div id="module-note" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
     <div class="control-bar">
         <div class="cb-header">
-            <span class="cb-title">📌 Bacheca</span>
+            <span class="cb-title cb-title-lg">📌 Bacheca</span>
             <button class="btn btn-primary" style="height:38px; padding:0 18px" onclick="openNoteModal()">+ Nuova Nota</button>
         </div>
         <div class="cb-row" style="flex-wrap:wrap">
@@ -4714,11 +4734,11 @@ window.saveIngressi = async () => {
     p.totale = p.int + p.rid + p.grat + p.abb_int + p.abb_rid;
     
     try {
-        if(editIdIngressi) { await updateDoc(doc(db,"sessioni",editIdIngressi), p); showToast("Aggiornato"); cancelEditIngressi(); } else { await addDoc(collection(db,"sessioni"), p); showToast("Salvato"); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; }
+        if(editIdIngressi) { await updateDoc(doc(db,"sessioni",editIdIngressi), p); showToast("Aggiornato"); cancelEditIngressi(); switchSubView('archive'); } else { await addDoc(collection(db,"sessioni"), p); showToast("Salvato"); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; }
     } catch(e){ showToast(e.message,"error"); }
 };
-window.editIngressi = (id) => { const d = dataIngressi.find(x=>x.id===id); if(!d) return; editIdIngressi = id; document.getElementById('i-date').value=d.date; document.getElementById('i-type').value=d.type||'standard'; document.getElementById('i-fascia').value=d.fascia; document.getElementById('i-meteo').value=d.meteo; document.getElementById('i-exclude').checked = d.excludeStats || false; document.getElementById('q-intero').value=d.int; document.getElementById('q-ridotto').value=d.rid; document.getElementById('q-gratuito').value=d.grat; document.getElementById('q-abb-int').value=d.abb_int; document.getElementById('q-abb-rid').value=d.abb_rid; document.getElementById('title-ingressi').innerText="Modifica Ingressi"; document.getElementById('btn-save-ingressi').innerText="AGGIORNA"; document.getElementById('btn-save-ingressi').style.background="#f59e0b"; document.getElementById('cancel-ingressi').classList.remove('hidden'); document.getElementById('cb-ingressi').classList.add('editing'); window.scrollTo({top:0,behavior:'smooth'}); };
-window.cancelEditIngressi = () => { editIdIngressi=null; document.getElementById('title-ingressi').innerText="Registrazione Ingressi"; document.getElementById('btn-save-ingressi').innerText="SALVA"; document.getElementById('btn-save-ingressi').style.background=""; document.getElementById('cancel-ingressi').classList.add('hidden'); document.getElementById('cb-ingressi').classList.remove('editing'); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; };
+window.editIngressi = (id) => { const d = dataIngressi.find(x=>x.id===id); if(!d) return; editIdIngressi = id; document.getElementById('i-date').value=d.date; document.getElementById('i-type').value=d.type||'standard'; document.getElementById('i-fascia').value=d.fascia; document.getElementById('i-meteo').value=d.meteo; document.getElementById('i-exclude').checked = d.excludeStats || false; document.getElementById('q-intero').value=d.int; document.getElementById('q-ridotto').value=d.rid; document.getElementById('q-gratuito').value=d.grat; document.getElementById('q-abb-int').value=d.abb_int; document.getElementById('q-abb-rid').value=d.abb_rid; switchSubView('register'); document.getElementById('title-ingressi').innerText="✏️ Modifica Ingressi"; document.getElementById('btn-save-ingressi').innerText="AGGIORNA"; document.getElementById('btn-save-ingressi').style.background="#f59e0b"; document.getElementById('cancel-ingressi').classList.remove('hidden'); document.getElementById('cb-ingressi-form').classList.add('editing'); };
+window.cancelEditIngressi = () => { editIdIngressi=null; document.getElementById('title-ingressi').innerText="➕ Registra Ingressi"; document.getElementById('btn-save-ingressi').innerText="SALVA"; document.getElementById('btn-save-ingressi').style.background=""; document.getElementById('cancel-ingressi').classList.add('hidden'); document.getElementById('cb-ingressi-form').classList.remove('editing'); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; };
 window.delDoc = async (c,i) => { if(confirm("Eliminare?")){ await deleteDoc(doc(db,c,i)); showToast("Eliminato"); } };
 window.toggleExcludeStats = async (id, currentVal) => { try { await updateDoc(doc(db, "sessioni", id), { excludeStats: !currentVal }); showToast(!currentVal ? "Giorno escluso dalla media" : "Giorno reincluso nella media"); } catch(e) { showToast(e.message, "error"); } };
 window.loadMoreIngressi = () => { limitIngressi += 200; renderIngressiArchive(); };
@@ -4970,10 +4990,79 @@ window.downloadRiepilogoCSV = () => {
 };
 
 window.switchModule=(m)=>{ document.querySelectorAll('.module-container').forEach(e=>e.classList.add('hidden')); document.getElementById('module-'+m).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('nav-module-'+m).classList.add('active'); if(m==='ingressi')debouncedRefresh(); if(m==='dae')renderDae(); if(m==='utenze')renderUtenze(); if(m==='incassi'){ switchSubViewIncassi(isRestrictedIncassiUser ? 'archive' : 'overview'); } if(m==='note')renderNote(); };
-window.switchSubView=(s)=>{ ['overview','stats','riepilogo','archive'].forEach(v=>{ document.getElementById('sub-'+v).classList.add('hidden'); document.getElementById('btn-sub-'+v).classList.remove('btn-primary'); }); document.getElementById('sub-'+s).classList.remove('hidden'); document.getElementById('btn-sub-'+s).classList.add('btn-primary'); debouncedRefresh(); };
+
+// ============ SUGGERIMENTO METEO (Open-Meteo, Milano Lampugnano) ============
+const METEO_LAT = 45.495, METEO_LON = 9.126;
+const METEO_HOT = 28, METEO_COLD = 8; // soglie °C per "Caldo" / "Freddo"
+const meteoCache = {};
+const WMO_IT = {0:'Sereno',1:'Prevalentemente sereno',2:'Parzialmente nuvoloso',3:'Coperto',45:'Nebbia',48:'Nebbia',51:'Pioviggine',53:'Pioviggine',55:'Pioviggine intensa',56:'Pioviggine gelata',57:'Pioviggine gelata',61:'Pioggia debole',63:'Pioggia',65:'Pioggia forte',66:'Pioggia gelata',67:'Pioggia gelata',71:'Neve debole',73:'Neve',75:'Neve forte',77:'Nevischio',80:'Rovesci',81:'Rovesci',82:'Rovesci violenti',85:'Rovesci di neve',86:'Rovesci di neve',95:'Temporale',96:'Temporale con grandine',99:'Temporale con grandine'};
+
+function meteoOptionsFor(code, temp) {
+    const hot = temp != null && temp >= METEO_HOT, cold = temp != null && temp <= METEO_COLD;
+    if (code === 0 || code === 1) return hot ? ['🔥 Sole + Caldo', '☀️ Sole'] : cold ? ['❄️ Sole + Freddo', '☀️ Sole'] : ['☀️ Sole', '🌤️ Parz Nuvoloso'];
+    if (code === 2) return ['🌤️ Parz Nuvoloso', '☀️ Sole', '🌦️ Variabile'];
+    if (code === 3 || code === 45 || code === 48) return cold ? ['🌥️ Nuv + Freddo', '☁️ Nuvoloso'] : ['☁️ Nuvoloso', '🌤️ Parz Nuvoloso'];
+    if ([51,53,55,56,57,61,63,65,66,67].includes(code)) return (temp != null && temp <= 5) ? ['🌨️ Piog + Freddo', '🌧️ Pioggia'] : ['🌧️ Pioggia', '🌦️ Variabile'];
+    if ([71,73,75,77,85,86].includes(code)) return ['🌨️ Piog + Freddo', '🌧️ Pioggia'];
+    if (code === 80 || code === 81) return ['🌦️ Variabile', '🌧️ Pioggia'];
+    if (code === 82) return ['🌧️ Pioggia', '⛈️ Temporale'];
+    if (code >= 95) return ['⛈️ Temporale', '🌧️ Pioggia'];
+    return ['❓ N/D'];
+}
+
+window.applyMeteoOption = (val) => {
+    const sel = document.getElementById('i-meteo');
+    sel.value = val;
+    document.querySelectorAll('#meteo-suggest .ms-chip').forEach(b => b.classList.toggle('active', b.dataset.val === val));
+};
+
+window.updateMeteoSuggestion = async () => {
+    const box = document.getElementById('meteo-suggest');
+    const dateStr = document.getElementById('i-date').value;
+    if (!box || !dateStr) return;
+    const todayStr = fmtDateISO(new Date());
+    const diffDays = Math.round((new Date(todayStr + 'T00:00:00') - new Date(dateStr + 'T00:00:00')) / 86400000);
+    if (diffDays < -14 || diffDays > 80) { box.classList.add('hidden'); return; }
+    const isToday = dateStr === todayStr;
+    const key = dateStr + (isToday ? '|' + Math.floor(Date.now() / 600000) : '');
+    box.classList.remove('hidden');
+    try {
+        let info = meteoCache[key];
+        if (!info) {
+            box.innerHTML = '<span style="color:#64748b">⏳ Recupero il meteo...</span>';
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}` +
+                `&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum` +
+                `&timezone=Europe%2FRome&start_date=${dateStr}&end_date=${dateStr}`;
+            const r = await fetch(url);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const j = await r.json();
+            const dly = j.daily || {};
+            info = { dCode: dly.weather_code && dly.weather_code[0], dMax: dly.temperature_2m_max && dly.temperature_2m_max[0], dMin: dly.temperature_2m_min && dly.temperature_2m_min[0], dRain: dly.precipitation_sum && dly.precipitation_sum[0], cCode: j.current && j.current.weather_code, cTemp: j.current && j.current.temperature_2m };
+            meteoCache[key] = info;
+        }
+        if (dateStr !== document.getElementById('i-date').value) return; // la data è cambiata nel frattempo
+        let code, temp, head, extra = '';
+        if (isToday && info.cCode != null) {
+            code = info.cCode; temp = info.cTemp;
+            head = `Meteo attuale (Milano): <b>${WMO_IT[code] || '-'}, ${Math.round(temp)}°C</b>`;
+            if (info.dMax != null) extra = `<span style="color:#64748b">Oggi: ${Math.round(info.dMin)}–${Math.round(info.dMax)}°C${info.dRain > 0 ? ', pioggia ' + info.dRain.toFixed(1) + ' mm' : ''}</span>`;
+        } else if (info.dCode != null) {
+            code = info.dCode; temp = info.dMax;
+            head = `Meteo del giorno (Milano): <b>${WMO_IT[code] || '-'}, ${Math.round(info.dMin)}–${Math.round(info.dMax)}°C${info.dRain > 0 ? ', pioggia ' + info.dRain.toFixed(1) + ' mm' : ''}</b>`;
+        } else { box.classList.add('hidden'); return; }
+        const opts = meteoOptionsFor(code, temp);
+        const cur = document.getElementById('i-meteo').value;
+        box.innerHTML = `<span>🌐 ${head}</span>${extra}<span style="margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap"><span style="font-size:0.75rem; font-weight:700; color:#64748b">Suggerito:</span>` +
+            opts.map((o, i) => `<button type="button" class="ms-chip${i === 0 ? ' primary' : ''}${o === cur ? ' active' : ''}" data-val="${o}" onclick="applyMeteoOption('${o}')">${o}</button>`).join('') + '</span>';
+    } catch (e) {
+        box.innerHTML = '<span style="color:#94a3b8">🌐 Suggerimento meteo non disponibile (nessuna connessione al servizio meteo).</span>';
+    }
+};
+
+window.switchSubView=(s)=>{ ['overview','stats','riepilogo','archive','register'].forEach(v=>{ document.getElementById('sub-'+v).classList.add('hidden'); document.getElementById('btn-sub-'+v).classList.remove('btn-primary'); }); document.getElementById('sub-'+s).classList.remove('hidden'); document.getElementById('btn-sub-'+s).classList.add('btn-primary'); if(s==='register') updateMeteoSuggestion(); debouncedRefresh(); };
 function refreshCurrentView(){ if(!document.getElementById('sub-overview').classList.contains('hidden')) renderOverview(); if(!document.getElementById('sub-stats').classList.contains('hidden')) renderStats(); if(!document.getElementById('sub-riepilogo').classList.contains('hidden')) renderRiepilogoMensile(); if(!document.getElementById('sub-archive').classList.contains('hidden')) renderIngressiArchive(); }
 setInterval(()=>{ const n=new Date(); const s=n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'); if(document.getElementById('d-time')) document.getElementById('d-time').value=s; if(document.getElementById('note-time')) document.getElementById('note-time').value=s; },1000);
-const today=new Date().toISOString().split('T')[0]; document.getElementById('i-date').value=today; document.getElementById('d-date').value=today; document.getElementById('u-date').value=today; document.getElementById('inc-date').value=today;
+const today=fmtDateISO(new Date()); document.getElementById('i-date').value=today; document.getElementById('d-date').value=today; document.getElementById('u-date').value=today; document.getElementById('inc-date').value=today;
 window.downloadCSV = () => { const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const filtered = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && d.meteo !== meteo) return false; return true; }); if(!filtered.length) return showToast("Nessun dato da scaricare", "error"); let csvContent = "data:text/csv;charset=utf-8,Data;Tipo;Fascia;Meteo;EsclusoMedia;Intero;Ridotto;Abbonamenti;Gratuiti;Totale\n"; filtered.forEach(row => { csvContent += `${row.date};${row.type||'standard'};${row.fascia};${row.meteo};${row.excludeStats?'SI':'NO'};${row.int};${row.rid};${row.abb_int + row.abb_rid};${row.grat};${row.totale}\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "archivio_ingressi.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); };
 window.resetArchiveFilters = () => { document.getElementById('arch-date-start').value=""; document.getElementById('arch-date-end').value=""; document.getElementById('arch-filter-fascia').value="all"; document.getElementById('arch-filter-meteo').value="all"; limitIngressi = 200; renderIngressiArchive(); };
 </script>
