@@ -54,17 +54,18 @@
     
     /* CB-ROW BASE */
     .cb-row { display: flex; gap: 15px; align-items: flex-end; width: 100%; }
-    #cb-utenze .cb-row { flex-wrap: wrap; }
     .cb-title-lg { font-size: 1.2rem; opacity: 1; letter-spacing: 0.6px; }
     #cb-ingressi-form .cb-row { gap: 15px; margin-bottom: 14px; }
     #cb-ingressi-form .cb-row.ctx { flex-wrap: wrap; }
     #cb-ingressi-form .group-ctx { flex: 1 1 100%; }
     #cb-ingressi-form.editing { background: rgba(254, 243, 199, 0.9); border: 2px solid #f59e0b; }
-    #meteo-suggest { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin: -4px 0 16px; padding:10px 14px; border-radius:12px; background:rgba(255,255,255,0.55); border:1px dashed rgba(37,99,235,0.35); font-size:0.85rem; color:#334155; }
-    #meteo-suggest .ms-chip { border:1.5px solid rgba(37,99,235,0.35); background:#fff; color:#1e3a8a; font-weight:700; font-size:0.82rem; padding:5px 12px; border-radius:20px; cursor:pointer; font-family:inherit; }
-    #meteo-suggest .ms-chip:hover { background:#eff6ff; }
-    #meteo-suggest .ms-chip.primary { background:#2563eb; border-color:#2563eb; color:#fff; }
-    #meteo-suggest .ms-chip.active { box-shadow:0 0 0 3px rgba(22,163,74,.35); border-color:#16a34a; }
+    #cb-utenze.editing { background: rgba(254, 243, 199, 0.9); border: 2px solid #f59e0b; }
+    #cb-utenze .cb-row { flex-wrap: wrap; margin-bottom: 14px; }
+    .u-reg-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; }
+    .u-reg-card { background: rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.8); border-radius:16px; padding:16px 18px; }
+    .u-reg-card h4 { margin:0 0 12px; font-size:0.95rem; display:flex; align-items:center; justify-content:space-between; }
+    .u-reg-card .u-live { font-size:0.8rem; font-weight:700; color:#64748b; }
+    .u-auto-hint { font-size:0.78rem; color:#64748b; margin:-4px 0 16px; }
         
     /* INPUT FIELDS STANDARD */
     .inp-field { display: flex; flex-direction: column; flex: 1; min-width: 0; }
@@ -265,7 +266,7 @@
                 </div>
                 <div class="cb-row ctx">
                     <div class="group-ctx">
-                <div class="inp-field" style="flex:1.2"><label>Data</label><input type="date" id="i-date" onchange="updateMeteoSuggestion()"></div>
+                <div class="inp-field" style="flex:1.2"><label>Data</label><input type="date" id="i-date" onchange="onIngressiDateChange()"></div>
                 <div class="inp-field" style="flex:1.3"><label>Tipo Giorno</label>
                     <select id="i-type">
                         <option value="standard">🏢 Standard</option>
@@ -278,8 +279,8 @@
                 <div class="inp-field" style="flex:1.5"><label>Fascia</label>
                     <select id="i-fascia"><optgroup label="🏊 Vasca Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="☀️ Vasca Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
                 </div>
-                <div class="inp-field" style="flex:1.2"><label>Meteo</label>
-                    <select id="i-meteo" onchange="applyMeteoOption(this.value)"><option value="☀️ Sole">☀️ Sole</option><option value="🔥 Sole + Caldo">🔥 Sole + Caldo</option><option value="❄️ Sole + Freddo">❄️ Sole + Freddo</option><option value="🌦️ Variabile">🌦️ Variabile</option><option value="🌤️ Parz Nuvoloso">🌤️ Parz Nuvoloso</option><option value="☁️ Nuvoloso">☁️ Nuvoloso</option><option value="🌥️ Nuv + Freddo">🌥️ Nuv + Freddo</option><option value="🌧️ Pioggia">🌧️ Pioggia</option><option value="🌨️ Piog + Freddo">🌨️ Piog + Freddo</option><option value="⛈️ Temporale">⛈️ Temporale</option><option value="❓ N/D">❓ N/D</option></select>
+                <div class="inp-field" style="flex:1.2"><label>Meteo <span id="meteo-auto-hint" style="font-weight:600; color:#2563eb; margin-left:4px"></span></label>
+                    <select id="i-meteo" onchange="markMeteoManual()"><option value="☀️ Sole">☀️ Sole</option><option value="🔥 Sole + Caldo">🔥 Sole + Caldo</option><option value="❄️ Sole + Freddo">❄️ Sole + Freddo</option><option value="🌦️ Variabile">🌦️ Variabile</option><option value="🌤️ Parz Nuvoloso">🌤️ Parz Nuvoloso</option><option value="☁️ Nuvoloso">☁️ Nuvoloso</option><option value="🌥️ Nuv + Freddo">🌥️ Nuv + Freddo</option><option value="🌧️ Pioggia">🌧️ Pioggia</option><option value="🌨️ Piog + Freddo">🌨️ Piog + Freddo</option><option value="⛈️ Temporale">⛈️ Temporale</option><option value="❓ N/D">❓ N/D</option></select>
                 </div>
                 <div class="inp-field" style="flex:0.3; align-items:center; justify-content:center; padding-bottom:8px">
                     <label style="cursor:pointer; display:flex; flex-direction:column; align-items:center; color:#ef4444" title="Escludi">
@@ -289,8 +290,7 @@
                 </div>
             </div>
                 </div>
-                <div id="meteo-suggest" class="hidden"></div>
-                <div class="cb-row" style="margin-bottom:0">
+                        <div class="cb-row" style="margin-bottom:0">
                     <div class="group-tickets">
                 <div class="t-box"><label>INTERO</label><input type="number" id="q-intero" value="0" onfocus="this.select()"></div>
                 <div class="t-box"><label>RIDOTTO</label><input type="number" id="q-ridotto" value="0" onfocus="this.select()"></div>
@@ -421,12 +421,12 @@
                     <div class="inp-field" style="width:160px">
                         <label>Modalità Analisi</label>
                         <select id="stat-mode" onchange="toggleStatMode()" style="font-weight:700; border-color:var(--primary); color:var(--primary)">
-                            <option value="year">📅 Anno Intero</option>
+                            <option value="year">📅 Stagione Intera</option>
                             <option value="custom">📆 Periodo Personalizz.</option>
                         </select>
                     </div>
-                    <div class="inp-field" id="stat-year-cont" style="width:100px">
-                        <label>Anno</label>
+                    <div class="inp-field" id="stat-year-cont" style="width:120px">
+                        <label>Stagione</label>
                         <select id="stat-year" onchange="renderStats()" style="font-weight:700"></select>
                     </div>
                     <div id="stat-custom-cont" class="hidden" style="display:flex; gap:10px; align-items:flex-end">
@@ -557,7 +557,7 @@
 
 <div id="module-dae" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
     <div class="control-bar">
-        <div class="cb-header"><span class="cb-title">Controllo Defibrillatore (DAE)</span></div>
+        <div class="cb-header"><span class="cb-title cb-title-lg">⚡ Controllo DAE</span></div>
         <div class="cb-row">
             <div class="group-ctx">
                 <div class="inp-field" style="flex:0.5"><label>Data</label><input type="date" id="d-date" class="inp-locked" readonly></div><div class="inp-field" style="flex:0.5"><label>Ora Controllo</label><input type="text" id="d-time" class="inp-locked" readonly></div>
@@ -591,63 +591,9 @@
 </div>
 
 <div id="module-utenze" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
-    <div class="control-bar" id="cb-utenze">
-        <div class="cb-header">
-            <span class="cb-title" id="title-utenze">Registrazione Letture Utenze</span>
-            <button class="btn btn-danger hidden" id="cancel-utenze" style="height:30px; font-size:0.7rem; padding:0 15px" onclick="cancelEditUtenze()">Annulla Modifica</button>
-        </div>
-        
-        <div class="cb-row">
-            <div class="inp-field" style="width:140px; flex:none;">
-                <label>Data</label>
-                <input type="date" id="u-date">
-            </div>
-            <div class="inp-field" style="flex:1;">
-                <label>Tipo Utenza</label>
-                <select id="u-type" onchange="toggleUtenzeMode()">
-                    <option value="⚡ Elettricità">⚡ Elettricità</option>
-                    <option value="💧 Acqua">💧 Acqua (m³)</option>
-                    <option value="🔥 Gas Metano">🔥 Gas Metano (m³)</option>
-                </select>
-            </div>
-            <div id="u-extra-elec-meteo" class="inp-field hidden" style="flex:1;">
-                <label>Meteo Giornata</label>
-                <select id="u-meteo">
-                    <option value="☀️ Sole">☀️ Sole</option>
-                    <option value="⛅ Variabile">⛅ Variabile</option>
-                    <option value="☁️ Nuvoloso">☁️ Nuvoloso</option>
-                    <option value="🌧️ Pioggia">🌧️ Pioggia</option>
-                </select>
-            </div>
-            <div id="u-elec-input" style="display:contents;">
-                <div class="inp-field" style="flex:1">
-                    <label>A1 (F1)</label>
-                    <input type="number" id="u-a1" step="any">
-                </div>
-                <div class="inp-field" style="flex:1">
-                    <label>A2 (F2)</label>
-                    <input type="number" id="u-a2" step="any">
-                </div>
-                <div class="inp-field" style="flex:1">
-                    <label>A3 (F3)</label>
-                    <input type="number" id="u-a3" step="any">
-                </div>
-            </div>
-            <div id="u-single-input" class="inp-field hidden" style="flex:1;">
-                <label>Lettura Contatore</label>
-                <input type="number" id="u-val" placeholder="Es. 12500" step="any">
-            </div>
-            <div id="u-extra-gas" class="inp-field hidden" style="width:100px; flex:none;">
-                <label>Temp. (°C)</label>
-                <input type="number" id="u-temp" placeholder="°C" step="0.1">
-            </div>
-            <div class="inp-field" style="flex:1.5;">
-                <label>Note</label>
-                <input type="text" id="u-note" placeholder="Opzionale...">
-            </div>
-            <div style="width:120px; flex:none;">
-                <button id="btn-save-utenze" class="btn btn-primary" style="height:44px; width:100%" onclick="saveUtenze()">SALVA</button>
-            </div>
+    <div class="control-bar" id="hdr-utenze" style="padding:16px 20px">
+        <div class="cb-header" style="margin:0">
+            <span class="cb-title cb-title-lg">📊 Utenze</span>
         </div>
     </div>
 
@@ -657,6 +603,51 @@
             <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-charts" onclick="switchSubViewUtenze('charts')">Grafici</button>
             <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-riepilogo" onclick="switchSubViewUtenze('riepilogo')">Riepilogo</button>
             <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-archive" onclick="switchSubViewUtenze('archive')">Archivio</button>
+            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-register" onclick="switchSubViewUtenze('register')">➕ Registra Utenze</button>
+        </div>
+
+        <!-- Utenze Sub-View: Registrazione -->
+        <div id="sub-u-register" class="hidden">
+            <div class="glass-card" id="cb-utenze" style="padding:20px">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px">
+                    <h3 style="margin:0; font-size:1.1rem" id="title-utenze">➕ Registra Utenze</h3>
+                    <button class="btn btn-danger hidden" id="cancel-utenze" style="height:34px; font-size:0.75rem; padding:0 15px" onclick="cancelEditUtenze()">Annulla Modifica</button>
+                </div>
+                <div class="cb-row">
+                    <div class="inp-field" style="width:150px; flex:none;"><label>Data</label><input type="date" id="u-date" onchange="onUtenzeDateChange()"></div>
+                    <div class="inp-field" id="u-f-meteo" style="flex:1; min-width:170px"><label>Meteo Giornata</label>
+                        <select id="u-meteo" onchange="markUtenzeMeteo()">
+                            <option value="☀️ Sole">☀️ Sole</option>
+                            <option value="⛅ Variabile">⛅ Variabile</option>
+                            <option value="☁️ Nuvoloso">☁️ Nuvoloso</option>
+                            <option value="🌧️ Pioggia">🌧️ Pioggia</option>
+                        </select>
+                    </div>
+                    <div class="inp-field" id="u-f-temp" style="width:150px; flex:none;"><label>Temp. media (°C)</label><input type="number" id="u-temp" placeholder="°C" step="0.1" oninput="markUtenzeTemp()"></div>
+                    <div class="inp-field" style="flex:2; min-width:200px"><label>Note</label><input type="text" id="u-note" placeholder="Opzionale..."></div>
+                    <div style="width:120px; flex:none;"><button id="btn-save-utenze" class="btn btn-primary" style="height:44px; width:100%" onclick="saveUtenze()">SALVA</button></div>
+                </div>
+                <div class="u-auto-hint" id="u-auto-hint"></div>
+
+                <div class="u-reg-grid">
+                    <div class="u-reg-card" id="u-card-elec" style="border-left:4px solid #eab308">
+                        <h4><span>⚡ Elettricità (kWh)</span><span class="u-live" id="u-elec-total"></span></h4>
+                        <div class="cb-row" style="margin-bottom:0">
+                            <div class="inp-field"><label>A1 (F1)</label><input type="number" id="u-a1" step="any" oninput="updateUtenzeElecTotal()"></div>
+                            <div class="inp-field"><label>A2 (F2)</label><input type="number" id="u-a2" step="any" oninput="updateUtenzeElecTotal()"></div>
+                            <div class="inp-field"><label>A3 (F3)</label><input type="number" id="u-a3" step="any" oninput="updateUtenzeElecTotal()"></div>
+                        </div>
+                    </div>
+                    <div class="u-reg-card" id="u-card-water" style="border-left:4px solid #3b82f6">
+                        <h4><span>💧 Acqua (m³)</span></h4>
+                        <div class="inp-field"><label>Lettura contatore</label><input type="number" id="u-val-water" placeholder="Es. 12500" step="any"></div>
+                    </div>
+                    <div class="u-reg-card" id="u-card-gas" style="border-left:4px solid #ef4444">
+                        <h4><span>🔥 Gas Metano (m³)</span></h4>
+                        <div class="inp-field"><label>Lettura contatore</label><input type="number" id="u-val-gas" placeholder="Es. 12500" step="any"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Utenze Sub-View: Overview (KPI) -->
@@ -1440,13 +1431,14 @@
 
 <!-- ============ MODULO: NOTE (Bacheca collaboratori) ============ -->
 <div id="module-note" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
-    <div class="control-bar">
-        <div class="cb-header">
+    <div class="control-bar" style="padding:16px 20px">
+        <div class="cb-header" style="margin:0">
             <span class="cb-title cb-title-lg">📌 Bacheca</span>
-            <button class="btn btn-primary" style="height:38px; padding:0 18px" onclick="openNoteModal()">+ Nuova Nota</button>
         </div>
-        <div class="cb-row" style="flex-wrap:wrap">
-            <div class="inp-field" style="flex:1"><label>Rivolto a</label>
+    </div>
+    <div class="scroll-area">
+        <div class="filter-row" style="justify-content:flex-start; align-items:flex-end; background:rgba(255,255,255,0.4); padding:15px; border-radius:16px; border:var(--glass-border); margin-bottom:22px; gap:16px">
+            <div class="inp-field" style="width:260px; flex:none"><label>Rivolto a</label>
                 <select id="note-filter-destinatario" onchange="renderNote()">
                     <option value="all">Tutti i destinatari</option>
                     <option value="Tutti">Tutti</option>
@@ -1462,12 +1454,11 @@
                     <option value="Sangiorgi">Sangiorgi</option>
                 </select>
             </div>
-            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#475569; cursor:pointer; padding-top:22px">
+            <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#475569; cursor:pointer; height:44px">
                 <input type="checkbox" id="note-show-expired" onchange="renderNote()"> Mostra anche le note scadute
             </label>
+            <button class="btn btn-primary" style="height:44px; padding:0 22px; margin-left:auto" onclick="openNoteModal()">+ Nuova Nota</button>
         </div>
-    </div>
-    <div class="scroll-area">
         <div id="note-board"><div id="note-feed"></div></div>
     </div>
 </div>
@@ -1631,31 +1622,33 @@ function startListening() {
 
 window.populateStatFilters = () => {
     if(!dataIngressi.length) return;
-    const years = [...new Set(dataIngressi.map(d => new Date(d.date).getFullYear()))].sort().reverse();
+    // Stagioni sportive: 1 settembre - 31 agosto. Il valore e' l'anno di inizio stagione (es. 2026 = 2026/27)
+    const years = [...new Set(dataIngressi.map(d => getSeasonStartYear(d.date)))].sort().reverse();
     const yearSel = document.getElementById('stat-year');
-    
-    // FIX: Populate the main year selector options
+
     const currentVal = yearSel.value;
     yearSel.innerHTML = "";
     years.forEach(y => {
         const opt = document.createElement('option');
         opt.value = y;
-        opt.innerText = y;
+        opt.innerText = getSeasonLabel(y);
         yearSel.appendChild(opt);
     });
 
     // Multi-Select Logic (Replacing <select>)
     const msList = document.getElementById('ms-compare-list');
-    msList.innerHTML = `<div class="ms-option"><input type="checkbox" value="avg" checked onchange="renderStats()"><span>📊 Media Storica</span></div>`;
+    const prevChecked = new Set(Array.from(msList.querySelectorAll('input:checked')).map(i => i.value));
+    const firstBuild = msList.children.length === 0;
+    msList.innerHTML = `<div class="ms-option"><input type="checkbox" value="avg" ${(firstBuild || prevChecked.has('avg')) ? 'checked' : ''} onchange="renderStats()"><span>📊 Media Storica</span></div>`;
     years.forEach(y => {
-        msList.innerHTML += `<div class="ms-option"><input type="checkbox" value="${y}" onchange="renderStats()"><span>${y}</span></div>`;
+        msList.innerHTML += `<div class="ms-option"><input type="checkbox" value="${y}" ${prevChecked.has(String(y)) ? 'checked' : ''} onchange="renderStats()"><span>${getSeasonLabel(y)}</span></div>`;
     });
 
-    const todayYear = new Date().getFullYear();
+    const todaySeason = getSeasonStartYear(fmtDateISO(new Date()));
     if(currentVal && years.includes(parseInt(currentVal))) {
         yearSel.value = currentVal;
-    } else if(years.includes(todayYear)) {
-        yearSel.value = todayYear;
+    } else if(years.includes(todaySeason)) {
+        yearSel.value = todaySeason;
     } else {
         yearSel.value = years[0];
     }
@@ -1686,8 +1679,8 @@ window.toggleStatMode = () => {
         cCont.style.display = 'flex';
         if(!document.getElementById('stat-date-start').value) {
             const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+            const firstDay = fmtDateISO(new Date(now.getFullYear(), now.getMonth(), 1));
+            const lastDay = fmtDateISO(new Date(now.getFullYear(), now.getMonth() + 1, 0));
             document.getElementById('stat-date-start').value = firstDay;
             document.getElementById('stat-date-end').value = lastDay;
         }
@@ -2210,16 +2203,17 @@ window.renderStats = () => {
 
     let startDate, endDate, yearMain;
     if(mode === 'year') {
-        yearMain = parseInt(document.getElementById('stat-year').value) || new Date().getFullYear(); // Safe Default
-        startDate = new Date(yearMain, 0, 1);
-        endDate = new Date(yearMain, 11, 31);
+        // yearMain = anno di INIZIO della stagione sportiva (1 set - 31 ago)
+        yearMain = parseInt(document.getElementById('stat-year').value) || getSeasonStartYear(fmtDateISO(new Date())); // Safe Default
+        startDate = new Date(yearMain, 8, 1);
+        endDate = new Date(yearMain + 1, 7, 31);
     } else {
         const sVal = document.getElementById('stat-date-start').value;
         const eVal = document.getElementById('stat-date-end').value;
         if(!sVal || !eVal) return;
-        startDate = new Date(sVal);
-        endDate = new Date(eVal);
-        yearMain = startDate.getFullYear(); 
+        startDate = new Date(sVal + 'T00:00:00');
+        endDate = new Date(eVal + 'T00:00:00');
+        yearMain = getSeasonStartYear(sVal); 
     }
 
     const filteredSource = dataIngressi.filter(d => {
@@ -2260,13 +2254,15 @@ window.renderStats = () => {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentDay = today.getDate();
-    const isCurrentYear = (yearMain === today.getFullYear());
+    const isCurrentYear = (yearMain === getSeasonStartYear(fmtDateISO(today)));
+    const monthOf = (dateStr) => parseInt(dateStr.slice(5, 7), 10) - 1;       // 0-11 (mese calendario)
+    const seasonIdx = (m) => (m + 4) % 12;                                    // Set=0 ... Ago=11
 
     if(mode === 'year') {
-        labels = ["Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago","Set","Ott","Nov","Dic"];
+        labels = ["Set","Ott","Nov","Dic","Gen","Feb","Mar","Apr","Mag","Giu","Lug","Ago"];
         mainData = new Array(12).fill(0);
-        fMain.forEach(d => { mainData[new Date(d.date).getMonth()] += d.totale; });
-        document.getElementById('yoy-title').innerText = `Andamento Stagionale (${yearMain})`;
+        fMain.forEach(d => { mainData[seasonIdx(monthOf(d.date))] += d.totale; });
+        document.getElementById('yoy-title').innerText = `Andamento Stagionale (${getSeasonLabel(yearMain)})`;
     } else {
         const days = [];
         for(let d=new Date(startDate); d<=endDate; d.setDate(d.getDate()+1)) {
@@ -2281,50 +2277,43 @@ window.renderStats = () => {
         document.getElementById('yoy-title').innerText = `Andamento Periodo (${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()})`;
     }
 
-    const datasets = [{ label: mode==='year' ? `Anno ${yearMain}` : 'Periodo Selezionato', data: mainData, borderColor: '#2563eb', backgroundColor: bgMain, tension: 0.4, fill: true }];
+    const datasets = [{ label: mode==='year' ? `Stagione ${getSeasonLabel(yearMain)}` : 'Periodo Selezionato', data: mainData, borderColor: '#2563eb', backgroundColor: bgMain, tension: 0.4, fill: true }];
 
     // LOOP THROUGH COMPARISONS
     selectedComps.forEach((compVal, idx) => {
         let compData = [];
-        let compLabel = compVal === 'avg' ? 'Media Storica' : `Anno ${compVal}`;
+        let compLabel = compVal === 'avg' ? 'Media Storica' : `Stagione ${getSeasonLabel(parseInt(compVal))}`;
         let col = getCompColor(idx);
         let bgCol = isBar ? col : 'transparent'; 
 
         if(mode === 'year') {
-            for(let m=0; m<12; m++) {
+            for(let i=0; i<12; i++) {
+                const m = (i + 8) % 12; // indice mese calendario: Set=8 ... Ago=7
                 let sum=0, count=0;
                 const limitDay = (isCurrentYear && m === currentMonth) ? currentDay : 32;
+                const inMonthLimit = (d) => monthOf(d.date) === m && parseInt(d.date.slice(8, 10), 10) <= limitDay;
 
                 if(compVal === 'avg') {
-                    const allYears = [...new Set(filteredSource.map(d=>new Date(d.date).getFullYear()))].filter(y => y !== yearMain);
-                    allYears.forEach(y => {
-                        const val = filteredSource.filter(d => {
-                            const dd = new Date(d.date);
-                            return dd.getFullYear() === y && dd.getMonth() === m && dd.getDate() <= limitDay;
-                        }).reduce((a,b)=>a+b.totale,0);
+                    const allSeasons = [...new Set(filteredSource.map(d => getSeasonStartYear(d.date)))].filter(y => y !== yearMain);
+                    allSeasons.forEach(y => {
+                        const val = filteredSource.filter(d => getSeasonStartYear(d.date) === y && inMonthLimit(d)).reduce((a,b)=>a+b.totale,0);
                         if(val > 0) { sum += val; count++; }
                     });
                 } else {
                     const y = parseInt(compVal);
-                    sum = filteredSource.filter(d => {
-                        const dd = new Date(d.date);
-                        return dd.getFullYear() === y && dd.getMonth() === m && dd.getDate() <= limitDay;
-                    }).reduce((a,b)=>a+b.totale,0);
+                    sum = filteredSource.filter(d => getSeasonStartYear(d.date) === y && inMonthLimit(d)).reduce((a,b)=>a+b.totale,0);
                     count = 1;
                 }
                 compData.push(count>0 ? sum/count : 0);
             }
         } else {
-            // CUSTOM RANGE LOGIC
+            // CUSTOM RANGE LOGIC (confronto per stesso giorno/mese nelle altre stagioni)
             const days = [];
             for(let d=new Date(startDate); d<=endDate; d.setDate(d.getDate()+1)) days.push(new Date(d));
 
-            // Build Hist Map
-            const histMap = {}; 
+            const histMap = {};
             filteredSource.forEach(d => {
-                const dDate = new Date(d.date);
-                if(dDate.getFullYear() === yearMain) return; 
-                const k = `${dDate.getMonth()}-${dDate.getDate()}`;
+                const k = `${monthOf(d.date)}-${parseInt(d.date.slice(8, 10), 10)}`;
                 if(!histMap[k]) histMap[k] = [];
                 histMap[k].push(d);
             });
@@ -2333,24 +2322,25 @@ window.renderStats = () => {
                 const month = d.getMonth();
                 const day = d.getDate();
                 const k = `${month}-${day}`;
-                
+                const daySeason = getSeasonStartYear(getStrDate(d));
+
                 if(compVal === 'avg') {
                     let sum = 0, count = 0;
                     if(histMap[k]) {
-                        const yearsInDay = [...new Set(histMap[k].map(x=>new Date(x.date).getFullYear()))];
-                        yearsInDay.forEach(y => {
-                            const val = histMap[k].filter(x => new Date(x.date).getFullYear() === y).reduce((a,b)=>a+b.totale,0);
-                            sum += val; count++;
+                        const others = histMap[k].filter(x => getSeasonStartYear(x.date) !== daySeason);
+                        const seasonsInDay = [...new Set(others.map(x => getSeasonStartYear(x.date)))];
+                        seasonsInDay.forEach(y => {
+                            sum += others.filter(x => getSeasonStartYear(x.date) === y).reduce((a,b)=>a+b.totale,0);
+                            count++;
                         });
                     }
                     compData.push(count>0 ? sum/count : 0);
                 } else {
+                    // stesso giorno/mese nella stagione scelta (set-dic -> anno di inizio, gen-ago -> anno successivo)
                     const y = parseInt(compVal);
-                    const val = filteredSource.filter(x => {
-                        const xd = new Date(x.date);
-                        return xd.getFullYear() === y && xd.getMonth() === month && xd.getDate() === day;
-                    }).reduce((a,b)=>a+b.totale, 0);
-                    compData.push(val);
+                    const calYear = month >= 8 ? y : y + 1;
+                    const key = `${calYear}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+                    compData.push((dataMap[key] || []).reduce((a,b)=>a+b.totale, 0));
                 }
             });
         }
@@ -2395,9 +2385,9 @@ window.renderStats = () => {
         selectedComps.forEach((compVal, idx) => {
             let compSet = [];
             if(compVal === 'avg') {
-                 compSet = filteredSource.filter(d => new Date(d.date).getFullYear() !== yearMain);
+                 compSet = filteredSource.filter(d => getSeasonStartYear(d.date) !== yearMain);
             } else {
-                 compSet = filteredSource.filter(d => new Date(d.date).getFullYear() === parseInt(compVal));
+                 compSet = filteredSource.filter(d => getSeasonStartYear(d.date) === parseInt(compVal));
             }
             const compDataWeekly = weekLabels.map((_, i) => {
                 let subset = compSet.filter(d => new Date(d.date).getDay() === getJsDay(i));
@@ -2405,7 +2395,7 @@ window.renderStats = () => {
             });
             
             weekDatasets.push({
-                label: (compVal === 'avg' ? 'Media' : compVal) + ' (Tot)',
+                label: (compVal === 'avg' ? 'Media' : getSeasonLabel(parseInt(compVal))) + ' (Tot)',
                 data: compDataWeekly,
                 backgroundColor: getCompColor(idx),
                 stack: 'comp'+idx
@@ -2424,12 +2414,12 @@ window.renderStats = () => {
         selectedComps.forEach((compVal, idx) => {
             let compSet = [];
             if(compVal === 'avg') {
-                 compSet = filteredSource.filter(d => new Date(d.date).getFullYear() !== yearMain);
+                 compSet = filteredSource.filter(d => getSeasonStartYear(d.date) !== yearMain);
             } else {
-                 compSet = filteredSource.filter(d => new Date(d.date).getFullYear() === parseInt(compVal));
+                 compSet = filteredSource.filter(d => getSeasonStartYear(d.date) === parseInt(compVal));
             }
             weekDatasets.push({
-                label: compVal === 'avg' ? 'Media' : compVal,
+                label: compVal === 'avg' ? 'Media' : getSeasonLabel(parseInt(compVal)),
                 data: calcWeekly(compSet),
                 borderColor: getCompColor(idx),
                 borderDash: [5,5],
@@ -2836,275 +2826,78 @@ window.resetDaeFilter = () => {
 };
 
 // UTENZE
-window.toggleUtenzeMode = () => {
-    const type = document.getElementById('u-type').value;
-    const isSingle = type !== '⚡ Elettricità';
-    document.getElementById('u-single-input').classList.toggle('hidden', !isSingle);
-    const isElec = type === '⚡ Elettricità';
-    document.getElementById('u-elec-input').style.display = isElec ? 'contents' : 'none';
-    document.getElementById('u-extra-elec-meteo').classList.toggle('hidden', !isElec);
-    const isGas = type === '🔥 Gas Metano';
-    document.getElementById('u-extra-gas').classList.toggle('hidden', !isGas);
-};
-window.toggleUtenzeMode();
+let editTypeUtenze = null;
+const U_TYPES = { elec: '⚡ Elettricità', water: '💧 Acqua', gas: '🔥 Gas Metano' };
+function setUtenzeEditLayout(type) {
+    // type = null -> modulo completo (3 utenze); altrimenti mostra solo l'utenza in modifica
+    document.getElementById('u-card-elec').classList.toggle('hidden', !!type && type !== U_TYPES.elec);
+    document.getElementById('u-card-water').classList.toggle('hidden', !!type && type !== U_TYPES.water);
+    document.getElementById('u-card-gas').classList.toggle('hidden', !!type && type !== U_TYPES.gas);
+    document.getElementById('u-f-meteo').classList.toggle('hidden', !!type && type !== U_TYPES.elec);
+    document.getElementById('u-f-temp').classList.toggle('hidden', !!type && type === U_TYPES.water);
+}
+function resetUtenzeForm() {
+    ['u-a1','u-a2','u-a3','u-val-water','u-val-gas','u-note'].forEach(id => document.getElementById(id).value = '');
+    updateUtenzeElecTotal();
+}
 window.saveUtenze = async () => {
-    const d = document.getElementById('u-date').value; const type = document.getElementById('u-type').value; const note = document.getElementById('u-note').value;
-    let p = { date: d, type, note };
-    if(type === '⚡ Elettricità') {
-        const a1 = parseFloat(document.getElementById('u-a1').value)||0;
-        const a2 = parseFloat(document.getElementById('u-a2').value)||0;
-        const a3 = parseFloat(document.getElementById('u-a3').value)||0;
-        p.a1 = a1; p.a2 = a2; p.a3 = a3; p.val = a1+a2+a3;
-        p.meteo = document.getElementById('u-meteo').value;
-    } else {
-        p.val = parseFloat(document.getElementById('u-val').value);
-        if(type === '🔥 Gas Metano') { p.temp = parseFloat(document.getElementById('u-temp').value) || null; }
-    }
-    if(!d || (type!=='⚡ Elettricità' && isNaN(p.val))) return showToast("Dati mancanti", "error");
+    const d = document.getElementById('u-date').value;
+    const note = document.getElementById('u-note').value;
+    const meteo = document.getElementById('u-meteo').value;
+    const tempRaw = parseFloat(document.getElementById('u-temp').value);
+    const temp = isNaN(tempRaw) ? null : tempRaw;
+    if (!d) return showToast("Data mancante", "error");
+    const num = (id) => { const v = document.getElementById(id).value; return v === '' ? null : parseFloat(v); };
+
+    const docs = [];
+    const a1 = num('u-a1'), a2 = num('u-a2'), a3 = num('u-a3');
+    const elecFilled = [a1, a2, a3].some(x => x !== null && !isNaN(x));
+    const water = num('u-val-water'), gas = num('u-val-gas');
+    const include = (type) => !editTypeUtenze || editTypeUtenze === type;
+
+    if (include(U_TYPES.elec) && elecFilled) docs.push({ date: d, type: U_TYPES.elec, note, a1: a1||0, a2: a2||0, a3: a3||0, val: (a1||0)+(a2||0)+(a3||0), meteo, temp });
+    if (include(U_TYPES.water) && water !== null && !isNaN(water)) docs.push({ date: d, type: U_TYPES.water, note, val: water });
+    if (include(U_TYPES.gas) && gas !== null && !isNaN(gas)) docs.push({ date: d, type: U_TYPES.gas, note, val: gas, temp });
+    if (!docs.length) return showToast("Inserisci almeno una lettura", "error");
+
     try {
-        if(editIdUtenze) {
-            await updateDoc(doc(db, "utenze_log", editIdUtenze), p); showToast("Modifica salvata!"); cancelEditUtenze();
+        if (editIdUtenze) {
+            await updateDoc(doc(db, "utenze_log", editIdUtenze), docs[0]);
+            showToast("Modifica salvata!"); cancelEditUtenze(); switchSubViewUtenze('archive');
         } else {
-            await addDoc(collection(db, "utenze_log"), p); showToast("Salvato"); document.querySelectorAll('#cb-utenze input:not([type=date])').forEach(i=>i.value='');
+            for (const p of docs) await addDoc(collection(db, "utenze_log"), p);
+            showToast(docs.length > 1 ? `Salvate ${docs.length} letture` : "Salvato");
+            resetUtenzeForm();
         }
     } catch(e){ showToast(e.message, "error"); }
 };
-
 window.editUtenze = (id) => {
-    const d = dataUtenze.find(x => x.id === id); if(!d) return; editIdUtenze = id;
-    document.getElementById('u-date').value = d.date; document.getElementById('u-type').value = d.type; document.getElementById('u-note').value = d.note || '';
-    toggleUtenzeMode();
-    if(d.type === '⚡ Elettricità') {
-        document.getElementById('u-a1').value = d.a1; document.getElementById('u-a2').value = d.a2; document.getElementById('u-a3').value = d.a3; document.getElementById('u-meteo').value = d.meteo || '☀️ Sole';
+    const d = dataUtenze.find(x => x.id === id); if(!d) return; editIdUtenze = id; editTypeUtenze = d.type;
+    switchSubViewUtenze('register');
+    setUtenzeEditLayout(d.type);
+    document.getElementById('u-date').value = d.date; document.getElementById('u-note').value = d.note || '';
+    if(d.type === U_TYPES.elec) {
+        document.getElementById('u-a1').value = d.a1; document.getElementById('u-a2').value = d.a2; document.getElementById('u-a3').value = d.a3;
+        document.getElementById('u-meteo').value = d.meteo || '☀️ Sole'; document.getElementById('u-temp').value = d.temp != null ? d.temp : '';
+        updateUtenzeElecTotal();
+    } else if(d.type === U_TYPES.water) {
+        document.getElementById('u-val-water').value = d.val;
     } else {
-        document.getElementById('u-val').value = d.val;
-        if(d.type === '🔥 Gas Metano') { document.getElementById('u-temp').value = d.temp || ''; }
+        document.getElementById('u-val-gas').value = d.val; document.getElementById('u-temp').value = d.temp != null ? d.temp : '';
     }
-    document.getElementById('title-utenze').innerText = "Modifica Utenza"; document.getElementById('btn-save-utenze').innerText = "AGGIORNA"; document.getElementById('btn-save-utenze').style.background = "#f59e0b"; document.getElementById('cb-utenze').classList.add('editing'); document.getElementById('cancel-utenze').classList.remove('hidden'); window.scrollTo({top:0, behavior:'smooth'});
+    document.getElementById('u-auto-hint').innerText = '';
+    document.getElementById('title-utenze').innerText = "✏️ Modifica Utenza"; document.getElementById('btn-save-utenze').innerText = "AGGIORNA"; document.getElementById('btn-save-utenze').style.background = "#f59e0b"; document.getElementById('cb-utenze').classList.add('editing'); document.getElementById('cancel-utenze').classList.remove('hidden');
 };
 window.cancelEditUtenze = () => {
-    editIdUtenze = null; document.getElementById('title-utenze').innerText = "Registrazione Letture Utenze"; document.getElementById('btn-save-utenze').innerText = "SALVA"; document.getElementById('btn-save-utenze').style.background = ""; document.getElementById('cb-utenze').classList.remove('editing'); document.getElementById('cancel-utenze').classList.add('hidden'); document.querySelectorAll('#cb-utenze input:not([type=date])').forEach(i=>i.value=''); toggleUtenzeMode();
+    editIdUtenze = null; editTypeUtenze = null;
+    document.getElementById('title-utenze').innerText = "➕ Registra Utenze"; document.getElementById('btn-save-utenze').innerText = "SALVA"; document.getElementById('btn-save-utenze').style.background = ""; document.getElementById('cb-utenze').classList.remove('editing'); document.getElementById('cancel-utenze').classList.add('hidden');
+    setUtenzeEditLayout(null); resetUtenzeForm(); document.getElementById('u-temp').value = '';
+    utenzeMeteoManual = false; utenzeTempManual = false; updateUtenzeAuto();
 };
-
-// NEW FUNCTION: Delete all records for a specific day
-window.deleteUtenzeDate = async (date) => {
-    if(!confirm(`Vuoi cancellare TUTTI i dati del giorno ${date.split('-').reverse().join('/')}?`)) return;
-    const toDelete = dataUtenze.filter(d => d.date === date);
-    if (toDelete.length === 0) return;
-    
-    try {
-        const promises = toDelete.map(d => deleteDoc(doc(db, "utenze_log", d.id)));
-        await Promise.all(promises);
-        showToast("Giornata eliminata");
-    } catch(e) { showToast(e.message, "error"); }
-};
-
-// ============ INCASSI: funzioni CRUD ============
-function numVal(id) { const el = document.getElementById(id); if (!el) return 0; const v = parseFloat(el.value); return isNaN(v) ? 0 : v; }
-function fmtEUR(v) { return '€ ' + (v||0).toLocaleString('it-IT', {minimumFractionDigits:2, maximumFractionDigits:2}); }
-const EPS = 0.01; // tolleranza di arrotondamento per la riconciliazione
-
-const SEASONAL_FIELD_IDS = ['inc-ing-estfer-intero','inc-ing-estfer-ridotto','inc-ing-estsab-intero','inc-ing-estsab-ridotto','inc-ing-estdom-intero','inc-ing-estdom-ridotto','inc-abb-estivi'];
-
-function isSummerMonth(dateStr) {
-    if (!dateStr) return false;
-    const m = parseInt(dateStr.slice(5, 7), 10);
-    return m >= 5 && m <= 9;
-}
-
-window.toggleSeasonalFields = () => {
-    const dateStr = document.getElementById('inc-date').value;
-    const section = document.getElementById('inc-seasonal-section');
-    const show = isSummerMonth(dateStr);
-    section.style.display = show ? '' : 'none';
-    if (!show) { SEASONAL_FIELD_IDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; }); }
-    updateIncassiLiveTotal();
-};
-
-window.updateIncassiLiveTotal = () => {
-    const n4Tot = numVal('inc-n4-tot');
-    const ssTot = numVal('inc-ss-tot');
-    const esenteDetailTot = n4Tot + ssTot;
-    const n4Pos = numVal('inc-n4-pos'), n4Sat = numVal('inc-n4-satispay'), n4Bon = numVal('inc-n4-bonifico'), n4Cnt = numVal('inc-n4-contanti');
-    const n4PaySum = n4Pos + n4Sat + n4Bon + n4Cnt;
-
-    const ingressiTot = numVal('inc-ing-int-intero') + numVal('inc-ing-int-ridotto')
-        + numVal('inc-ing-estfer-intero') + numVal('inc-ing-estfer-ridotto')
-        + numVal('inc-ing-estsab-intero') + numVal('inc-ing-estsab-ridotto')
-        + numVal('inc-ing-estdom-intero') + numVal('inc-ing-estdom-ridotto');
-    const abbonamentiTot = numVal('inc-abb11-intero') + numVal('inc-abb11-ridotto')
-        + numVal('inc-abb-mensile-intero') + numVal('inc-abb-mensile-ridotto')
-        + numVal('inc-abb-trim-intero') + numVal('inc-abb-trim-ridotto')
-        + numVal('inc-abb-sem-intero') + numVal('inc-abb-sem-ridotto')
-        + numVal('inc-abb-ann-intero') + numVal('inc-abb-ann-ridotto')
-        + numVal('inc-abb-estivi');
-    const accessori5Tot = numVal('inc-acc-crediti') + numVal('inc-acc-tessere') + numVal('inc-acc-cuffie') + numVal('inc-acc-noleggio') + numVal('inc-acc-altro');
-    const fatSpaziAcqua = numVal('inc-fat-spazi-acqua'), fatAltro = numVal('inc-fat-altro');
-    const fattureTot = fatSpaziAcqua + fatAltro;
-    const ivaDetailTot = ingressiTot + abbonamentiTot + accessori5Tot + fattureTot;
-
-    const ivaPos = numVal('inc-iva-pos'), ivaSat = numVal('inc-iva-satispay'), ivaBon = numVal('inc-iva-bonifico'), ivaCnt = numVal('inc-iva-contanti');
-    const ivaPaySum = ivaPos + ivaSat + ivaBon + ivaCnt;
-
-    const borselliniCorrezioni = numVal('inc-borsellini-correzioni');
-    const ivaNetTarget = ivaDetailTot - borselliniCorrezioni; // netto da riconciliare con i metodi di pagamento
-    const incassoTotale = esenteDetailTot + ivaDetailTot - borselliniCorrezioni;
-
-    document.getElementById('inc-live-total').innerText = fmtEUR(incassoTotale);
-    const esenteCalcEl = document.getElementById('inc-esente-calc-tot');
-    if (esenteCalcEl) esenteCalcEl.innerText = fmtEUR(esenteDetailTot);
-    const ivaCalcEl = document.getElementById('inc-iva-calc-tot');
-    if (ivaCalcEl) ivaCalcEl.innerText = borselliniCorrezioni > 0
-        ? `${fmtEUR(ivaDetailTot)} − ${fmtEUR(borselliniCorrezioni)} = ${fmtEUR(ivaNetTarget)}`
-        : fmtEUR(ivaDetailTot);
-    const accCalcEl = document.getElementById('inc-accessori-calc-tot');
-    if (accCalcEl) accCalcEl.innerText = fmtEUR(accessori5Tot);
-    const fatCalcEl = document.getElementById('inc-fatture-calc-tot');
-    if (fatCalcEl) fatCalcEl.innerText = fmtEUR(fattureTot);
-
-    // Indicatori di riconciliazione
-    const n4Check = document.getElementById('inc-n4-check');
-    if (n4Check) {
-        if (esenteDetailTot === 0 && n4PaySum === 0) { n4Check.innerText = ''; }
-        else if (Math.abs(n4PaySum - esenteDetailTot) < EPS) { n4Check.innerHTML = `<span style="color:#16a34a">✅ Metodi di pagamento combaciano (${fmtEUR(n4PaySum)})</span>`; }
-        else { n4Check.innerHTML = `<span style="color:#dc2626">⚠️ Metodi pagamento: ${fmtEUR(n4PaySum)} — differenza ${fmtEUR(n4PaySum - esenteDetailTot)}</span>`; }
-    }
-    const ivaCheck = document.getElementById('inc-iva-check');
-    if (ivaCheck) {
-        if (ivaNetTarget === 0 && ivaPaySum === 0) { ivaCheck.innerText = ''; }
-        else if (Math.abs(ivaPaySum - ivaNetTarget) < EPS) { ivaCheck.innerHTML = `<span style="color:#16a34a">✅ Metodi di pagamento combaciano (${fmtEUR(ivaPaySum)})</span>`; }
-        else { ivaCheck.innerHTML = `<span style="color:#dc2626">⚠️ Metodi pagamento: ${fmtEUR(ivaPaySum)} — differenza ${fmtEUR(ivaPaySum - ivaNetTarget)}</span>`; }
-    }
-
-    return { n4Tot, ssTot, esenteDetailTot, n4Pos, n4Sat, n4Bon, n4Cnt, n4PaySum, ingressiTot, abbonamentiTot, accessori5Tot, fatSpaziAcqua, fatAltro, fattureTot, ivaDetailTot, ivaNetTarget, ivaPos, ivaSat, ivaBon, ivaCnt, ivaPaySum, borselliniCorrezioni, incassoTotale };
-};
-
-function clearIncassiForm() {
-    document.querySelectorAll('#sub-inc-register input:not([type=date])').forEach(i => i.value = '');
-    toggleSeasonalFields();
-}
-
-window.loadIncassiDayIntoForm = () => {
-    toggleSeasonalFields();
-    if (editIdIncassi) return; // non sovrascrivere durante una modifica esplicita
-    const d = document.getElementById('inc-date').value;
-    const existing = dataIncassi.find(x => x.date === d);
-    if (existing) { fillIncassiForm(existing, false); showToast("Dati esistenti caricati per questa data"); }
-    else { clearIncassiForm(); }
-};
-
-const INCASSI_FIELD_MAP = {
-    'inc-n4-tot':'corsi_n4_tot', 'inc-ss-tot':'societa_sportive_tot', 'inc-n4-pos':'corsi_n4_pos', 'inc-n4-satispay':'corsi_n4_satispay', 'inc-n4-bonifico':'corsi_n4_bonifico', 'inc-n4-contanti':'corsi_n4_contanti',
-    'inc-ing-int-intero':'ing_int_intero', 'inc-ing-int-ridotto':'ing_int_ridotto',
-    'inc-abb11-intero':'abb11_intero', 'inc-abb11-ridotto':'abb11_ridotto',
-    'inc-abb-mensile-intero':'abb_mensile_intero', 'inc-abb-mensile-ridotto':'abb_mensile_ridotto',
-    'inc-abb-trim-intero':'abb_trimestrale_intero', 'inc-abb-trim-ridotto':'abb_trimestrale_ridotto',
-    'inc-abb-sem-intero':'abb_semestrale_intero', 'inc-abb-sem-ridotto':'abb_semestrale_ridotto',
-    'inc-abb-ann-intero':'abb_annuale_intero', 'inc-abb-ann-ridotto':'abb_annuale_ridotto',
-    'inc-ing-estfer-intero':'ing_est_fer_intero', 'inc-ing-estfer-ridotto':'ing_est_fer_ridotto',
-    'inc-ing-estsab-intero':'ing_est_sab_intero', 'inc-ing-estsab-ridotto':'ing_est_sab_ridotto',
-    'inc-ing-estdom-intero':'ing_est_dom_intero', 'inc-ing-estdom-ridotto':'ing_est_dom_ridotto',
-    'inc-abb-estivi':'abb_estivi',
-    'inc-acc-crediti':'acc_crediti', 'inc-acc-tessere':'acc_tessere', 'inc-acc-cuffie':'acc_cuffie', 'inc-acc-noleggio':'acc_noleggio', 'inc-acc-altro':'acc_altro',
-    'inc-fat-spazi-acqua':'fatture_spazi_acqua', 'inc-fat-altro':'fatture_altro',
-    'inc-iva-pos':'iva_pos', 'inc-iva-satispay':'iva_satispay', 'inc-iva-bonifico':'iva_bonifico', 'inc-iva-contanti':'iva_contanti',
-    'inc-borsellini-correzioni':'borsellini_correzioni',
-};
-
-function fillIncassiForm(d, isEditMode) {
-    document.getElementById('inc-date').value = d.date;
-    document.getElementById('inc-note').value = d.note || '';
-    toggleSeasonalFields();
-    Object.entries(INCASSI_FIELD_MAP).forEach(([elId, field]) => {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        const v = d[field];
-        el.value = (v === undefined || v === null || v === 0) ? '' : v;
-    });
-    updateIncassiLiveTotal();
-    if (isEditMode) {
-        document.getElementById('title-incassi').innerText = "✏️ Modifica Incasso";
-        document.getElementById('btn-save-incassi').innerText = "AGGIORNA";
-        document.getElementById('btn-save-incassi').style.background = "#f59e0b";
-        document.getElementById('cancel-incassi').classList.remove('hidden');
-    }
-}
-
-window.saveIncassi = async () => {
-    const date = document.getElementById('inc-date').value;
-    if (!date) return showToast("Data mancante", "error");
-    const v = updateIncassiLiveTotal();
-
-    // Validazione riconciliazione: i metodi di pagamento devono combaciare con i totali calcolati
-    if (Math.abs(v.n4PaySum - v.esenteDetailTot) >= EPS) {
-        return showToast(`Esente IVA: i metodi di pagamento (${fmtEUR(v.n4PaySum)}) non combaciano con il totale (${fmtEUR(v.esenteDetailTot)})`, "error");
-    }
-    if (Math.abs(v.ivaPaySum - v.ivaNetTarget) >= EPS) {
-        return showToast(`Parte IVA: i metodi di pagamento (${fmtEUR(v.ivaPaySum)}) non combaciano con il totale al netto di borsellini/correzioni (${fmtEUR(v.ivaNetTarget)})`, "error");
-    }
-
-    const p = {
-        date, note: document.getElementById('inc-note').value || '',
-        corsi_n4_tot: v.n4Tot,
-        societa_sportive_tot: v.ssTot,
-        corsi_n4_pos: v.n4Pos, corsi_n4_satispay: v.n4Sat, corsi_n4_bonifico: v.n4Bon, corsi_n4_contanti: v.n4Cnt,
-        ing_int_intero: numVal('inc-ing-int-intero'), ing_int_ridotto: numVal('inc-ing-int-ridotto'),
-        abb11_intero: numVal('inc-abb11-intero'), abb11_ridotto: numVal('inc-abb11-ridotto'),
-        abb_mensile_intero: numVal('inc-abb-mensile-intero'), abb_mensile_ridotto: numVal('inc-abb-mensile-ridotto'),
-        abb_trimestrale_intero: numVal('inc-abb-trim-intero'), abb_trimestrale_ridotto: numVal('inc-abb-trim-ridotto'),
-        abb_semestrale_intero: numVal('inc-abb-sem-intero'), abb_semestrale_ridotto: numVal('inc-abb-sem-ridotto'),
-        abb_annuale_intero: numVal('inc-abb-ann-intero'), abb_annuale_ridotto: numVal('inc-abb-ann-ridotto'),
-        ing_est_fer_intero: numVal('inc-ing-estfer-intero'), ing_est_fer_ridotto: numVal('inc-ing-estfer-ridotto'),
-        ing_est_sab_intero: numVal('inc-ing-estsab-intero'), ing_est_sab_ridotto: numVal('inc-ing-estsab-ridotto'),
-        ing_est_dom_intero: numVal('inc-ing-estdom-intero'), ing_est_dom_ridotto: numVal('inc-ing-estdom-ridotto'),
-        abb_estivi: numVal('inc-abb-estivi'),
-        acc_crediti: numVal('inc-acc-crediti'), acc_tessere: numVal('inc-acc-tessere'), acc_cuffie: numVal('inc-acc-cuffie'), acc_noleggio: numVal('inc-acc-noleggio'), acc_altro: numVal('inc-acc-altro'),
-        fatture_spazi_acqua: v.fatSpaziAcqua, fatture_altro: v.fatAltro,
-        accessori_tot: v.accessori5Tot,
-        fatture_tot: v.fattureTot,
-        iva_pos: v.ivaPos, iva_satispay: v.ivaSat, iva_bonifico: v.ivaBon, iva_contanti: v.ivaCnt,
-        // aggregati per il reporting (Panoramica/Riepilogo/Archivio)
-        ingressi_tot: v.ingressiTot, abbonamenti_tot: v.abbonamentiTot,
-        borsellini_correzioni: v.borselliniCorrezioni,
-        incasso_totale: v.incassoTotale,
-    };
-
-    try {
-        if (editIdIncassi) {
-            await updateDoc(doc(db, "incassi_log", editIdIncassi), p); showToast("Modifica salvata!"); cancelEditIncassi();
-        } else {
-            // upsert by date: se esiste gia' un record per questa data, aggiorna invece di duplicare
-            const existing = dataIncassi.find(x => x.date === date);
-            if (existing) {
-                await updateDoc(doc(db, "incassi_log", existing.id), p); showToast("Giornata aggiornata");
-            } else {
-                await addDoc(collection(db, "incassi_log"), p); showToast("Salvato");
-            }
-            clearIncassiForm();
-        }
-    } catch(e) { showToast(e.message, "error"); }
-};
-
-window.editIncassi = (id) => {
-    const d = dataIncassi.find(x => x.id === id); if (!d) return;
-    editIdIncassi = id;
-    switchSubViewIncassi('register');
-    fillIncassiForm(d, true);
-    window.scrollTo({top:0, behavior:'smooth'});
-};
-
-window.cancelEditIncassi = () => {
-    editIdIncassi = null;
-    document.getElementById('title-incassi').innerText = "➕ Registra Incasso";
-    document.getElementById('btn-save-incassi').innerText = "SALVA";
-    document.getElementById('btn-save-incassi').style.background = "";
-    document.getElementById('cancel-incassi').classList.add('hidden');
-    clearIncassiForm();
-};
-
 window.switchSubViewUtenze=(s)=>{
-    ['overview','charts','riepilogo','archive'].forEach(v=>{ document.getElementById('sub-u-'+v).classList.add('hidden'); document.getElementById('btn-sub-u-'+v).classList.remove('btn-primary'); });
+    ['overview','charts','riepilogo','archive','register'].forEach(v=>{ document.getElementById('sub-u-'+v).classList.add('hidden'); document.getElementById('btn-sub-u-'+v).classList.remove('btn-primary'); });
     document.getElementById('sub-u-'+s).classList.remove('hidden'); document.getElementById('btn-sub-u-'+s).classList.add('btn-primary');
+    if(s==='register') updateUtenzeAuto();
     renderUtenze();
 };
 
@@ -4734,11 +4527,11 @@ window.saveIngressi = async () => {
     p.totale = p.int + p.rid + p.grat + p.abb_int + p.abb_rid;
     
     try {
-        if(editIdIngressi) { await updateDoc(doc(db,"sessioni",editIdIngressi), p); showToast("Aggiornato"); cancelEditIngressi(); switchSubView('archive'); } else { await addDoc(collection(db,"sessioni"), p); showToast("Salvato"); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; }
+        if(editIdIngressi) { await updateDoc(doc(db,"sessioni",editIdIngressi), p); showToast("Aggiornato"); cancelEditIngressi(); switchSubView('archive'); } else { await addDoc(collection(db,"sessioni"), p); showToast("Salvato"); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; meteoManualIng = false; }
     } catch(e){ showToast(e.message,"error"); }
 };
 window.editIngressi = (id) => { const d = dataIngressi.find(x=>x.id===id); if(!d) return; editIdIngressi = id; document.getElementById('i-date').value=d.date; document.getElementById('i-type').value=d.type||'standard'; document.getElementById('i-fascia').value=d.fascia; document.getElementById('i-meteo').value=d.meteo; document.getElementById('i-exclude').checked = d.excludeStats || false; document.getElementById('q-intero').value=d.int; document.getElementById('q-ridotto').value=d.rid; document.getElementById('q-gratuito').value=d.grat; document.getElementById('q-abb-int').value=d.abb_int; document.getElementById('q-abb-rid').value=d.abb_rid; switchSubView('register'); document.getElementById('title-ingressi').innerText="✏️ Modifica Ingressi"; document.getElementById('btn-save-ingressi').innerText="AGGIORNA"; document.getElementById('btn-save-ingressi').style.background="#f59e0b"; document.getElementById('cancel-ingressi').classList.remove('hidden'); document.getElementById('cb-ingressi-form').classList.add('editing'); };
-window.cancelEditIngressi = () => { editIdIngressi=null; document.getElementById('title-ingressi').innerText="➕ Registra Ingressi"; document.getElementById('btn-save-ingressi').innerText="SALVA"; document.getElementById('btn-save-ingressi').style.background=""; document.getElementById('cancel-ingressi').classList.add('hidden'); document.getElementById('cb-ingressi-form').classList.remove('editing'); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; };
+window.cancelEditIngressi = () => { editIdIngressi=null; document.getElementById('title-ingressi').innerText="➕ Registra Ingressi"; document.getElementById('btn-save-ingressi').innerText="SALVA"; document.getElementById('btn-save-ingressi').style.background=""; document.getElementById('cancel-ingressi').classList.add('hidden'); document.getElementById('cb-ingressi-form').classList.remove('editing'); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; meteoManualIng = false; updateMeteoSuggestion(); };
 window.delDoc = async (c,i) => { if(confirm("Eliminare?")){ await deleteDoc(doc(db,c,i)); showToast("Eliminato"); } };
 window.toggleExcludeStats = async (id, currentVal) => { try { await updateDoc(doc(db, "sessioni", id), { excludeStats: !currentVal }); showToast(!currentVal ? "Giorno escluso dalla media" : "Giorno reincluso nella media"); } catch(e) { showToast(e.message, "error"); } };
 window.loadMoreIngressi = () => { limitIngressi += 200; renderIngressiArchive(); };
@@ -4991,72 +4784,98 @@ window.downloadRiepilogoCSV = () => {
 
 window.switchModule=(m)=>{ document.querySelectorAll('.module-container').forEach(e=>e.classList.add('hidden')); document.getElementById('module-'+m).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('nav-module-'+m).classList.add('active'); if(m==='ingressi')debouncedRefresh(); if(m==='dae')renderDae(); if(m==='utenze')renderUtenze(); if(m==='incassi'){ switchSubViewIncassi(isRestrictedIncassiUser ? 'archive' : 'overview'); } if(m==='note')renderNote(); };
 
-// ============ SUGGERIMENTO METEO (Open-Meteo, Milano Lampugnano) ============
+// ============ METEO AUTOMATICO (Open-Meteo, Milano Lampugnano) ============
 const METEO_LAT = 45.495, METEO_LON = 9.126;
 const METEO_HOT = 28, METEO_COLD = 8; // soglie °C per "Caldo" / "Freddo"
 const meteoCache = {};
 const WMO_IT = {0:'Sereno',1:'Prevalentemente sereno',2:'Parzialmente nuvoloso',3:'Coperto',45:'Nebbia',48:'Nebbia',51:'Pioviggine',53:'Pioviggine',55:'Pioviggine intensa',56:'Pioviggine gelata',57:'Pioviggine gelata',61:'Pioggia debole',63:'Pioggia',65:'Pioggia forte',66:'Pioggia gelata',67:'Pioggia gelata',71:'Neve debole',73:'Neve',75:'Neve forte',77:'Nevischio',80:'Rovesci',81:'Rovesci',82:'Rovesci violenti',85:'Rovesci di neve',86:'Rovesci di neve',95:'Temporale',96:'Temporale con grandine',99:'Temporale con grandine'};
 
-function meteoOptionsFor(code, temp) {
+// Voce del menu Meteo di "Nuoto Libero" corrispondente al codice WMO
+function meteoOptionFor(code, temp) {
     const hot = temp != null && temp >= METEO_HOT, cold = temp != null && temp <= METEO_COLD;
-    if (code === 0 || code === 1) return hot ? ['🔥 Sole + Caldo', '☀️ Sole'] : cold ? ['❄️ Sole + Freddo', '☀️ Sole'] : ['☀️ Sole', '🌤️ Parz Nuvoloso'];
-    if (code === 2) return ['🌤️ Parz Nuvoloso', '☀️ Sole', '🌦️ Variabile'];
-    if (code === 3 || code === 45 || code === 48) return cold ? ['🌥️ Nuv + Freddo', '☁️ Nuvoloso'] : ['☁️ Nuvoloso', '🌤️ Parz Nuvoloso'];
-    if ([51,53,55,56,57,61,63,65,66,67].includes(code)) return (temp != null && temp <= 5) ? ['🌨️ Piog + Freddo', '🌧️ Pioggia'] : ['🌧️ Pioggia', '🌦️ Variabile'];
-    if ([71,73,75,77,85,86].includes(code)) return ['🌨️ Piog + Freddo', '🌧️ Pioggia'];
-    if (code === 80 || code === 81) return ['🌦️ Variabile', '🌧️ Pioggia'];
-    if (code === 82) return ['🌧️ Pioggia', '⛈️ Temporale'];
-    if (code >= 95) return ['⛈️ Temporale', '🌧️ Pioggia'];
-    return ['❓ N/D'];
+    if (code === 0 || code === 1) return hot ? '🔥 Sole + Caldo' : cold ? '❄️ Sole + Freddo' : '☀️ Sole';
+    if (code === 2) return '🌤️ Parz Nuvoloso';
+    if (code === 3 || code === 45 || code === 48) return cold ? '🌥️ Nuv + Freddo' : '☁️ Nuvoloso';
+    if ([51,53,55,56,57,61,63,65,66,67].includes(code)) return (temp != null && temp <= 5) ? '🌨️ Piog + Freddo' : '🌧️ Pioggia';
+    if ([71,73,75,77,85,86].includes(code)) return '🌨️ Piog + Freddo';
+    if (code === 80 || code === 81) return '🌦️ Variabile';
+    if (code === 82) return '🌧️ Pioggia';
+    if (code >= 95) return '⛈️ Temporale';
+    return '❓ N/D';
+}
+// Voce del menu Meteo di "Utenze" (4 sole opzioni)
+function meteoOptionForUtenze(code) {
+    if (code === 0 || code === 1) return '☀️ Sole';
+    if (code === 2 || code === 80 || code === 81) return '⛅ Variabile';
+    if (code === 3 || code === 45 || code === 48) return '☁️ Nuvoloso';
+    return '🌧️ Pioggia';
 }
 
-window.applyMeteoOption = (val) => {
-    const sel = document.getElementById('i-meteo');
-    sel.value = val;
-    document.querySelectorAll('#meteo-suggest .ms-chip').forEach(b => b.classList.toggle('active', b.dataset.val === val));
-};
-
-window.updateMeteoSuggestion = async () => {
-    const box = document.getElementById('meteo-suggest');
-    const dateStr = document.getElementById('i-date').value;
-    if (!box || !dateStr) return;
+// Recupera meteo corrente (solo se oggi) e riepilogo giornaliero per la data. null = data fuori intervallo.
+async function fetchMeteoInfo(dateStr) {
     const todayStr = fmtDateISO(new Date());
     const diffDays = Math.round((new Date(todayStr + 'T00:00:00') - new Date(dateStr + 'T00:00:00')) / 86400000);
-    if (diffDays < -14 || diffDays > 80) { box.classList.add('hidden'); return; }
+    if (diffDays < -14 || diffDays > 80) return null;
     const isToday = dateStr === todayStr;
     const key = dateStr + (isToday ? '|' + Math.floor(Date.now() / 600000) : '');
-    box.classList.remove('hidden');
+    if (meteoCache[key]) return meteoCache[key];
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}` +
+        `&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum` +
+        `&timezone=Europe%2FRome&start_date=${dateStr}&end_date=${dateStr}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const dly = j.daily || {};
+    const info = { isToday, dCode: dly.weather_code && dly.weather_code[0], dMax: dly.temperature_2m_max && dly.temperature_2m_max[0], dMin: dly.temperature_2m_min && dly.temperature_2m_min[0], dRain: dly.precipitation_sum && dly.precipitation_sum[0], cCode: j.current && j.current.weather_code, cTemp: j.current && j.current.temperature_2m };
+    meteoCache[key] = info;
+    return info;
+}
+
+// ---- Nuoto Libero: selezione automatica del meteo ----
+let meteoManualIng = false;
+window.markMeteoManual = () => { meteoManualIng = true; const h = document.getElementById('meteo-auto-hint'); if (h) h.innerText = ''; };
+window.onIngressiDateChange = () => { meteoManualIng = false; updateMeteoSuggestion(); };
+window.updateMeteoSuggestion = async () => {
+    const hint = document.getElementById('meteo-auto-hint');
+    const dateStr = document.getElementById('i-date').value;
+    if (!hint || !dateStr || editIdIngressi || meteoManualIng) return;
     try {
-        let info = meteoCache[key];
-        if (!info) {
-            box.innerHTML = '<span style="color:#64748b">⏳ Recupero il meteo...</span>';
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}` +
-                `&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum` +
-                `&timezone=Europe%2FRome&start_date=${dateStr}&end_date=${dateStr}`;
-            const r = await fetch(url);
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            const j = await r.json();
-            const dly = j.daily || {};
-            info = { dCode: dly.weather_code && dly.weather_code[0], dMax: dly.temperature_2m_max && dly.temperature_2m_max[0], dMin: dly.temperature_2m_min && dly.temperature_2m_min[0], dRain: dly.precipitation_sum && dly.precipitation_sum[0], cCode: j.current && j.current.weather_code, cTemp: j.current && j.current.temperature_2m };
-            meteoCache[key] = info;
-        }
-        if (dateStr !== document.getElementById('i-date').value) return; // la data è cambiata nel frattempo
-        let code, temp, head, extra = '';
-        if (isToday && info.cCode != null) {
-            code = info.cCode; temp = info.cTemp;
-            head = `Meteo attuale (Milano): <b>${WMO_IT[code] || '-'}, ${Math.round(temp)}°C</b>`;
-            if (info.dMax != null) extra = `<span style="color:#64748b">Oggi: ${Math.round(info.dMin)}–${Math.round(info.dMax)}°C${info.dRain > 0 ? ', pioggia ' + info.dRain.toFixed(1) + ' mm' : ''}</span>`;
-        } else if (info.dCode != null) {
-            code = info.dCode; temp = info.dMax;
-            head = `Meteo del giorno (Milano): <b>${WMO_IT[code] || '-'}, ${Math.round(info.dMin)}–${Math.round(info.dMax)}°C${info.dRain > 0 ? ', pioggia ' + info.dRain.toFixed(1) + ' mm' : ''}</b>`;
-        } else { box.classList.add('hidden'); return; }
-        const opts = meteoOptionsFor(code, temp);
-        const cur = document.getElementById('i-meteo').value;
-        box.innerHTML = `<span>🌐 ${head}</span>${extra}<span style="margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap"><span style="font-size:0.75rem; font-weight:700; color:#64748b">Suggerito:</span>` +
-            opts.map((o, i) => `<button type="button" class="ms-chip${i === 0 ? ' primary' : ''}${o === cur ? ' active' : ''}" data-val="${o}" onclick="applyMeteoOption('${o}')">${o}</button>`).join('') + '</span>';
-    } catch (e) {
-        box.innerHTML = '<span style="color:#94a3b8">🌐 Suggerimento meteo non disponibile (nessuna connessione al servizio meteo).</span>';
-    }
+        const info = await fetchMeteoInfo(dateStr);
+        if (dateStr !== document.getElementById('i-date').value || meteoManualIng || editIdIngressi) return; // contesto cambiato nel frattempo
+        if (!info) { hint.innerText = ''; return; }
+        let code, temp, desc;
+        if (info.isToday && info.cCode != null) { code = info.cCode; temp = info.cTemp; desc = `Meteo attuale (Milano): ${WMO_IT[code] || '-'}, ${Math.round(temp)}°C`; }
+        else if (info.dCode != null) { code = info.dCode; temp = info.dMax; desc = `Meteo del giorno (Milano): ${WMO_IT[code] || '-'}, ${Math.round(info.dMin)}–${Math.round(info.dMax)}°C`; }
+        else { hint.innerText = ''; return; }
+        document.getElementById('i-meteo').value = meteoOptionFor(code, temp);
+        hint.innerText = `🌐 auto · ${Math.round(temp)}°C`;
+        hint.title = desc + (info.dRain > 0 ? `, pioggia ${info.dRain.toFixed(1)} mm` : '');
+    } catch (e) { hint.innerText = ''; }
+};
+
+// ---- Utenze: meteo e temperatura media automatici ----
+let utenzeMeteoManual = false, utenzeTempManual = false;
+window.markUtenzeMeteo = () => { utenzeMeteoManual = true; };
+window.markUtenzeTemp = () => { utenzeTempManual = true; };
+window.onUtenzeDateChange = () => { utenzeMeteoManual = false; utenzeTempManual = false; updateUtenzeAuto(); };
+window.updateUtenzeElecTotal = () => {
+    const v = ['u-a1','u-a2','u-a3'].map(id => parseFloat(document.getElementById(id).value));
+    const el = document.getElementById('u-elec-total');
+    el.innerText = v.some(x => !isNaN(x)) ? `Totale: ${v.reduce((a,b) => a + (isNaN(b) ? 0 : b), 0).toLocaleString('it-IT', {maximumFractionDigits: 2})} kWh` : '';
+};
+window.updateUtenzeAuto = async () => {
+    const hint = document.getElementById('u-auto-hint');
+    const dateStr = document.getElementById('u-date').value;
+    if (!hint || !dateStr || editIdUtenze) return;
+    try {
+        const info = await fetchMeteoInfo(dateStr);
+        if (dateStr !== document.getElementById('u-date').value || editIdUtenze) return;
+        if (!info || info.dCode == null || info.dMax == null || info.dMin == null) { hint.innerText = ''; return; }
+        const avg = Math.round(((info.dMax + info.dMin) / 2) * 10) / 10;
+        if (!utenzeMeteoManual) document.getElementById('u-meteo').value = meteoOptionForUtenze(info.dCode);
+        if (!utenzeTempManual) document.getElementById('u-temp').value = avg;
+        hint.innerText = `🌐 Compilati in automatico (Milano): ${WMO_IT[info.dCode] || '-'} · min ${Math.round(info.dMin)}° / max ${Math.round(info.dMax)}° → media ${avg.toLocaleString('it-IT')}°C. Puoi modificarli.`;
+    } catch (e) { hint.innerText = '🌐 Meteo automatico non disponibile: inseriscilo a mano.'; }
 };
 
 window.switchSubView=(s)=>{ ['overview','stats','riepilogo','archive','register'].forEach(v=>{ document.getElementById('sub-'+v).classList.add('hidden'); document.getElementById('btn-sub-'+v).classList.remove('btn-primary'); }); document.getElementById('sub-'+s).classList.remove('hidden'); document.getElementById('btn-sub-'+s).classList.add('btn-primary'); if(s==='register') updateMeteoSuggestion(); debouncedRefresh(); };
