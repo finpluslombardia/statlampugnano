@@ -3501,7 +3501,64 @@ const INC_FIXED = {
 const INC_ING_IDS = ['inc-ing-int-intero','inc-ing-int-ridotto','inc-ing-estfer-intero','inc-ing-estfer-ridotto','inc-ing-estsab-intero','inc-ing-estsab-ridotto','inc-ing-estdom-intero','inc-ing-estdom-ridotto'];
 const INC_ABB_IDS = ['inc-abb11-intero','inc-abb11-ridotto','inc-abb-mensile-intero','inc-abb-mensile-ridotto','inc-abb-trim-intero','inc-abb-trim-ridotto','inc-abb-sem-intero','inc-abb-sem-ridotto','inc-abb-ann-intero','inc-abb-ann-ridotto','inc-abb-estivi'];
 const INC_GRAN_IDS = [...INC_ING_IDS, ...INC_ABB_IDS];
-const incKey = (id) => INC_FIXED[id] || id.replace(/^inc-/, '').replace(/-/g, '_');
+const incDefaultKey = (id) => INC_FIXED[id] || id.replace(/^inc-/, '').replace(/-/g, '_');
+let incLearnedKeys = {};          // id -> nome campo reale trovato nei dati gia' salvati
+let incAbb11InIngressi = false;   // come la versione precedente classificava "11 Ingressi"
+const incKey = (id) => incLearnedKeys[id] || incDefaultKey(id);
+const INC_KNOWN_KEYS = new Set(['id','date','note','notes','createdAt','modificataAt','incasso_totale','ingressi_tot','abbonamenti_tot','accessori_tot','fatture_tot', ...Object.values({
+    a:'corsi_n4_tot',b:'societa_sportive_tot',c:'corsi_n4_pos',d:'corsi_n4_satispay',e:'corsi_n4_bonifico',f:'corsi_n4_contanti',g:'acc_crediti',h:'acc_tessere',i:'acc_cuffie',j:'acc_noleggio',k:'acc_altro',l:'fatture_spazi_acqua',m:'fatture_altro',n:'iva_pos',o:'iva_satispay',p:'iva_bonifico',q:'iva_contanti',r:'borsellini_correzioni'})]);
+// parole chiave (prefissi) che un nome di campo deve contenere per corrispondere a un campo del modulo
+const INC_STEMS = {
+    'inc-ing-int-intero':['sing|ingint|int_int','int'], 'inc-ing-int-ridotto':['sing|ingint|int_rid','rid'],
+    'inc-abb11-intero':['11','int'], 'inc-abb11-ridotto':['11','rid'],
+    'inc-abb-mensile-intero':['mens','int'], 'inc-abb-mensile-ridotto':['mens','rid'],
+    'inc-abb-trim-intero':['trim','int'], 'inc-abb-trim-ridotto':['trim','rid'],
+    'inc-abb-sem-intero':['sem','int'], 'inc-abb-sem-ridotto':['sem','rid'],
+    'inc-abb-ann-intero':['ann','int'], 'inc-abb-ann-ridotto':['ann','rid'],
+    'inc-ing-estfer-intero':['fer','int'], 'inc-ing-estfer-ridotto':['fer','rid'],
+    'inc-ing-estsab-intero':['sab','int'], 'inc-ing-estsab-ridotto':['sab','rid'],
+    'inc-ing-estdom-intero':['dom','int'], 'inc-ing-estdom-ridotto':['dom','rid'],
+    'inc-abb-estivi':['estiv','']
+};
+function incUnknownNumericKeys(d) {
+    return Object.keys(d).filter(k => !INC_KNOWN_KEYS.has(k) && typeof d[k] === 'number' && !INC_GRAN_IDS.some(id => incDefaultKey(id) === k));
+}
+function incFuzzyMatch(key, id) {
+    const k = key.toLowerCase();
+    const [cat, variant] = INC_STEMS[id];
+    if (!cat.split('|').some(c => k.includes(c))) return false;
+    if (variant && !k.includes(variant)) return false;
+    if (id === 'inc-abb-estivi') return true;
+    // evita che "intero"/"ridotto" coincida con chiavi di altre categorie
+    return true;
+}
+// Impara i nomi reali dei campi dai giorni gia' salvati (versione precedente)
+function incLearnSchema() {
+    const learned = {};
+    const votes = {};
+    (dataIncassi || []).forEach(d => {
+        incUnknownNumericKeys(d).forEach(k => {
+            const cands = INC_GRAN_IDS.filter(id => d[incDefaultKey(id)] == null && incFuzzyMatch(k, id));
+            if (cands.length === 1) { votes[cands[0]] = votes[cands[0]] || {}; votes[cands[0]][k] = (votes[cands[0]][k] || 0) + 1; }
+        });
+    });
+    Object.entries(votes).forEach(([id, ks]) => { learned[id] = Object.entries(ks).sort((a,b) => b[1]-a[1])[0][0]; });
+    // una stessa chiave non puo' servire due campi
+    const used = {}; Object.entries(learned).forEach(([id,k]) => { if (used[k]) { delete learned[id]; delete learned[used[k]]; } else used[k] = id; });
+    incLearnedKeys = learned;
+    // "11 Ingressi" stava negli ingressi o negli abbonamenti?
+    let inIng = 0, inAbb = 0;
+    (dataIncassi || []).forEach(d => {
+        const a11 = (d[incKey('inc-abb11-intero')] || 0) + (d[incKey('inc-abb11-ridotto')] || 0);
+        if (!a11 || d.ingressi_tot == null) return;
+        const ingBase = INC_ING_IDS.reduce((s,id) => s + (d[incKey(id)] || 0), 0);
+        if (Math.abs(ingBase + a11 - d.ingressi_tot) < INC_EPS) inIng++;
+        else if (Math.abs(ingBase - d.ingressi_tot) < INC_EPS) inAbb++;
+    });
+    incAbb11InIngressi = inIng > inAbb;
+}
+function incIngIds() { return incAbb11InIngressi ? [...INC_ING_IDS, 'inc-abb11-intero', 'inc-abb11-ridotto'] : INC_ING_IDS; }
+function incAbbIds() { return incAbb11InIngressi ? INC_ABB_IDS.filter(id => !id.startsWith('inc-abb11')) : INC_ABB_IDS; }
 const incVal = (id) => { const el = document.getElementById(id); if (!el) return 0; const v = parseFloat(String(el.value).replace(',', '.')); return isNaN(v) ? 0 : v; };
 const incSum = (ids) => ids.reduce((s, id) => s + incVal(id), 0);
 let incLegacy = null; // giorno registrato con la versione precedente: dettaglio ingressi/abbonamenti non leggibile
@@ -3510,8 +3567,8 @@ function incAllIds() { return [...Object.keys(INC_FIXED), ...INC_GRAN_IDS]; }
 
 function incTotals() {
     const corsi = incVal('inc-n4-tot'), ss = incVal('inc-ss-tot');
-    const ingressi = incLegacy ? incLegacy.ingressi_tot : incSum(INC_ING_IDS);
-    const abbonamenti = incLegacy ? incLegacy.abbonamenti_tot : incSum(INC_ABB_IDS);
+    const ingressi = incLegacy ? incLegacy.ingressi_tot : incSum(incIngIds());
+    const abbonamenti = incLegacy ? incLegacy.abbonamenti_tot : incSum(incAbbIds());
     const accessori = incSum(['inc-acc-crediti','inc-acc-tessere','inc-acc-cuffie','inc-acc-noleggio','inc-acc-altro']);
     const fatture = incSum(['inc-fat-spazi-acqua','inc-fat-altro']);
     const borsellini = incVal('inc-borsellini-correzioni');
@@ -3550,7 +3607,7 @@ window.toggleSeasonalFields = () => {
     if (sec) sec.classList.toggle('hidden', !(m >= 5 && m <= 9) && !hasValues);
 };
 
-function incSetLegacyNotice(doc) {
+function incSetLegacyNotice(doc, granSum) {
     let n = document.getElementById('inc-legacy-notice');
     INC_GRAN_IDS.forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = !!doc; el.style.opacity = doc ? '0.5' : ''; } });
     if (!doc) { if (n) n.remove(); return; }
@@ -3560,7 +3617,8 @@ function incSetLegacyNotice(doc) {
         const anchor = document.getElementById('inc-ing-int-intero').closest('div[style*="padding:12px"]');
         anchor.parentNode.insertBefore(n, anchor);
     }
-    n.innerHTML = `ℹ️ Questo giorno è stato registrato con la versione precedente: il dettaglio di ingressi e abbonamenti non è modificabile qui. Restano invariati Ingressi ${fmtEUR(doc.ingressi_tot)} e Abbonamenti ${fmtEUR(doc.abbonamenti_tot)}; tutto il resto si può modificare.`;
+    n.innerHTML = `ℹ️ Questo giorno è stato registrato con la versione precedente: il dettaglio di ingressi e abbonamenti non è modificabile qui. Restano invariati Ingressi ${fmtEUR(doc.ingressi_tot)} e Abbonamenti ${fmtEUR(doc.abbonamenti_tot)}; tutto il resto si può modificare.` +
+        `<div style="font-weight:500; margin-top:6px; font-size:0.75rem">Dettaglio riconosciuto: ${fmtEUR(granSum || 0)} su ${fmtEUR((doc.ingressi_tot||0)+(doc.abbonamenti_tot||0))}. Campi non riconosciuti: ${incUnknownNumericKeys(doc).filter(k => !Object.values(incLearnedKeys).includes(k)).map(k => k + ' = ' + doc[k]).join(', ') || 'nessuno'}</div>`;
 }
 
 function incClearForm() {
@@ -3581,12 +3639,16 @@ function incFillFromDoc(d) {
     incClearForm();
     document.getElementById('inc-note').value = d.note || '';
     Object.entries(INC_FIXED).forEach(([id, key]) => { const el = document.getElementById(id); if (el && d[key] != null && d[key] !== 0) el.value = d[key]; });
-    const hasGranular = INC_GRAN_IDS.some(id => d[incKey(id)] != null);
-    if (hasGranular) {
+    incLearnSchema();
+    const granSum = INC_GRAN_IDS.reduce((t, id) => t + (Number(d[incKey(id)]) || 0), 0);
+    const storedSum = (d.ingressi_tot || 0) + (d.abbonamenti_tot || 0);
+    if (Math.abs(granSum - storedSum) < INC_EPS) {
         INC_GRAN_IDS.forEach(id => { const v = d[incKey(id)]; if (v != null && v !== 0) document.getElementById(id).value = v; });
-    } else if ((d.ingressi_tot || 0) !== 0 || (d.abbonamenti_tot || 0) !== 0) {
+    } else {
+        // dettaglio incompleto: blocco il dettaglio e conservo i totali salvati (nessun dato viene perso)
         incLegacy = { ingressi_tot: d.ingressi_tot || 0, abbonamenti_tot: d.abbonamenti_tot || 0 };
-        incSetLegacyNotice(d);
+        INC_GRAN_IDS.forEach(id => { const v = d[incKey(id)]; if (v != null && v !== 0) document.getElementById(id).value = v; });
+        incSetLegacyNotice(d, granSum);
     }
 }
 
