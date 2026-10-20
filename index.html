@@ -1708,14 +1708,26 @@ function renderDynamicChart(id, labels, datasets, type, isStacked=false) {
         backgroundColor: d.backgroundColor ? d.backgroundColor : (isBar ? '#2563eb' : (d.fill ? d.borderColor + '20' : undefined)),
         borderWidth: d.borderWidth !== undefined ? d.borderWidth : (isBar ? 0 : 2),
         pointRadius: d.pointRadius !== undefined ? d.pointRadius : (isBar ? 0 : 3),
+        pointHoverRadius: 6,
+        pointHoverBorderWidth: 2,
+        pointHoverBackgroundColor: '#fff',
         type: d.type || type, 
         borderDash: isBar ? [] : (d.borderDash || []),
         tension: 0.4,
         parsing: { yAxisKey: 'y' }
     }));
 
+    const crosshair = { id: 'crosshair', afterDatasetsDraw(chart) {
+        if (chart.config.type !== 'line') return;
+        const act = chart.tooltip && chart.tooltip.getActiveElements ? chart.tooltip.getActiveElements() : [];
+        if (!act.length) return;
+        const x = act[0].element.x, a = chart.chartArea, c = chart.ctx;
+        c.save(); c.beginPath(); c.moveTo(x, a.top); c.lineTo(x, a.bottom);
+        c.lineWidth = 1.5; c.strokeStyle = 'rgba(37,99,235,0.35)'; c.setLineDash([4,4]); c.stroke(); c.restore();
+    } };
     ch[id] = new Chart(document.getElementById(id), {
         type: type,
+        plugins: [crosshair],
         data: { labels: labels, datasets: optimizedDatasets },
         options: {
             animation: false,
@@ -1728,23 +1740,68 @@ function renderDynamicChart(id, labels, datasets, type, isStacked=false) {
                     backgroundColor: 'rgba(15, 23, 42, 0.95)',
                     padding: 12,
                     cornerRadius: 8,
-                    titleFont: { size: 13 },
                     bodyFont: { size: 13, weight: 'bold' },
+                    usePointStyle: true,
+                    boxPadding: 6,
+                    bodySpacing: 7,
+                    footerSpacing: 5,
+                    titleMarginBottom: 8,
+                    titleFont: { size: 14, weight: 'bold' },
+                    footerFont: { size: 12, weight: 'normal' },
                     callbacks: {
-                        afterBody: function(context) {
-                            const punto = context.find(c => c.raw && typeof c.raw === 'object');
-                            if(!punto || !punto.raw) return [];
-                            const lines = [];
-                            if (punto.raw.meteo) lines.push(`${punto.raw.meteo}`);
-                            if (punto.raw.dayType) lines.push(`📅 ${punto.raw.dayType}`);
-                            if (punto.raw.refDate) {
-                                const dRef = new Date(punto.raw.refDate);
-                                const dStr = dRef.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
-                                if (lines.length) lines.push('------------------');
-                                lines.push(`Confrontato con:\n${dStr}`);
+                        title: function(items) {
+                            const r = items[0] && items[0].raw;
+                            if (r && typeof r === 'object' && r.daily && r.date) {
+                                const t = new Date(r.date + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+                                return t.charAt(0).toUpperCase() + t.slice(1);
                             }
-                            if (punto.raw.extraInfo) lines.push(`📝 ${punto.raw.extraInfo}`);
-                            return lines.length ? ['', ...lines] : [];
+                            return items[0] ? items[0].label : '';
+                        },
+                        label: function(ctx) {
+                            const r0 = ctx.chart.data.datasets[0].data[ctx.dataIndex];
+                            const daily = r0 && typeof r0 === 'object' && r0.daily;
+                            const v = ctx.parsed.y;
+                            if (!daily) return ` ${ctx.dataset.label}: ${ctx.formattedValue}`;
+                            if (ctx.datasetIndex === 0) return ` Quest'anno: ${v} ingressi`;
+                            const dRef = new Date(r0.refDate + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                            return ` Anno prec. (${dRef}): ${v} ingressi`;
+                        },
+                        labelColor: function(ctx) {
+                            const c = ctx.dataset.borderColor || '#2563eb';
+                            return { borderColor: c, backgroundColor: c, borderWidth: 2, borderRadius: 6 };
+                        },
+                        afterBody: function(context) {
+                            const lines = [];
+                            const first = context[0] && context[0].raw;
+                            if (first && typeof first === 'object' && first.daily && context.length > 1) {
+                                const cur = context[0].parsed.y, prev = context[1].parsed.y, diff = cur - prev;
+                                const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '＝');
+                                const sign = diff > 0 ? '+' : '';
+                                const pct = prev > 0 ? ` (${sign}${((diff / prev) * 100).toFixed(1)}%)` : '';
+                                lines.push('');
+                                lines.push(`${arrow} Differenza: ${sign}${diff}${pct}`);
+                            }
+                            return lines;
+                        },
+                        footer: function(context) {
+                            const punto = context.find(c => c.raw && typeof c.raw === 'object');
+                            if (!punto) return [];
+                            const r = punto.raw, lines = [];
+                            if (r.daily) {
+                                if (r.meteo) lines.push(`Meteo: ${r.meteo}`);
+                                if (r.dayType) lines.push(`Giorno: ${r.dayType}`);
+                            } else {
+                                if (r.meteo) lines.push(`${r.meteo}`);
+                                if (r.dayType) lines.push(`📅 ${r.dayType}`);
+                                if (r.refDate) {
+                                    const dRef = new Date(r.refDate);
+                                    const dStr = dRef.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+                                    if (lines.length) lines.push('------------------');
+                                    lines.push(`Confrontato con:\n${dStr}`);
+                                }
+                            }
+                            if (r.extraInfo) lines.push(`📝 ${r.extraInfo}`);
+                            return lines;
                         }
                     }
                 }
@@ -2062,7 +2119,7 @@ window.renderOverviewCharts = () => {
         const dayEntries30 = dataIngressi.filter(x=>x.date===dtStr && !x.excludeStats);
         const meteoSet30 = [...new Set(dayEntries30.map(x=>x.meteo).filter(Boolean))];
         const dayTypeSet30 = [...new Set(dayEntries30.map(x=>x.type).filter(t=>t && t!=='standard'))];
-        l30.push({ x: dates[dates.length-1], y: valOggi, refDate: dtPrevStr, meteo: meteoSet30.join(', '), dayType: dayTypeSet30.join(', ') });
+        l30.push({ x: dates[dates.length-1], y: valOggi, daily: true, date: dtStr, refDate: dtPrevStr, meteo: meteoSet30.join(', '), dayType: dayTypeSet30.join(', ') });
         l30_prev.push(dataIngressi.filter(x=>x.date===dtPrevStr && !x.excludeStats).reduce((a,b)=>a+b.totale,0));
     }
     
@@ -2085,7 +2142,7 @@ window.renderOverviewCharts = () => {
         const dayEntries90 = dataIngressi.filter(x=>x.date===dtStr && !x.excludeStats);
         const meteoSet90 = [...new Set(dayEntries90.map(x=>x.meteo).filter(Boolean))];
         const dayTypeSet90 = [...new Set(dayEntries90.map(x=>x.type).filter(t=>t && t!=='standard'))];
-        l90.push({ x: dates90[dates90.length-1], y: valOggi, refDate: dtPrevStr, meteo: meteoSet90.join(', '), dayType: dayTypeSet90.join(', ') });
+        l90.push({ x: dates90[dates90.length-1], y: valOggi, daily: true, date: dtStr, refDate: dtPrevStr, meteo: meteoSet90.join(', '), dayType: dayTypeSet90.join(', ') });
         l90_prev.push(dataIngressi.filter(x=>x.date===dtPrevStr && !x.excludeStats).reduce((a,b)=>a+b.totale,0));
     }
     renderDynamicChart('chartRecent90', dates90, [
