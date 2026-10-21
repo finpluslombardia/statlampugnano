@@ -5093,13 +5093,15 @@ window.updateUtenzeAuto = async () => {
     const dateStr = document.getElementById('u-date').value;
     if (!hint || !dateStr || editIdUtenze) return;
     try {
-        const info = await fetchMeteoInfo(dateStr);
+        const [yy, mm, dd] = dateStr.split('-').map(Number);
+        const prevStr = fmtDateISO(new Date(yy, mm - 1, dd - 1));
+        const info = await fetchMeteoInfo(prevStr);
         if (dateStr !== document.getElementById('u-date').value || editIdUtenze) return;
         if (!info || info.dCode == null || info.dMax == null || info.dMin == null) { hint.innerText = ''; return; }
         const avg = Math.round(((info.dMax + info.dMin) / 2) * 10) / 10;
         if (!utenzeMeteoManual) document.getElementById('u-meteo').value = meteoOptionForUtenze(info.dCode);
         if (!utenzeTempManual) document.getElementById('u-temp').value = avg;
-        hint.innerText = `🌐 Compilati in automatico (Milano): ${WMO_IT[info.dCode] || '-'} · min ${Math.round(info.dMin)}° / max ${Math.round(info.dMax)}° → media ${avg.toLocaleString('it-IT')}°C. Puoi modificarli.`;
+        hint.innerText = `🌐 Compilati in automatico per il giorno precedente (${prevStr.split('-').reverse().join('/')}, Milano): ${WMO_IT[info.dCode] || '-'} · min ${Math.round(info.dMin)}° / max ${Math.round(info.dMax)}° → media ${avg.toLocaleString('it-IT')}°C. Puoi modificarli.`;
     } catch (e) { hint.innerText = '🌐 Meteo automatico non disponibile: inseriscilo a mano.'; }
 };
 
