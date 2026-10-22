@@ -472,7 +472,7 @@
                         <div id="deep-total" style="color:var(--primary); font-size:1.8rem; font-weight:900">0</div>
                     </div>
                 </div>
-                <div class="chart-card glass-card"><div class="chart-header">Performance Meteo</div><div class="chart-wrapper"><canvas id="chartMeteo"></canvas></div></div>
+                <div class="chart-card glass-card"><div class="chart-header">Performance Meteo <span style="font-size:0.75rem;font-weight:500;color:#64748b">· ingressi per giorno vs normale (stesso giorno della settimana)</span></div><div class="chart-wrapper"><canvas id="chartMeteo"></canvas></div></div>
             </div>
             <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Popolarità Fasce Orarie</div><div class="chart-wrapper"><canvas id="chartFasce"></canvas></div></div></div>
 
@@ -1821,6 +1821,41 @@ function renderDynamicChart(id, labels, datasets, type, isStacked=false) {
     });
 }
 function renderPie(id,l,d) { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:l,datasets:[{data:d,backgroundColor:['#2563eb','#60a5fa','#a855f7','#d8b4fe','#f59e0b','#ef4444'],borderWidth:0}]},options:{animation:false, responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{usePointStyle:true}}}}}); }
+function renderMeteoPerformance(rows) {
+    if (!isChartReady()) return;
+    const days = {};
+    rows.forEach(d => {
+        if (!d.date) return;
+        const o = days[d.date] || (days[d.date] = { tot: 0, m: {} });
+        o.tot += d.totale || 0;
+        const m = d.meteo || '❓ N/D';
+        o.m[m] = (o.m[m] || 0) + 1;
+    });
+    const list = Object.keys(days).map(date => {
+        const o = days[date]; const m = Object.keys(o.m).sort((a, b) => o.m[b] - o.m[a])[0];
+        return { wd: new Date(date + 'T12:00:00').getDay(), tot: o.tot, meteo: m };
+    }).filter(x => x.tot > 0 && !x.meteo.includes('N/D'));
+    const wdSum = {};
+    list.forEach(x => { const w = wdSum[x.wd] || (wdSum[x.wd] = { s: 0, n: 0 }); w.s += x.tot; w.n++; });
+    const by = {};
+    list.forEach(x => {
+        const b = by[x.meteo] || (by[x.meteo] = { n: 0, tot: 0, r: 0 });
+        b.n++; b.tot += x.tot; b.r += x.tot / (wdSum[x.wd].s / wdSum[x.wd].n);
+    });
+    const order = ['☀️ Sole','🔥 Sole + Caldo','❄️ Sole + Freddo','🌤️ Parz Nuvoloso','☁️ Nuvoloso','🌥️ Nuv + Freddo','🌦️ Variabile','🌧️ Pioggia','🌨️ Piog + Freddo','⛈️ Temporale'];
+    const keys = Object.keys(by).sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b)));
+    const vals = keys.map(k => Math.round((by[k].r / by[k].n - 1) * 1000) / 10);
+    if (ch['chartMeteo']) ch['chartMeteo'].destroy();
+    ch['chartMeteo'] = new Chart(document.getElementById('chartMeteo'), {
+        type: 'bar',
+        data: { labels: keys.map(k => k + ' (' + by[k].n + ' gg)'), datasets: [{ label: 'Scostamento dal normale', data: vals,
+            backgroundColor: vals.map((v, i) => by[keys[i]].n < 5 ? '#cbd5e1' : (v >= 0 ? '#10b981' : '#ef4444')), borderRadius: 4 }] },
+        options: { animation: false, responsive: true, maintainAspectRatio: false,
+            scales: { y: { ticks: { callback: v => (v > 0 ? '+' : '') + v + '%' } }, x: { ticks: { maxRotation: 45, minRotation: 30 } } },
+            plugins: { legend: { display: false }, tooltip: { callbacks: {
+                label: c => { const b = by[keys[c.dataIndex]]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.tot / b.n)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi, poco affidabile)' : ''}`]; } } } } }
+    });
+}
 function renderMultiBar(id,l,ds,ax='x') { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'bar',data:{labels:l,datasets:ds},options:{animation:false, responsive:true,maintainAspectRatio:false,indexAxis:ax,plugins:{legend:{display:true}}}}); }
 
 window.renderOverview = () => { renderOverviewKPI(); renderOverviewCharts(); }
@@ -2467,8 +2502,7 @@ window.renderStats = () => {
         });
         return { labels: sortedL, datasets: [{ label: `Totale`, data: dp, backgroundColor: '#2563eb' }] };
     };
-    const meteoData = buildMultiSeries(d => ({key: d.meteo, val: d.totale}));
-    renderMultiBar('chartMeteo', meteoData.labels, meteoData.datasets);
+    renderMeteoPerformance(fMain);
     const fasceData = buildMultiSeries(d => ({key: d.fascia, val: d.totale}));
     renderMultiBar('chartFasce', fasceData.labels, fasceData.datasets, 'y');
 
