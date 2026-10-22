@@ -660,7 +660,7 @@
     <div class="scroll-area">
         <div class="filter-row" style="margin-bottom:20px; justify-content:center">
             <button class="btn btn-primary" id="btn-sub-u-overview" onclick="switchSubViewUtenze('overview')">Panoramica</button>
-            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-charts" onclick="switchSubViewUtenze('charts')">Grafici</button>
+            <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-charts" onclick="switchSubViewUtenze('charts')">Statistiche</button>
             <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-riepilogo" onclick="switchSubViewUtenze('riepilogo')">Riepilogo</button>
             <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-archive" onclick="switchSubViewUtenze('archive')">Archivio</button>
             <button class="btn" style="border:1px solid rgba(0,0,0,0.1)" id="btn-sub-u-register" onclick="switchSubViewUtenze('register')">➕ Registra Utenze</button>
@@ -856,7 +856,7 @@
         <!-- Utenze Sub-View: Charts -->
         <div id="sub-u-charts" class="hidden">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px">
-                <h2 class="page-title" style="margin:0; font-size:1.3rem">📊 Analisi Utenze</h2>
+                <h2 class="page-title" style="margin:0; font-size:1.3rem">📊 Statistiche Utenze</h2>
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
                     <select id="u-range" class="filter-select" onchange="toggleUtenzeChartMode()" style="font-weight:700">
                         <option value="7">Ultimi 7 Giorni</option>
@@ -864,7 +864,7 @@
                         <option value="30">Ultimi 30 Giorni</option>
                         <option value="90">Ultimi 3 Mesi</option>
                         <option value="180">Ultimi 6 Mesi</option>
-                        <option value="365">Ultimi 12 Mesi</option>
+                        <option value="365" selected>Ultimi 12 Mesi</option>
                         <option value="custom">📅 Periodo Personalizzato</option>
                     </select>
                     
@@ -886,9 +886,14 @@
                 </div>
             </div>
 
-            <div style="display:flex; flex-direction:column; gap:25px; margin-bottom:25px;">
-                <div class="chart-card glass-card" style="height:320px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem; color:#eab308">⚡ Elettricità (kWh) — colore barra = meteo del giorno</div>
+            <div id="u-stat-note" style="font-size:0.8rem; color:#64748b; margin:-5px 0 15px">Le statistiche usano il periodo scelto qui sopra. Il consumo di un giorno è la differenza tra la sua lettura e quella precedente: è riferito alle 24 ore trascorse, quindi meteo e temperatura sono quelli del giorno prima.</div>
+
+            <!-- U1: ELETTRICITA -->
+            <div class="stat-section" style="--sc:234,179,8">
+                <div class="stat-section-head"><h3>⚡ Elettricità</h3><span>Consumi, fasce F1/F2/F3 e rapporto con meteo e temperatura</span></div>
+                <div id="u-kpi-elec" class="st-kpis"></div>
+                <div class="charts-row-main"><div class="chart-card glass-card" style="height:320px; padding:15px">
+                    <div class="chart-header" style="font-size:0.85rem; color:#b45309">⚡ Elettricità (kWh) — colore barra = meteo del giorno</div>
                     <div class="chart-wrapper" style="height:calc(100% - 58px)"><canvas id="chartElec"></canvas></div>
                     <div style="display:flex; gap:14px; flex-wrap:wrap; justify-content:center; padding-top:7px; font-size:0.72rem; color:#475569">
                         <span><span style="display:inline-block;width:11px;height:11px;border-radius:2px;background:#fbbf24;margin-right:3px;vertical-align:middle"></span>Sole</span>
@@ -897,15 +902,47 @@
                         <span><span style="display:inline-block;width:11px;height:11px;border-radius:2px;background:#60a5fa;margin-right:3px;vertical-align:middle"></span>Pioggia</span>
                         <span><span style="display:inline-block;width:11px;height:11px;border-radius:2px;background:#cbd5e1;margin-right:3px;vertical-align:middle"></span>N/D</span>
                     </div>
-                </div>
-                <div class="chart-card glass-card" style="height:300px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem; color:#3b82f6">💧 Acqua (m³)</div>
-                    <div class="chart-wrapper"><canvas id="chartWater"></canvas></div>
-                </div>
-                <div class="chart-card glass-card" style="height:300px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem; color:#ef4444">🔥 Gas (m³) vs Temp. Esterna</div>
+                </div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card"><div class="chart-header">Ripartizione Fasce <span class="chart-sub">· F1 / F2 / F3 nel periodo</span></div><div class="chart-wrapper"><canvas id="chartUElecFasce"></canvas></div></div><div class="chart-card glass-card"><div class="chart-header">Consumo Medio Giornaliero per Mese <span class="chart-sub">· kWh/giorno</span></div><div class="chart-wrapper"><canvas id="chartUElecMonth"></canvas></div></div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card"><div class="chart-header">Elettricità vs Meteo <span class="chart-sub">· consumo vs normale (stesso giorno della settimana)</span></div><div class="chart-wrapper"><canvas id="chartUElecMeteo"></canvas></div></div><div class="chart-card glass-card"><div class="chart-header">Elettricità vs Temperatura <span class="chart-sub">· ogni punto è un giorno</span></div><div class="chart-wrapper"><canvas id="chartUElecScatter"></canvas></div></div></div>
+            </div>
+
+            <!-- U2: GAS -->
+            <div class="stat-section" style="--sc:239,68,68">
+                <div class="stat-section-head"><h3>🔥 Gas Metano</h3><span>Consumi, dipendenza dalla temperatura e gradi-giorno di riscaldamento</span></div>
+                <div id="u-kpi-gas" class="st-kpis"></div>
+                <div class="charts-row-main"><div class="chart-card glass-card" style="height:300px; padding:15px">
+                    <div class="chart-header" style="font-size:0.85rem; color:#b91c1c">🔥 Gas (m³) vs Temp. Esterna</div>
                     <div class="chart-wrapper"><canvas id="chartGas"></canvas></div>
-                </div>
+                </div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card"><div class="chart-header">Gas vs Temperatura <span class="chart-sub">· retta di tendenza e correlazione</span></div><div class="chart-wrapper"><canvas id="chartUGasScatter"></canvas></div></div><div class="chart-card glass-card"><div class="chart-header">Gas per Fascia di Temperatura <span class="chart-sub">· consumo medio giornaliero</span></div><div class="chart-wrapper"><canvas id="chartUGasBands"></canvas></div></div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card"><div class="chart-header">Consumo Medio Giornaliero per Mese <span class="chart-sub">· m³/giorno</span></div><div class="chart-wrapper"><canvas id="chartUGasMonth"></canvas></div></div><div class="chart-card glass-card"><div class="chart-header">Efficienza: Gas per Grado-Giorno <span class="chart-sub">· m³ per ogni °C sotto i 18°</span></div><div class="chart-wrapper"><canvas id="chartUGasHdd"></canvas></div></div></div>
+            </div>
+
+            <!-- U3: ACQUA -->
+            <div class="stat-section" style="--sc:59,130,246">
+                <div class="stat-section-head"><h3>💧 Acqua</h3><span>Consumi e rapporto con gli ingressi in piscina</span></div>
+                <div id="u-kpi-water" class="st-kpis"></div>
+                <div class="charts-row-main"><div class="chart-card glass-card" style="height:300px; padding:15px">
+                    <div class="chart-header" style="font-size:0.85rem; color:#1d4ed8">💧 Acqua (m³)</div>
+                    <div class="chart-wrapper"><canvas id="chartWater"></canvas></div>
+                </div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card"><div class="chart-header">Consumo Medio Giornaliero per Mese <span class="chart-sub">· m³/giorno</span></div><div class="chart-wrapper"><canvas id="chartUWaterMonth"></canvas></div></div><div class="chart-card glass-card"><div class="chart-header">Acqua vs Ingressi <span class="chart-sub">· m³ del giorno vs ingressi del giorno</span></div><div class="chart-wrapper"><canvas id="chartUWaterIngr"></canvas></div></div></div>
+            </div>
+
+            <!-- U4: METEO E TEMPERATURA -->
+            <div class="stat-section" style="--sc:16,185,129">
+                <div class="stat-section-head"><h3>🌦️ Meteo e Temperatura</h3><span>Quanto incidono su luce, gas e acqua (rispetto al normale)</span></div>
+                <div class="charts-row-main"><div class="chart-card glass-card auto-h"><div class="chart-header">Correlazioni <span class="chart-sub">· r vicino a ±1 = legame forte, vicino a 0 = nessun legame</span></div><div id="u-corr-table" style="overflow-x:auto"></div></div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card auto-h"><div class="chart-header">Effetto Meteo sui Consumi <span class="chart-sub">· scostamento dal normale</span></div><div id="u-meteo-table" style="overflow-x:auto"></div></div><div class="chart-card glass-card auto-h"><div class="chart-header">Effetto Temperatura sui Consumi <span class="chart-sub">· scostamento dal normale</span></div><div id="u-temp-table" style="overflow-x:auto"></div></div></div>
+                <div style="font-size:0.75rem; color:#64748b; margin-top:12px">Rosso = consumo sopra il normale, verde = sotto. Il normale è la media dello stesso giorno della settimana. Le celle con meno di 3 giorni sono grigie e poco affidabili.</div>
+            </div>
+
+            <!-- U5: CALENDARIO ED EFFICIENZA -->
+            <div class="stat-section" style="--sc:244,63,94">
+                <div class="stat-section-head"><h3>📅 Calendario ed Efficienza</h3><span>Profilo settimanale, consumi per ingresso e giorni anomali</span></div>
+                <div class="charts-row-split"><div class="chart-card glass-card"><div class="chart-header">Profilo Settimanale <span class="chart-sub">· indice: 100 = media della settimana</span></div><div class="chart-wrapper"><canvas id="chartUWeekly"></canvas></div></div><div class="chart-card glass-card"><div class="chart-header">Consumi per Ingresso <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartUPerIngr"></canvas></div></div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card auto-h"><div class="chart-header">🔥 Gas: giorni sopra il previsto <span class="chart-sub">· rispetto alla temperatura</span></div><div id="u-anom-gas" style="overflow-x:auto"></div></div><div class="chart-card glass-card auto-h"><div class="chart-header">⚡ Elettricità: giorni sopra il previsto <span class="chart-sub">· rispetto al giorno della settimana</span></div><div id="u-anom-elec" style="overflow-x:auto"></div></div></div>
             </div>
         </div>
 
@@ -1886,6 +1923,22 @@ function renderDynamicChart(id, labels, datasets, type, isStacked=false) {
     });
 }
 function renderPie(id,l,d) { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:l,datasets:[{data:d,backgroundColor:['#2563eb','#60a5fa','#a855f7','#d8b4fe','#f59e0b','#ef4444'],borderWidth:0}]},options:{animation:false, responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{usePointStyle:true}}}}}); }
+// Insiemi di confronto per i grafici delle Statistiche: stessa finestra di periodo nelle stagioni scelte in "Confronta con"
+function buildCompSets(selectedComps, source, startDate, endDate, yearMain) {
+    if (!selectedComps || !selectedComps.length) return [];
+    const todayD = new Date(); todayD.setHours(0, 0, 0, 0);
+    const mainEnd = endDate > todayD ? todayD : endDate;
+    const shift = (d, k) => fmtDateISO(new Date(d.getFullYear() + k, d.getMonth(), d.getDate()));
+    const rowsFor = (y) => { const k = y - yearMain; const a = shift(startDate, k), b = shift(mainEnd, k); return source.filter(d => d.date >= a && d.date <= b); };
+    const seasonsAll = [...new Set(source.map(d => getSeasonStartYear(d.date)))].filter(y => y !== yearMain);
+    return selectedComps.map((v, idx) => {
+        const label = v === 'avg' ? 'Media Storica' : 'Stagione ' + getSeasonLabel(parseInt(v));
+        const seasons = v === 'avg' ? seasonsAll : [parseInt(v)];
+        let rows = []; let n = 0;
+        seasons.forEach(y => { const r = rowsFor(y); if (r.length) { rows = rows.concat(r); n++; } });
+        return { label, color: getCompColor(idx), rows, n: Math.max(n, 1) };
+    });
+}
 // Giorni aggregati (totale, famiglia meteo, temperatura) e rapporto rispetto al normale dello stesso giorno della settimana
 function buildMeteoDays(rows) {
     const days = {};
@@ -1906,50 +1959,68 @@ function buildMeteoDays(rows) {
     list.forEach(x => { x.ratio = x.tot / (w[x.wd].s / w[x.wd].n); });
     return list;
 }
-function renderMeteoPerformance(rows) {
-    if (!isChartReady()) return;
-    const list = buildMeteoDays(rows).filter(x => x.fam);
+function meteoByFam(rows) {
     const by = {};
-    list.forEach(x => { const b = by[x.fam] || (by[x.fam] = { n: 0, tot: 0, r: 0 }); b.n++; b.tot += x.tot; b.r += x.ratio; });
+    buildMeteoDays(rows).filter(x => x.fam).forEach(x => { const b = by[x.fam] || (by[x.fam] = { n: 0, tot: 0, r: 0 }); b.n++; b.tot += x.tot; b.r += x.ratio; });
+    return by;
+}
+function renderMeteoPerformance(rows, comps) {
+    if (!isChartReady()) return;
+    comps = comps || [];
+    const by = meteoByFam(rows);
     const keys = METEO_FAMILIES.filter(k => by[k]);
     const vals = keys.map(k => Math.round((by[k].r / by[k].n - 1) * 1000) / 10);
+    const cb = comps.map(c => ({ c, by: meteoByFam(c.rows) }));
+    const mainColor = (v, i) => cb.length ? '#2563eb' : (by[keys[i]].n < 5 ? '#cbd5e1' : (v >= 0 ? '#10b981' : '#ef4444'));
+    const datasets = [{ label: cb.length ? 'Selezione' : 'Scostamento dal normale', data: vals, backgroundColor: vals.map((v, i) => mainColor(v, i)), borderRadius: 4, _by: by }];
+    cb.forEach(x => datasets.push({ label: x.c.label, data: keys.map(k => x.by[k] ? Math.round((x.by[k].r / x.by[k].n - 1) * 1000) / 10 : null), backgroundColor: x.c.color, borderRadius: 4, _by: x.by }));
     if (ch['chartMeteo']) ch['chartMeteo'].destroy();
     ch['chartMeteo'] = new Chart(document.getElementById('chartMeteo'), {
         type: 'bar',
-        data: { labels: keys.map(k => k + ' (' + by[k].n + ' gg)'), datasets: [{ label: 'Scostamento dal normale', data: vals,
-            backgroundColor: vals.map((v, i) => by[keys[i]].n < 5 ? '#cbd5e1' : (v >= 0 ? '#10b981' : '#ef4444')), borderRadius: 4 }] },
+        data: { labels: keys.map(k => k + ' (' + by[k].n + ' gg)'), datasets },
         options: { animation: false, responsive: true, maintainAspectRatio: false,
             scales: { y: { ticks: { callback: v => (v > 0 ? '+' : '') + v + '%' } }, x: { ticks: { maxRotation: 45, minRotation: 30 } } },
-            plugins: { legend: { display: false }, tooltip: { callbacks: {
-                label: c => { const b = by[keys[c.dataIndex]]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.tot / b.n)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi, poco affidabile)' : ''}`]; } } } } }
+            plugins: { legend: { display: cb.length > 0, labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: {
+                label: c => { const b = c.dataset._by[keys[c.dataIndex]]; const v = c.parsed.y; if (v == null || !b) return ''; return [`${c.dataset.label}: ${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.tot / b.n)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi, poco affidabile)' : ''}`]; } } } } }
     });
 }
 const TEMP_BANDS = [[-99,5,'< 5°'],[5,10,'5–10°'],[10,15,'10–15°'],[15,20,'15–20°'],[20,25,'20–25°'],[25,30,'25–30°'],[30,99,'≥ 30°']];
-function renderTempStats(rows) {
+function tempBands(rows) {
+    const list = buildMeteoDays(rows).filter(x => x.temp != null);
+    return { list, bands: TEMP_BANDS.map(([lo, hi, lab]) => { const g = list.filter(x => x.temp >= lo && x.temp < hi); return { lab, n: g.length, r: g.length ? g.reduce((a, x) => a + x.ratio, 0) / g.length : null, avg: g.length ? g.reduce((a, x) => a + x.tot, 0) / g.length : 0 }; }) };
+}
+function renderTempStats(rows, comps) {
     const sumEl = document.getElementById('temp-corr-summary');
     if (!sumEl || !isChartReady()) return;
-    const list = buildMeteoDays(rows).filter(x => x.temp != null);
+    comps = comps || [];
+    const { list, bands: bandsAll } = tempBands(rows);
     const info = document.getElementById('temp-backfill-info');
     if (info) { const missing = new Set(rows.filter(d => typeof d.temp !== 'number' && d.date).map(d => d.date)).size; info.innerText = missing ? `${missing} giorni senza temperatura` : 'Tutti i giorni hanno la temperatura'; }
     if (ch['chartTemp']) { ch['chartTemp'].destroy(); ch['chartTemp'] = null; }
     if (list.length < 10) { sumEl.innerText = 'Dati insufficienti: servono almeno 10 giorni con temperatura. Le temperature storiche vengono inserite in automatico: riprova tra poco.'; return; }
-    const n = list.length, mx = list.reduce((a, x) => a + x.temp, 0) / n, my = list.reduce((a, x) => a + x.ratio, 0) / n;
-    let sxy = 0, sxx = 0, syy = 0;
-    list.forEach(x => { sxy += (x.temp - mx) * (x.ratio - my); sxx += (x.temp - mx) ** 2; syy += (x.ratio - my) ** 2; });
-    const r = sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0, slope = sxx ? sxy / sxx * 10 * 100 : 0; // % ogni +10°C
-    const force = Math.abs(r) < 0.2 ? 'molto debole' : Math.abs(r) < 0.4 ? 'debole' : Math.abs(r) < 0.6 ? 'moderata' : 'forte';
-    sumEl.innerHTML = `Correlazione temperatura–ingressi: <b>r = ${r.toFixed(2).replace('.', ',')}</b> (${force}${r < 0 ? ', inversa' : ''}) · circa <b>${slope >= 0 ? '+' : ''}${slope.toFixed(0)}%</b> ogni +10°C · su ${n} giorni. <span style="color:#64748b">Attenzione: la temperatura segue la stagione (es. vasca estiva), quindi non è l'unico fattore.</span>`;
-    const bands = TEMP_BANDS.map(([lo, hi, lab]) => { const g = list.filter(x => x.temp >= lo && x.temp < hi); return { lab, n: g.length, r: g.length ? g.reduce((a, x) => a + x.ratio, 0) / g.length : null, avg: g.length ? g.reduce((a, x) => a + x.tot, 0) / g.length : 0 }; }).filter(b => b.n > 0);
+    const corr = (l) => { const n = l.length; if (n < 10) return null; const mx = l.reduce((a, x) => a + x.temp, 0) / n, my = l.reduce((a, x) => a + x.ratio, 0) / n; let sxy = 0, sxx = 0, syy = 0; l.forEach(x => { sxy += (x.temp - mx) * (x.ratio - my); sxx += (x.temp - mx) ** 2; syy += (x.ratio - my) ** 2; }); return { r: sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0, slope: sxx ? sxy / sxx * 10 * 100 : 0, n }; };
+    const c0 = corr(list);
+    const force = Math.abs(c0.r) < 0.2 ? 'molto debole' : Math.abs(c0.r) < 0.4 ? 'debole' : Math.abs(c0.r) < 0.6 ? 'moderata' : 'forte';
+    let txt = `Correlazione temperatura–ingressi: <b>r = ${c0.r.toFixed(2).replace('.', ',')}</b> (${force}${c0.r < 0 ? ', inversa' : ''}) · circa <b>${c0.slope >= 0 ? '+' : ''}${c0.slope.toFixed(0)}%</b> ogni +10°C · su ${c0.n} giorni.`;
+    const cmps = comps.map(c => ({ c, t: tempBands(c.rows) }));
+    cmps.forEach(x => { const cc = corr(x.t.list); if (cc) txt += ` <span style="color:${x.c.color}; font-weight:700">${x.c.label}: r = ${cc.r.toFixed(2).replace('.', ',')}, ${cc.slope >= 0 ? '+' : ''}${cc.slope.toFixed(0)}% ogni +10°C</span>`; });
+    sumEl.innerHTML = txt + ` <span style="color:#64748b">Attenzione: la temperatura segue la stagione (es. vasca estiva), quindi non è l'unico fattore.</span>`;
+    const idx = bandsAll.map((b, i) => i).filter(i => bandsAll[i].n > 0);
+    const bands = idx.map(i => bandsAll[i]);
+    const mainCol = (b) => cmps.length ? '#2563eb' : (b.n < 5 ? '#cbd5e1' : (b.r >= 1 ? '#10b981' : '#ef4444'));
+    const datasets = [{ label: cmps.length ? 'Selezione' : 'Scostamento dal normale', data: bands.map(b => Math.round((b.r - 1) * 1000) / 10), backgroundColor: bands.map(mainCol), borderRadius: 4, _b: bands }];
+    cmps.forEach(x => { const bb = idx.map(i => x.t.bands[i]); datasets.push({ label: x.c.label, data: bb.map(b => b.n ? Math.round((b.r - 1) * 1000) / 10 : null), backgroundColor: x.c.color, borderRadius: 4, _b: bb }); });
     ch['chartTemp'] = new Chart(document.getElementById('chartTemp'), {
         type: 'bar',
-        data: { labels: bands.map(b => `${b.lab} (${b.n} gg)`), datasets: [{ label: 'Scostamento dal normale', data: bands.map(b => Math.round((b.r - 1) * 1000) / 10), backgroundColor: bands.map(b => b.n < 5 ? '#cbd5e1' : (b.r >= 1 ? '#10b981' : '#ef4444')), borderRadius: 4 }] },
+        data: { labels: bands.map(b => `${b.lab} (${b.n} gg)`), datasets },
         options: { animation: false, responsive: true, maintainAspectRatio: false,
             scales: { y: { ticks: { callback: v => (v > 0 ? '+' : '') + v + '%' } } },
-            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const b = bands[c.dataIndex]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.avg)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi)' : ''}`]; } } } } }
+            plugins: { legend: { display: cmps.length > 0, labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => { const b = c.dataset._b[c.dataIndex]; const v = c.parsed.y; if (v == null || !b || !b.n) return ''; return [`${c.dataset.label}: ${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.avg)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi)' : ''}`]; } } } } }
     });
 }
 // ---- Statistiche aggiuntive: KPI, mix clienti, giorni della settimana, stagionalità, classifiche, tipi di giorno ----
-function renderStatsExtra(rows) {
+function renderStatsExtra(rows, comps) {
+    comps = comps || [];
     if (!isChartReady() || !document.getElementById('st-kpis')) return;
     const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
     const GIORNI = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
@@ -1977,14 +2048,28 @@ function renderStatsExtra(rows) {
     const wds = {}; days.forEach(x => { const w = new Date(x.date + 'T12:00:00').getDay(); (wds[w] = wds[w] || []).push(x.tot); });
     const wdAvg = Object.keys(wds).map(w => ({ w: +w, avg: wds[w].reduce((a, b) => a + b, 0) / wds[w].length }));
     const bestWd = wdAvg.reduce((a, b) => (a.avg >= b.avg ? a : b));
-    const kpi = (l, v, sub) => `<div class="st-kpi"><small>${l}</small><b>${v}</b>${sub ? `<em>${sub}</em>` : ''}</div>`;
-    kp.innerHTML = kpi('Ingressi totali', fmtN(tot), `${n} giorni di apertura`)
-        + kpi('Media giornaliera', fmtN(tot / n), `mediana ${fmtN(median)}`)
-        + kpi('Record giornaliero', fmtN(rec.tot), fmtD(rec.date))
+    // metriche dei confronti (stessa finestra di periodo; per la media storica totali = media per stagione)
+    const metr = (rws, nS) => {
+        const dm = {}; rws.forEach(d => { if (d.date) dm[d.date] = (dm[d.date] || 0) + (d.totale || 0); });
+        const dl = Object.values(dm).filter(v => v > 0); const nn = dl.length;
+        const sm = k => rws.reduce((a, d) => a + (d[k] || 0), 0);
+        const t = dl.reduce((a, v) => a + v, 0), ab = sm('abb_int') + sm('abb_rid'), pg = sm('int') + sm('rid');
+        return { tot: t / nS, n: nn / nS, avg: nn ? t / nn : null, abb: t ? ab / t * 100 : null, grat: t ? sm('grat') / t * 100 : null, rid: pg ? sm('rid') / pg * 100 : null, rec: dl.length ? Math.max(...dl) : null };
+    };
+    const cm = comps.map(c => ({ c, m: metr(c.rows, c.n) }));
+    const cLine = (c, txt, good) => `<em style="color:${c.color === '#94a3b8' ? '#64748b' : c.color}; font-weight:600">${c.label.replace('Stagione ', '')}: ${txt}${good == null ? '' : ` <span style="color:${good ? '#059669' : '#dc2626'}">${good ? '▲' : '▼'}</span>`}</em>`;
+    const pctD = (a, b) => (b ? Math.round((a / b - 1) * 100) : null);
+    const cmpPct = (get, cur, fmt) => cm.map(x => { const v = get(x.m); if (v == null) return ''; const d = pctD(cur, v); return cLine(x.c, `${fmt(v)}${d == null ? '' : ` (${d >= 0 ? '+' : ''}${d}%)`}`, d == null ? null : d >= 0); }).join('');
+    const cmpPp = (get, cur) => cm.map(x => { const v = get(x.m); if (v == null) return ''; const d = Math.round((cur - v) * 10) / 10; return cLine(x.c, `${Math.round(v)}% (${d >= 0 ? '+' : ''}${String(d).replace('.', ',')} pp)`, null); }).join('');
+    const kpi = (l, v, sub, cmp) => `<div class="st-kpi"><small>${l}</small><b>${v}</b>${sub ? `<em>${sub}</em>` : ''}${cmp || ''}</div>`;
+    const abbP = tot ? abb / tot * 100 : 0, gratP = tot ? grat / tot * 100 : 0, ridP = paganti ? sum('rid') / paganti * 100 : 0;
+    kp.innerHTML = kpi('Ingressi totali', fmtN(tot), `${n} giorni di apertura`, cmpPct(m => m.tot, tot, fmtN))
+        + kpi('Media giornaliera', fmtN(tot / n), `mediana ${fmtN(median)}`, cmpPct(m => m.avg, tot / n, fmtN))
+        + kpi('Record giornaliero', fmtN(rec.tot), fmtD(rec.date), cmpPct(m => m.rec, rec.tot, fmtN))
         + kpi('Giorno migliore', ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'][bestWd.w], `media ${fmtN(bestWd.avg)}`)
-        + kpi('Abbonati', tot ? Math.round(abb / tot * 100) + '%' : '-', `${fmtN(abb)} ingressi`)
-        + kpi('Gratuiti', tot ? Math.round(grat / tot * 100) + '%' : '-', `${fmtN(grat)} ingressi`)
-        + kpi('Ridotti su paganti', paganti ? Math.round(sum('rid') / paganti * 100) + '%' : '-', `${fmtN(sum('rid'))} ridotti`);
+        + kpi('Abbonati', tot ? Math.round(abbP) + '%' : '-', `${fmtN(abb)} ingressi`, cmpPp(m => m.abb, abbP))
+        + kpi('Gratuiti', tot ? Math.round(gratP) + '%' : '-', `${fmtN(grat)} ingressi`, cmpPp(m => m.grat, gratP))
+        + kpi('Ridotti su paganti', paganti ? Math.round(ridP) + '%' : '-', `${fmtN(sum('rid'))} ridotti`, cmpPp(m => m.rid, ridP));
 
     // Mix clienti per mese (% impilata)
     const byM = {};
@@ -2001,16 +2086,25 @@ function renderStatsExtra(rows) {
     // Media per giorno della settimana (Lun..Dom)
     const order = [1, 2, 3, 4, 5, 6, 0];
     const maxAvg = Math.max(...wdAvg.map(x => x.avg));
+    const wdSeries = (rws) => { const dm = {}; rws.forEach(d => { if (d.date) dm[d.date] = (dm[d.date] || 0) + (d.totale || 0); }); const a = {}; Object.keys(dm).forEach(k => { if (dm[k] > 0) { const w = new Date(k + 'T12:00:00').getDay(); (a[w] = a[w] || []).push(dm[k]); } }); return a; };
+    const wdDatasets = [{ label: comps.length ? 'Selezione' : 'Media ingressi', data: order.map(w => wds[w] ? Math.round(wds[w].reduce((a, b) => a + b, 0) / wds[w].length) : 0), backgroundColor: comps.length ? '#2563eb' : order.map(w => wds[w] && (wds[w].reduce((a, b) => a + b, 0) / wds[w].length) === maxAvg ? '#f43f5e' : '#fda4af'), borderRadius: 6 }];
+    comps.forEach(c => { const cw = wdSeries(c.rows); wdDatasets.push({ label: c.label, data: order.map(w => cw[w] ? Math.round(cw[w].reduce((a, b) => a + b, 0) / cw[w].length) : 0), backgroundColor: c.color, borderRadius: 6 }); });
     ch['chartWd'] = new Chart(document.getElementById('chartWd'), { type: 'bar',
-        data: { labels: order.map(w => GIORNI[w]), datasets: [{ label: 'Media ingressi', data: order.map(w => wds[w] ? Math.round(wds[w].reduce((a, b) => a + b, 0) / wds[w].length) : 0), backgroundColor: order.map(w => wds[w] && (wds[w].reduce((a, b) => a + b, 0) / wds[w].length) === maxAvg ? '#f43f5e' : '#fda4af'), borderRadius: 6 }] },
-        options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: c => { const w = order[c.dataIndex]; return wds[w] ? `Giorni osservati: ${wds[w].length}` : ''; } } } } } });
+        data: { labels: order.map(w => GIORNI[w]), datasets: wdDatasets },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: comps.length > 0, labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { afterLabel: c => { if (c.datasetIndex) return ''; const w = order[c.dataIndex]; return wds[w] ? `Giorni osservati: ${wds[w].length}` : ''; } } } } } });
 
-    // Media giornaliera per mese
+    // Media giornaliera per mese (il confronto è allineato per mese di calendario)
     const mDays = {}; days.forEach(x => { const m = x.date.slice(0, 7); const o = mDays[m] || (mDays[m] = { t: 0, n: 0 }); o.t += x.tot; o.n++; });
     const mk2 = Object.keys(mDays).sort();
+    const moDatasets = [{ label: comps.length ? 'Selezione' : 'Media/giorno', data: mk2.map(m => Math.round(mDays[m].t / mDays[m].n)), backgroundColor: comps.length ? '#2563eb' : '#fb7185', borderRadius: 6 }];
+    comps.forEach(c => {
+        const dm = {}; c.rows.forEach(d => { if (d.date) dm[d.date] = (dm[d.date] || 0) + (d.totale || 0); });
+        const byMo = {}; Object.keys(dm).forEach(k => { if (dm[k] > 0) { const mm = k.slice(5, 7); const o = byMo[mm] || (byMo[mm] = { t: 0, n: 0 }); o.t += dm[k]; o.n++; } });
+        moDatasets.push({ label: c.label, data: mk2.map(m => { const o = byMo[m.slice(5, 7)]; return o ? Math.round(o.t / o.n) : null; }), backgroundColor: c.color, borderRadius: 6 });
+    });
     ch['chartMonthAvg'] = new Chart(document.getElementById('chartMonthAvg'), { type: 'bar',
-        data: { labels: mk2.map(lab), datasets: [{ label: 'Media/giorno', data: mk2.map(m => Math.round(mDays[m].t / mDays[m].n)), backgroundColor: '#fb7185', borderRadius: 6 }] },
-        options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: c => `Giorni di apertura: ${mDays[mk2[c.dataIndex]].n}` } } } } });
+        data: { labels: mk2.map(lab), datasets: moDatasets },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: comps.length > 0, labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { afterLabel: c => c.datasetIndex ? '' : `Giorni di apertura: ${mDays[mk2[c.dataIndex]].n}` } } } } });
 
     // Classifiche
     const rank = (arr) => '<table>' + arr.map((x, i) => `<tr><td style="color:#94a3b8; width:26px">${i + 1}</td><td>${fmtD(x.date)}</td><td style="text-align:right"><b>${fmtN(x.tot)}</b></td></tr>`).join('') + '</table>';
@@ -2728,11 +2822,17 @@ window.renderStats = () => {
         });
         return { labels: sortedL, datasets: [{ label: `Totale`, data: dp, backgroundColor: '#2563eb' }] };
     };
-    renderMeteoPerformance(fMain);
-    renderTempStats(fMain);
+    const compSets = buildCompSets(selectedComps, filteredSource, startDate, endDate, yearMain);
+    renderMeteoPerformance(fMain, compSets);
+    renderTempStats(fMain, compSets);
     renderMeteoTempMatrix(fMain);
-    renderStatsExtra(fMain);
+    renderStatsExtra(fMain, compSets);
     const fasceData = buildMultiSeries(d => ({key: d.fascia, val: d.totale}));
+    compSets.forEach(c => {
+        const byF = {}; c.rows.forEach(d => { byF[d.fascia] = (byF[d.fascia] || 0) + (d.totale || 0); });
+        fasceData.datasets.push({ label: c.label + (c.n > 1 ? ' (media)' : ''), data: fasceData.labels.map(l => Math.round((byF[l] || 0) / c.n)), backgroundColor: c.color });
+    });
+    if (compSets.length) fasceData.datasets[0].label = 'Selezione';
     renderMultiBar('chartFasce', fasceData.labels, fasceData.datasets, 'y');
 
     // --- HEATMAP GIORNO SETTIMANA x FASCIA ---
@@ -4927,8 +5027,258 @@ window.renderUtenze = () => {
         renderElecMeteoChart(elecData, isDelta, showHistory, chartType);
         renderDynamicChart('chartWater', waterData.labels, makeDatasets(waterData, waterData, '#3b82f6', '#93c5fd', null), chartType); // No secondary for water
         renderDynamicChart('chartGas', gasData.labels, makeDatasets(gasData, gasData, '#ef4444', '#fca5a5', 'Temp. Esterna (°C)'), chartType);
+        try { renderUtenzeStats(); } catch (e) { console.error('renderUtenzeStats', e); }
     }
 };
+
+// ================= UTENZE: STATISTICHE =================
+const UC = { elec: '#eab308', gas: '#ef4444', water: '#3b82f6' };
+const U_METEO_CLASSES = ['Sole', 'Variabile', 'Nuvoloso', 'Pioggia'];
+const U_METEO_ICON = { Sole: '☀️ Sole', Variabile: '⛅ Variabile', Nuvoloso: '☁️ Nuvoloso', Pioggia: '🌧️ Pioggia' };
+const HDD_BASE = 18; // temperatura base dei gradi-giorno di riscaldamento
+function uMeteoClass(m) { if (!m) return null; for (const c of U_METEO_CLASSES) if (m.includes(c)) return c; return null; }
+function uNum(v) { return typeof v === 'number' && isFinite(v); }
+function uLinReg(pts) {
+    const n = pts.length; if (n < 8) return null;
+    const mx = pts.reduce((a, p2) => a + p2.x, 0) / n, my = pts.reduce((a, p2) => a + p2.y, 0) / n;
+    let sxy = 0, sxx = 0, syy = 0;
+    pts.forEach(q => { sxy += (q.x - mx) * (q.y - my); sxx += (q.x - mx) ** 2; syy += (q.y - my) ** 2; });
+    if (!sxx || !syy) return null;
+    const b = sxy / sxx; return { b, a: my - b * mx, r: sxy / Math.sqrt(sxx * syy), n };
+}
+const uStrength = (r) => { const a = Math.abs(r); return a < 0.2 ? 'nessun legame' : a < 0.4 ? 'legame debole' : a < 0.6 ? 'legame moderato' : a < 0.8 ? 'legame forte' : 'legame molto forte'; };
+const uF = (v, d = 0) => v == null || !isFinite(v) ? '–' : v.toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d });
+function uChart(id, cfg) {
+    const el = document.getElementById(id); if (!el || !isChartReady()) return;
+    if (ch[id]) ch[id].destroy();
+    cfg.options = Object.assign({ animation: false, responsive: true, maintainAspectRatio: false }, cfg.options || {});
+    ch[id] = new Chart(el, cfg);
+}
+function uBuildDays() {
+    const g = {};
+    dataUtenze.forEach(d => { if (!d.date) return; const o = g[d.date] || (g[d.date] = {}); if (d.type === U_TYPES.elec) o.elec = d; else if (d.type === U_TYPES.water) o.water = d; else if (d.type === U_TYPES.gas) o.gas = d; });
+    const ingr = {}; dataIngressi.forEach(d => { if (d.date) ingr[d.date] = (ingr[d.date] || 0) + (d.totale || 0); });
+    const prev = {}; const out = [];
+    const step = (key, val, date) => {
+        if (!uNum(val)) return null;
+        const pr = prev[key]; prev[key] = { v: val, date };
+        if (!pr) return null;
+        const gap = (new Date(date + 'T12:00:00') - new Date(pr.date + 'T12:00:00')) / 86400000;
+        const dl = val - pr.v; return (dl < 0 || gap > 1.5) ? null : dl;
+    };
+    Object.keys(g).sort().forEach(date => {
+        const o = g[date];
+        const dd = new Date(date + 'T12:00:00'); dd.setDate(dd.getDate() - 1);
+        const prevStr = fmtDateISO(dd);
+        const day = { date, wd: new Date(date + 'T12:00:00').getDay(), e: null, f1: null, f2: null, f3: null, w: null, g: null,
+            meteo: o.elec ? uMeteoClass(o.elec.meteo) : null,
+            temp: o.elec && uNum(o.elec.temp) ? o.elec.temp : (o.gas && uNum(o.gas.temp) ? o.gas.temp : null),
+            ingr: ingr[prevStr] != null ? ingr[prevStr] : null };
+        if (o.elec) { day.e = step('e', o.elec.val, date); day.f1 = step('f1', o.elec.a1, date); day.f2 = step('f2', o.elec.a2, date); day.f3 = step('f3', o.elec.a3, date); }
+        if (o.water) day.w = step('w', o.water.val, date);
+        if (o.gas) day.g = step('g', o.gas.val, date);
+        out.push(day);
+    });
+    return out;
+}
+function uRange() {
+    const rv = document.getElementById('u-range').value;
+    const now = new Date(); now.setHours(12, 0, 0, 0);
+    let from, to;
+    if (rv === 'custom') { from = document.getElementById('u-chart-start').value || '0000-00-00'; to = document.getElementById('u-chart-end').value || fmtDateISO(now); }
+    else { const f = new Date(now); f.setDate(f.getDate() - parseInt(rv)); from = fmtDateISO(f); to = fmtDateISO(now); }
+    return { from, to };
+}
+const uShiftY = (ds, k) => { const [y, m, d] = ds.split('-').map(Number); return fmtDateISO(new Date(y + k, m - 1, d)); };
+const uInR = (arr, a, b) => arr.filter(x => x.date >= a && x.date <= b);
+function uAgg(arr, key) {
+    const v = arr.filter(x => uNum(x[key])); if (!v.length) return null;
+    const sum = v.reduce((a, x) => a + x[key], 0);
+    const mx = v.reduce((a, b2) => (a[key] >= b2[key] ? a : b2)); const mn = v.reduce((a, b2) => (a[key] <= b2[key] ? a : b2));
+    return { sum, n: v.length, avg: sum / v.length, max: mx[key], maxDate: mx.date, min: mn[key], minDate: mn.date };
+}
+// scostamento giornaliero rispetto alla media dello stesso giorno della settimana
+function uRatios(arr, key) {
+    const v = arr.filter(x => uNum(x[key]) && x[key] > 0);
+    const w = {}; v.forEach(x => { const a = w[x.wd] || (w[x.wd] = { s: 0, n: 0 }); a.s += x[key]; a.n++; });
+    return v.map(x => Object.assign({}, x, { ratio: x[key] / (w[x.wd].s / w[x.wd].n), val: x[key] }));
+}
+const uFmtDate = ds => new Date(ds + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' });
+function uCmpLine(label, cur, prev, unitDec) {
+    if (prev == null || !prev || cur == null) return '';
+    const d = Math.round((cur / prev - 1) * 100); const up = d >= 0;
+    return `<em style="font-weight:600">${label}: ${uF(prev, unitDec)} (${up ? '+' : ''}${d}%) <span style="color:${up ? '#dc2626' : '#059669'}">${up ? '▲' : '▼'}</span></em>`;
+}
+function uKpis(id, items) {
+    const el = document.getElementById(id); if (!el) return;
+    el.innerHTML = items.map(k => `<div class="st-kpi"><small>${k.l}</small><b>${k.v}</b>${k.sub ? `<em>${k.sub}</em>` : ''}${k.cmp || ''}</div>`).join('');
+}
+function uMonthly(arr, key) {
+    const m = {}; arr.forEach(x => { if (uNum(x[key])) { const k = x.date.slice(0, 7); const o = m[k] || (m[k] = { s: 0, n: 0 }); o.s += x[key]; o.n++; } });
+    return m;
+}
+function uMonthChart(id, arr, allDays, key, color, unit, range, cmpYear) {
+    const m = uMonthly(arr, key); const ks = Object.keys(m).sort();
+    const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    const lab = k => MESI[+k.slice(5, 7) - 1] + " '" + k.slice(2, 4);
+    const ds = [{ label: 'Periodo', data: ks.map(k => Math.round(m[k].s / m[k].n * 10) / 10), backgroundColor: color, borderRadius: 5 }];
+    if (cmpYear) {
+        const pm = uMonthly(allDays, key);
+        ds.push({ label: 'Anno prec.', data: ks.map(k => { const pk = (+k.slice(0, 4) - 1) + k.slice(4); return pm[pk] ? Math.round(pm[pk].s / pm[pk].n * 10) / 10 : null; }), backgroundColor: '#cbd5e1', borderRadius: 5 });
+    }
+    uChart(id, { type: 'bar', data: { labels: ks.map(lab), datasets: ds }, options: { plugins: { legend: { display: ds.length > 1 }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${uF(c.parsed.y, 1)} ${unit}/giorno` } } } } });
+}
+function uScatter(id, pts, color, xl, yl, note) {
+    if (ch[id]) { ch[id].destroy(); ch[id] = null; }
+    const el = document.getElementById(id); if (!el) return null;
+    const reg = uLinReg(pts);
+    const box = el.closest('.chart-card'); const sub = box && box.querySelector('.chart-sub');
+    if (!reg) { if (sub) sub.innerText = '· dati insufficienti (servono almeno 8 giorni)'; return null; }
+    const xs = pts.map(q => q.x), x0 = Math.min(...xs), x1 = Math.max(...xs);
+    if (sub) sub.innerHTML = `· r = ${reg.r.toFixed(2).replace('.', ',')} (${uStrength(reg.r)})${note ? ' · ' + note(reg) : ''}`;
+    uChart(id, { type: 'scatter', data: { datasets: [
+        { label: 'Giorni', data: pts, backgroundColor: color + 'aa', pointRadius: 3 },
+        { label: 'Tendenza', type: 'line', data: [{ x: x0, y: reg.a + reg.b * x0 }, { x: x1, y: reg.a + reg.b * x1 }], borderColor: '#0f172a', borderWidth: 2, borderDash: [6, 4], pointRadius: 0, fill: false }] },
+        options: { scales: { x: { title: { display: true, text: xl } }, y: { title: { display: true, text: yl }, beginAtZero: false } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.datasetIndex ? '' : `${xl}: ${uF(c.parsed.x, 1)} → ${yl}: ${uF(c.parsed.y, 1)}` } } } } });
+    return reg;
+}
+function uBandChart(id, arr, key, color, unit) {
+    const v = arr.filter(x => uNum(x[key]) && uNum(x.temp));
+    const bands = TEMP_BANDS.map(([lo, hi, lab]) => { const g2 = v.filter(x => x.temp >= lo && x.temp < hi); return { lab, n: g2.length, avg: g2.length ? g2.reduce((a, x) => a + x[key], 0) / g2.length : null }; }).filter(b => b.n);
+    if (!bands.length) { if (ch[id]) { ch[id].destroy(); ch[id] = null; } return; }
+    uChart(id, { type: 'bar', data: { labels: bands.map(b => `${b.lab} (${b.n} gg)`), datasets: [{ label: 'Consumo medio', data: bands.map(b => Math.round(b.avg * 10) / 10), backgroundColor: bands.map(b => b.n < 5 ? '#cbd5e1' : color), borderRadius: 5 }] },
+        options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${uF(c.parsed.y, 1)} ${unit}/giorno · ${bands[c.dataIndex].n} giorni` } } } } });
+}
+function uColorCell(ratio, n, extra) {
+    if (!n) return '<td style="text-align:center; color:#cbd5e1; padding:8px">–</td>';
+    const v = ratio - 1; const txt = `${v >= 0 ? '+' : ''}${Math.round(v * 100)}%<br><small style="font-weight:500">${n} gg${extra || ''}</small>`;
+    if (n < 3) return `<td style="text-align:center; padding:8px; background:#f1f5f9; color:#94a3b8">${txt}</td>`;
+    const a = Math.min(Math.abs(v) / 0.4, 1) * 0.6 + 0.08;
+    return `<td style="text-align:center; padding:8px; background:${v >= 0 ? `rgba(239,68,68,${a})` : `rgba(16,185,129,${a})`}; font-weight:700; color:#0f172a">${txt}</td>`;
+}
+function uCrossTable(id, rowDefs, arrByKey) {
+    const keys = [['e', '⚡ Elettricità'], ['g', '🔥 Gas'], ['w', '💧 Acqua']];
+    const rat = {}; keys.forEach(([k]) => { rat[k] = uRatios(arrByKey, k); });
+    let h = '<table style="width:100%; min-width:0; border-collapse:separate; border-spacing:3px; font-size:0.85rem"><thead><tr><th style="padding:6px"></th>' + keys.map(([, l]) => `<th style="padding:6px; color:#475569; text-align:center">${l}</th>`).join('') + '</tr></thead><tbody>';
+    rowDefs.forEach(r => {
+        h += `<tr><th style="text-align:left; padding:6px; white-space:nowrap; color:#334155">${r.label}</th>` + keys.map(([k]) => { const g2 = rat[k].filter(r.test); return uColorCell(g2.length ? g2.reduce((a, x) => a + x.ratio, 0) / g2.length : 1, g2.length); }).join('') + '</tr>';
+    });
+    document.getElementById(id).innerHTML = h + '</tbody></table>';
+}
+function uAnomTable(id, rows, cols) {
+    const el = document.getElementById(id); if (!el) return;
+    if (!rows.length) { el.innerHTML = '<div style="color:#64748b; padding:8px">Dati insufficienti.</div>'; return; }
+    el.innerHTML = '<table style="width:100%; min-width:0; border-collapse:collapse; font-size:0.85rem"><thead><tr>' + cols.map(c => `<th style="padding:6px 8px; text-align:${c.right ? 'right' : 'left'}; font-size:0.7rem">${c.h}</th>`).join('') + '</tr></thead><tbody>'
+        + rows.map(r => '<tr>' + cols.map(c => `<td style="padding:6px 8px; border-bottom:1px solid rgba(0,0,0,0.06); text-align:${c.right ? 'right' : 'left'}">${c.f(r)}</td>`).join('') + '</tr>').join('') + '</tbody></table>';
+}
+
+function renderUtenzeStats() {
+    if (!isChartReady() || !document.getElementById('u-kpi-elec')) return;
+    const all = uBuildDays();
+    const { from, to } = uRange();
+    const sel = uInR(all, from, to);
+    const cmpYear = document.getElementById('u-compare-year').checked;
+    const lenDays = Math.max(1, Math.round((new Date(to + 'T12:00:00') - new Date(from + 'T12:00:00')) / 86400000) + 1);
+    const pf = new Date(from + 'T12:00:00'); pf.setDate(pf.getDate() - lenDays); const pt = new Date(from + 'T12:00:00'); pt.setDate(pt.getDate() - 1);
+    const prevP = from === '0000-00-00' ? [] : uInR(all, fmtDateISO(pf), fmtDateISO(pt));
+    const prevY = uInR(all, uShiftY(from, -1), uShiftY(to, -1));
+    // HDD e efficienza per ogni giorno
+    sel.forEach(x => { x.hdd = uNum(x.temp) ? Math.max(0, HDD_BASE - x.temp) : null; });
+    all.forEach(x => { x.hdd = uNum(x.temp) ? Math.max(0, HDD_BASE - x.temp) : null; });
+    const noData = !sel.length;
+    const note = document.getElementById('u-stat-note');
+    // ---------- KPI ----------
+    const mkCmp = (key, unitDec) => { const a = uAgg(sel, key); const out = []; if (!a) return ''; const p1 = uAgg(prevP, key); const p2 = uAgg(prevY, key);
+        if (p1) out.push(uCmpLine('Periodo prec.', a.avg, p1.avg, unitDec)); if (cmpYear && p2) out.push(uCmpLine('Anno prec.', a.avg, p2.avg, unitDec)); return out.join(''); };
+    const ingrPair = (key) => { const v = sel.filter(x => uNum(x[key]) && uNum(x.ingr) && x.ingr > 0); return { c: v.reduce((a, x) => a + x[key], 0), i: v.reduce((a, x) => a + x.ingr, 0), n: v.length }; };
+    const eA = uAgg(sel, 'e'), gA = uAgg(sel, 'g'), wA = uAgg(sel, 'w');
+    uKpis('u-kpi-elec', eA ? [
+        { l: 'Consumo periodo', v: uF(eA.sum) + ' kWh', sub: `${eA.n} giorni con dato` },
+        { l: 'Media giornaliera', v: uF(eA.avg, 1), sub: 'kWh/giorno', cmp: mkCmp('e', 1) },
+        { l: 'Giorno di picco', v: uF(eA.max, 1), sub: uFmtDate(eA.maxDate) },
+        { l: 'Giorno più basso', v: uF(eA.min, 1), sub: uFmtDate(eA.minDate) },
+        (() => { const p = ingrPair('e'); return { l: 'kWh per ingresso', v: p.i ? uF(p.c / p.i, 2) : '–', sub: p.n ? `su ${p.n} giorni` : 'servono gli ingressi' }; })()
+    ] : []);
+    const hddSum = sel.filter(x => uNum(x.g) && x.hdd != null).reduce((a, x) => a + x.hdd, 0), gasHdd = sel.filter(x => uNum(x.g) && x.hdd != null).reduce((a, x) => a + x.g, 0);
+    const warm = sel.filter(x => uNum(x.g) && x.hdd === 0);
+    uKpis('u-kpi-gas', gA ? [
+        { l: 'Consumo periodo', v: uF(gA.sum) + ' m³', sub: `${gA.n} giorni con dato` },
+        { l: 'Media giornaliera', v: uF(gA.avg, 1), sub: 'm³/giorno', cmp: mkCmp('g', 1) },
+        { l: 'Giorno di picco', v: uF(gA.max, 1), sub: uFmtDate(gA.maxDate) },
+        { l: 'Gas per grado-giorno', v: hddSum > 5 ? uF(gasHdd / hddSum, 2) : '–', sub: 'm³ per °C sotto i 18°' },
+        { l: 'Consumo base (caldo)', v: warm.length >= 3 ? uF(warm.reduce((a, x) => a + x.g, 0) / warm.length, 1) : '–', sub: 'm³/giorno con ≥ 18°' }
+    ] : []);
+    uKpis('u-kpi-water', wA ? [
+        { l: 'Consumo periodo', v: uF(wA.sum) + ' m³', sub: `${wA.n} giorni con dato` },
+        { l: 'Media giornaliera', v: uF(wA.avg, 1), sub: 'm³/giorno', cmp: mkCmp('w', 1) },
+        { l: 'Giorno di picco', v: uF(wA.max, 1), sub: uFmtDate(wA.maxDate) },
+        { l: 'Giorno più basso', v: uF(wA.min, 1), sub: uFmtDate(wA.minDate) },
+        (() => { const p = ingrPair('w'); return { l: 'Litri per ingresso', v: p.i ? uF(p.c * 1000 / p.i, 0) : '–', sub: p.n ? `su ${p.n} giorni` : 'servono gli ingressi' }; })()
+    ] : []);
+    const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    const lab = k => MESI[+k.slice(5, 7) - 1] + " '" + k.slice(2, 4);
+    // ---------- ELETTRICITA ----------
+    const f = ['f1', 'f2', 'f3'].map(k => sel.filter(x => uNum(x[k])).reduce((a, x) => a + x[k], 0));
+    if (f.some(v => v > 0)) uChart('chartUElecFasce', { type: 'doughnut', data: { labels: ['F1', 'F2', 'F3'], datasets: [{ data: f.map(v => Math.round(v)), backgroundColor: ['#f59e0b', '#fb923c', '#fcd34d'], borderWidth: 0 }] }, options: { plugins: { legend: { position: 'right', labels: { usePointStyle: true } }, tooltip: { callbacks: { label: c => `${c.label}: ${uF(c.parsed)} kWh (${Math.round(c.parsed / f.reduce((a, b2) => a + b2, 0) * 100)}%)` } } } } });
+    else if (ch['chartUElecFasce']) { ch['chartUElecFasce'].destroy(); ch['chartUElecFasce'] = null; }
+    uMonthChart('chartUElecMonth', sel, all, 'e', UC.elec, 'kWh', null, cmpYear);
+    // elettricità vs meteo (scostamento dal normale)
+    const eR = uRatios(sel, 'e');
+    const eM = U_METEO_CLASSES.map(c => { const g2 = eR.filter(x => x.meteo === c); return { c, n: g2.length, r: g2.length ? g2.reduce((a, x) => a + x.ratio, 0) / g2.length : null, avg: g2.length ? g2.reduce((a, x) => a + x.val, 0) / g2.length : null }; }).filter(x => x.n);
+    if (eM.length) uChart('chartUElecMeteo', { type: 'bar', data: { labels: eM.map(x => `${U_METEO_ICON[x.c]} (${x.n} gg)`), datasets: [{ label: 'Scostamento', data: eM.map(x => Math.round((x.r - 1) * 1000) / 10), backgroundColor: eM.map(x => x.n < 5 ? '#cbd5e1' : (x.r >= 1 ? '#ef4444' : '#10b981')), borderRadius: 5 }] },
+        options: { scales: { y: { ticks: { callback: v => (v > 0 ? '+' : '') + v + '%' } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const x = eM[c.dataIndex]; return [`${c.parsed.y > 0 ? '+' : ''}${c.parsed.y.toFixed(1)}% rispetto al normale`, `Media: ${uF(x.avg, 1)} kWh/giorno`, `Giorni: ${x.n}`]; } } } } } });
+    else if (ch['chartUElecMeteo']) { ch['chartUElecMeteo'].destroy(); ch['chartUElecMeteo'] = null; }
+    const regE = uScatter('chartUElecScatter', sel.filter(x => uNum(x.e) && uNum(x.temp)).map(x => ({ x: x.temp, y: x.e })), UC.elec, 'Temp. °C', 'kWh', r => `${r.b >= 0 ? '+' : ''}${uF(r.b * 10, 1)} kWh ogni +10°C`);
+    // ---------- GAS ----------
+    const regG = uScatter('chartUGasScatter', sel.filter(x => uNum(x.g) && uNum(x.temp)).map(x => ({ x: x.temp, y: x.g })), UC.gas, 'Temp. °C', 'm³', r => `${uF(r.b, 1)} m³ per ogni +1°C`);
+    uBandChart('chartUGasBands', sel, 'g', UC.gas, 'm³');
+    uMonthChart('chartUGasMonth', sel, all, 'g', UC.gas, 'm³', null, cmpYear);
+    const hm = {}; sel.forEach(x => { if (uNum(x.g) && x.hdd != null) { const k = x.date.slice(0, 7); const o = hm[k] || (hm[k] = { g: 0, h: 0 }); o.g += x.g; o.h += x.hdd; } });
+    const hk = Object.keys(hm).filter(k => hm[k].h >= 20).sort();
+    if (hk.length) uChart('chartUGasHdd', { type: 'line', data: { labels: hk.map(lab), datasets: [{ label: 'm³ per grado-giorno', data: hk.map(k => Math.round(hm[k].g / hm[k].h * 100) / 100), borderColor: UC.gas, backgroundColor: 'rgba(239,68,68,0.12)', fill: true, tension: 0.3, pointRadius: 4 }] }, options: { plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${uF(c.parsed.y, 2)} m³/°C · ${uF(hm[hk[c.dataIndex]].h)} gradi-giorno` } } } } });
+    else if (ch['chartUGasHdd']) { ch['chartUGasHdd'].destroy(); ch['chartUGasHdd'] = null; }
+    // ---------- ACQUA ----------
+    uMonthChart('chartUWaterMonth', sel, all, 'w', UC.water, 'm³', null, cmpYear);
+    uScatter('chartUWaterIngr', sel.filter(x => uNum(x.w) && uNum(x.ingr)).map(x => ({ x: x.ingr, y: x.w })), UC.water, 'Ingressi', 'm³', r => `${uF(r.b * 100, 1)} m³ ogni 100 ingressi`);
+    // ---------- METEO / TEMPERATURA: tabelle ----------
+    const withDay = sel.map(x => x);
+    uCrossTable('u-meteo-table', U_METEO_CLASSES.map(c => ({ label: U_METEO_ICON[c], test: x => x.meteo === c })), withDay);
+    uCrossTable('u-temp-table', TEMP_BANDS.map(([lo, hi, l]) => ({ label: l, test: x => uNum(x.temp) && x.temp >= lo && x.temp < hi })), withDay);
+    // correlazioni
+    const corrRows = [['e', '⚡ Elettricità', 'kWh'], ['g', '🔥 Gas', 'm³'], ['w', '💧 Acqua', 'm³']].map(([k, l, u]) => {
+        const rt = uLinReg(sel.filter(x => uNum(x[k]) && uNum(x.temp)).map(x => ({ x: x.temp, y: x[k] })));
+        const ri = uLinReg(sel.filter(x => uNum(x[k]) && uNum(x.ingr)).map(x => ({ x: x.ingr, y: x[k] })));
+        const rh = k === 'g' ? uLinReg(sel.filter(x => uNum(x.g) && x.hdd != null).map(x => ({ x: x.hdd, y: x.g }))) : null;
+        return { l, u, rt, ri, rh };
+    });
+    const cc = (r, extra) => r ? `<b>${r.r.toFixed(2).replace('.', ',')}</b> <span style="color:#64748b">(${uStrength(r.r)}, ${r.n} gg)</span>${extra ? `<br><small style="color:#64748b">${extra}</small>` : ''}` : '<span style="color:#94a3b8">dati insufficienti</span>';
+    document.getElementById('u-corr-table').innerHTML = '<table style="width:100%; min-width:0; border-collapse:collapse; font-size:0.85rem"><thead><tr><th style="padding:8px">Consumo</th><th style="padding:8px">vs Temperatura</th><th style="padding:8px">vs Ingressi</th></tr></thead><tbody>'
+        + corrRows.map(r => `<tr><td style="padding:8px; border-bottom:1px solid rgba(0,0,0,0.06)"><b>${r.l}</b></td><td style="padding:8px; border-bottom:1px solid rgba(0,0,0,0.06)">${cc(r.rt, r.rt ? `${r.rt.b >= 0 ? '+' : ''}${uF(r.rt.b, 2)} ${r.u} per +1°C` : '')}</td><td style="padding:8px; border-bottom:1px solid rgba(0,0,0,0.06)">${cc(r.ri, r.ri ? `${r.ri.b >= 0 ? '+' : ''}${uF(r.ri.b * 100, 2)} ${r.u} ogni 100 ingressi` : '')}</td></tr>`).join('') + '</tbody></table>';
+    // ---------- PROFILO SETTIMANALE ----------
+    const order = [1, 2, 3, 4, 5, 6, 0], GN = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    const wprof = (k) => { const w = {}; sel.forEach(x => { if (uNum(x[k])) { (w[x.wd] = w[x.wd] || []).push(x[k]); } }); const avgs = order.map(d => w[d] ? w[d].reduce((a, b2) => a + b2, 0) / w[d].length : null); const ok = avgs.filter(v => v != null); const m = ok.length ? ok.reduce((a, b2) => a + b2, 0) / ok.length : 0; return avgs.map(v => v == null || !m ? null : Math.round(v / m * 100)); };
+    uChart('chartUWeekly', { type: 'bar', data: { labels: order.map(d => GN[d]), datasets: [{ label: '⚡ Elettricità', data: wprof('e'), backgroundColor: UC.elec, borderRadius: 4 }, { label: '🔥 Gas', data: wprof('g'), backgroundColor: UC.gas, borderRadius: 4 }, { label: '💧 Acqua', data: wprof('w'), backgroundColor: UC.water, borderRadius: 4 }] }, options: { scales: { y: { beginAtZero: false } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } } });
+    // ---------- CONSUMI PER INGRESSO (per mese) ----------
+    const pm = {}; sel.forEach(x => { if (uNum(x.ingr) && x.ingr > 0) { const k = x.date.slice(0, 7); const o = pm[k] || (pm[k] = { e: 0, ie: 0, w: 0, iw: 0 }); if (uNum(x.e)) { o.e += x.e; o.ie += x.ingr; } if (uNum(x.w)) { o.w += x.w; o.iw += x.ingr; } } });
+    const pk = Object.keys(pm).sort();
+    if (pk.length) uChart('chartUPerIngr', { type: 'line', data: { labels: pk.map(lab), datasets: [
+        { label: 'kWh per ingresso', data: pk.map(k => pm[k].ie ? Math.round(pm[k].e / pm[k].ie * 100) / 100 : null), borderColor: UC.elec, backgroundColor: UC.elec, tension: 0.3, yAxisID: 'y' },
+        { label: 'Litri per ingresso', data: pk.map(k => pm[k].iw ? Math.round(pm[k].w * 1000 / pm[k].iw) : null), borderColor: UC.water, backgroundColor: UC.water, tension: 0.3, yAxisID: 'y1' }] },
+        options: { scales: { y: { position: 'left', title: { display: true, text: 'kWh' } }, y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Litri' } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } } } });
+    else if (ch['chartUPerIngr']) { ch['chartUPerIngr'].destroy(); ch['chartUPerIngr'] = null; }
+    // ---------- ANOMALIE ----------
+    const gPts = sel.filter(x => uNum(x.g) && x.hdd != null).map(x => ({ x: x.hdd, y: x.g, d: x }));
+    const gReg = uLinReg(gPts.map(q => ({ x: q.x, y: q.y })));
+    const gAnom = gReg ? gPts.map(q => { const exp = Math.max(gReg.a + gReg.b * q.x, 0); return { date: q.d.date, temp: q.d.temp, val: q.y, exp, exc: q.y - exp, dev: exp > 1 ? (q.y / exp - 1) : null }; }).sort((a, b2) => b2.exc - a.exc).slice(0, 10) : [];
+    uAnomTable('u-anom-gas', gAnom, [
+        { h: 'Giorno', f: r => uFmtDate(r.date) }, { h: 'Temp.', right: 1, f: r => uF(r.temp, 1) + '°' }, { h: 'Gas', right: 1, f: r => uF(r.val, 1) + ' m³' }, { h: 'Previsto', right: 1, f: r => uF(r.exp, 1) + ' m³' },
+        { h: 'Eccesso', right: 1, f: r => `<b style="color:#dc2626">+${uF(r.exc, 1)} m³</b>${r.dev != null && r.exp >= 10 ? ` <small>(+${Math.round(r.dev * 100)}%)</small>` : ''}` }]);
+    const eAnom = eR.map(x => ({ date: x.date, val: x.val, exp: x.val / x.ratio, dev: x.ratio - 1 })).sort((a, b2) => b2.dev - a.dev).slice(0, 10);
+    uAnomTable('u-anom-elec', eAnom, [
+        { h: 'Giorno', f: r => uFmtDate(r.date) }, { h: 'Consumo', right: 1, f: r => uF(r.val, 1) + ' kWh' }, { h: 'Normale', right: 1, f: r => uF(r.exp, 1) + ' kWh' },
+        { h: 'Scost.', right: 1, f: r => `<b style="color:#dc2626">+${Math.round(r.dev * 100)}%</b>` }]);
+    if (note) note.innerText = noData ? 'Nessun dato nel periodo selezionato.' : `Periodo: ${uFmtDate(from === '0000-00-00' ? sel[0].date : from)} – ${uFmtDate(to)} · ${sel.length} giorni con letture. Il consumo di un giorno è la differenza tra la sua lettura e quella precedente (riferito alle 24 ore trascorse, quindi meteo e temperatura sono quelli del giorno prima; i giorni senza lettura il giorno prima non contano).`;
+}
 
 window.resetUtenzeHistory = () => {
     document.getElementById('u-hist-start').value = "";
