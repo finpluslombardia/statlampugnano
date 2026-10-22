@@ -3805,8 +3805,7 @@ function renderSeasonDetailExtra(selectedSeason) {
         + kpi('Record giornaliero', m.rec ? eur0(m.rec.incasso_totale) : '–', m.rec ? fmtD(m.rec.date) : '', mp.rec ? cmpPct(m.rec.incasso_totale, mp.rec.incasso_totale, eur0) : '')
         + kpi('Mese migliore', bm ? MESI[+bm.slice(5, 7) - 1] + ' ' + bm.slice(0, 4) : '–', bm ? eur0(byM[bm]) : '')
         + kpi('Giorno della settimana migliore', bestWd ? WD[bestWd.w] : '–', bestWd ? `media ${eur0(bestWd.avg)}` : '')
-        + kpi('Quota Esente IVA', m.esente != null ? Math.round(m.esente) + '%' : '–', m.esente != null ? `Parte IVA ${Math.round(100 - m.esente)}%` : '', cmpPp(m.esente, mp.esente))
-        + kpi('Quota contanti', m.cash != null ? Math.round(m.cash) + '%' : '–', m.pt > 0 ? 'sul totale pagato' : 'metodi non registrati', cmpPp(m.cash, mp.cash));
+        + kpi('Quota Esente IVA', m.esente != null ? Math.round(m.esente) + '%' : '–', m.esente != null ? `Parte IVA ${Math.round(100 - m.esente)}%` : '', cmpPp(m.esente, mp.esente));
 
     // ---- passo stagione cumulato: stagione + 3 precedenti ----
     const dayIdx = (ds, yk) => Math.round((new Date(ds + 'T12:00:00') - new Date(yk, 8, 1, 12)) / 86400000);
