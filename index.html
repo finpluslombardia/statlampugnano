@@ -1275,59 +1275,44 @@
 
         <!-- Incassi Sub-View: Statistiche (confronto tra stagioni) -->
         <div id="sub-inc-stats" class="hidden">
-            <h3 style="margin:0 0 15px; font-size:1.1rem; color:var(--text-main)">📊 Confronto tra Stagioni</h3>
-            <div class="chart-card glass-card" style="height:380px; padding:15px; margin-bottom:20px">
-                <div class="chart-header" style="font-size:0.85rem">💰 Incasso Totale — Tutte le Stagioni a Confronto</div>
-                <div class="chart-wrapper"><canvas id="chartIncYearCompare"></canvas></div>
+            <div id="inc-st-note" style="font-size:0.8rem; color:#64748b; margin:0 0 15px"></div>
+
+            <!-- I1: ANDAMENTO -->
+            <div class="stat-section" style="--sc:59,130,246">
+                <div class="stat-section-head"><h3>💰 Andamento Stagioni</h3><span>Dove siamo rispetto alle stagioni passate, alla stessa data</span></div>
+                <div id="inc-kpis" class="st-kpis"></div>
+                <div class="charts-row-main"><div class="chart-card glass-card" style="height:380px"><div class="chart-header">Incasso Totale — Tutte le Stagioni a Confronto <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompare"></canvas></div></div></div>
+                <div class="charts-row-main" style="margin-bottom:0"><div class="chart-card glass-card" style="height:380px"><div class="chart-header">Incasso Cumulato nella Stagione <span class="chart-sub">· il passo della stagione, giorno per giorno</span></div><div class="chart-wrapper"><canvas id="chartIncCum"></canvas></div></div></div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px">
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">📚 Corsi — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareCorsi"></canvas></div>
-                </div>
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">🏅 Società Sportive — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareSocietaSportive"></canvas></div>
-                </div>
+            <!-- I2: COMPOSIZIONE -->
+            <div class="stat-section" style="--sc:168,85,247">
+                <div class="stat-section-head"><h3>🧩 Composizione degli Incassi</h3><span>Da cosa è fatto l&apos;incasso di ogni stagione</span></div>
+                <div class="charts-row-split"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Incasso per Categoria <span class="chart-sub">· € per stagione</span></div><div class="chart-wrapper"><canvas id="chartIncCompAbs"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Peso di Ogni Categoria <span class="chart-sub">· % sul totale della stagione</span></div><div class="chart-wrapper"><canvas id="chartIncCompPct"></canvas></div></div></div>
+                <div class="charts-row-split" style="margin-bottom:0"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">📚 Corsi — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareCorsi"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">🏅 Società Sportive — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareSocietaSportive"></canvas></div></div></div>
             </div>
 
-            <div class="chart-card glass-card" style="height:340px; padding:15px; margin-bottom:20px">
-                <div class="chart-header" style="font-size:0.85rem">🧾 Totale Parte IVA — Confronto tra Stagioni</div>
-                <div class="chart-wrapper"><canvas id="chartIncYearCompareIva"></canvas></div>
+            <!-- I3: PARTE IVA E VENDITE -->
+            <div class="stat-section" style="--sc:245,158,11">
+                <div class="stat-section-head"><h3>🧾 Parte IVA e Vendite</h3><span>Ingressi, abbonamenti, accessori e fatture mese per mese</span></div>
+                <div class="charts-row-main"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">🧾 Totale Parte IVA — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareIva"></canvas></div></div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">🎫 Ingressi — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareIngressi"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">🎟️ Abbonamenti — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareAbbonamenti"></canvas></div></div></div>
+                <div class="charts-row-split"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">🛍️ Accessori — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareAccessori"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">💳 Crediti — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareCrediti"></canvas></div></div></div>
+                <div class="charts-row-split" style="margin-bottom:0"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">📄 Fatture — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareFatture"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">💧 Spazi Acqua — Confronto tra Stagioni <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncYearCompareSpaziAcqua"></canvas></div></div></div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px">
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">🎫 Ingressi — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareIngressi"></canvas></div>
-                </div>
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">🎟️ Abbonamenti — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareAbbonamenti"></canvas></div>
-                </div>
+            <!-- I4: METODI DI PAGAMENTO -->
+            <div class="stat-section" style="--sc:16,185,129">
+                <div class="stat-section-head"><h3>💳 Metodi di Pagamento</h3><span>Come pagano i clienti: POS, Satispay, bonifico, contanti</span></div>
+                <div class="charts-row-split"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Esente IVA (Corsi e Società) <span class="chart-sub">· € per stagione</span></div><div class="chart-wrapper"><canvas id="chartIncPayEsente"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Parte IVA <span class="chart-sub">· € per stagione</span></div><div class="chart-wrapper"><canvas id="chartIncPayIva"></canvas></div></div></div>
+                <div class="charts-row-main" style="margin-bottom:0"><div class="chart-card glass-card" style="height:320px"><div class="chart-header">Quota Contanti nel Tempo <span class="chart-sub">· % dei contanti sul totale incassato, per mese</span></div><div class="chart-wrapper"><canvas id="chartIncCashTrend"></canvas></div></div></div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px">
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">🛍️ Accessori — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareAccessori"></canvas></div>
-                </div>
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">💳 Crediti — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareCrediti"></canvas></div>
-                </div>
-            </div>
-
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px">
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">📄 Fatture — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareFatture"></canvas></div>
-                </div>
-                <div class="chart-card glass-card" style="height:340px; padding:15px">
-                    <div class="chart-header" style="font-size:0.85rem">💧 Spazi Acqua — Confronto tra Stagioni</div>
-                    <div class="chart-wrapper"><canvas id="chartIncYearCompareSpaziAcqua"></canvas></div>
-                </div>
+            <!-- I5: CALENDARIO E RECORD -->
+            <div class="stat-section" style="--sc:244,63,94">
+                <div class="stat-section-head"><h3>📅 Calendario e Record</h3><span>Giorni della settimana, media per giorno di apertura, giorni e mesi migliori</span></div>
+                <div class="charts-row-split"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Incasso Medio per Giorno della Settimana <span class="chart-sub">· € per giorno con incasso</span></div><div class="chart-wrapper"><canvas id="chartIncWd"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Incasso Medio per Giorno di Apertura <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncMonthAvg"></canvas></div></div></div>
+                <div class="charts-row-split" style="margin-bottom:0"><div class="chart-card glass-card auto-h"><div class="chart-header">🏆 10 Giorni Migliori <span class="chart-sub">· tutte le stagioni</span></div><div id="inc-top-days" style="overflow-x:auto"></div></div><div class="chart-card glass-card auto-h"><div class="chart-header">🏆 10 Mesi Migliori <span class="chart-sub">· tutte le stagioni</span></div><div id="inc-top-months" style="overflow-x:auto"></div></div></div>
             </div>
         </div>
 
@@ -3836,6 +3821,103 @@ function renderIncassiStats() {
     buildSeasonCompareChart('chartIncYearCompareCrediti', r => r.crediti);
     buildSeasonCompareChart('chartIncYearCompareFatture', r => r.fatture);
     buildSeasonCompareChart('chartIncYearCompareSpaziAcqua', r => r.spaziAcqua);
+    try { renderIncassiStatsExtra(); } catch (e) { console.error('renderIncassiStatsExtra', e); }
+}
+
+// ---- Incassi: statistiche aggiuntive (passo stagione, composizione, metodi di pagamento, calendario) ----
+function renderIncassiStatsExtra() {
+    if (!isChartReady() || !document.getElementById('inc-kpis')) return;
+    const docs = dataIncassi.filter(d => d.date);
+    if (!docs.length) return;
+    const yc = ['#94a3b8','#2563eb','#16a34a','#ea580c','#7c3aed','#dc2626'];
+    const seasons = [...new Set(docs.map(d => getSeasonStartYear(d.date)))].sort();
+    const col = y => yc[seasons.indexOf(y) % yc.length];
+    const lbl = y => getSeasonLabel(y);
+    const eur = v => fmtEUR(v);
+    const eur0 = v => '€ ' + Math.round(v).toLocaleString('it-IT');
+    const mk = () => ({ tot: 0, n4: 0, ss: 0, ing: 0, abb: 0, acc: 0, fat: 0, ep: { pos: 0, sat: 0, bon: 0, con: 0 }, ip: { pos: 0, sat: 0, bon: 0, con: 0 }, days: 0 });
+    const S = {}; seasons.forEach(y => { S[y] = mk(); });
+    const wd = {}, mAvg = {};
+    docs.forEach(d => {
+        const y = getSeasonStartYear(d.date), a = S[y], t = d.incasso_totale || 0;
+        a.tot += t; a.n4 += d.corsi_n4_tot || 0; a.ss += d.societa_sportive_tot || 0; a.ing += d.ingressi_tot || 0; a.abb += d.abbonamenti_tot || 0;
+        a.acc += d.accessori_tot || 0; a.fat += (d.fatture_spazi_acqua || 0) + (d.fatture_altro || 0);
+        a.ep.pos += d.corsi_n4_pos || 0; a.ep.sat += d.corsi_n4_satispay || 0; a.ep.bon += d.corsi_n4_bonifico || 0; a.ep.con += d.corsi_n4_contanti || 0;
+        a.ip.pos += d.iva_pos || 0; a.ip.sat += d.iva_satispay || 0; a.ip.bon += d.iva_bonifico || 0; a.ip.con += d.iva_contanti || 0;
+        if (t > 0) {
+            a.days++;
+            const w = new Date(d.date + 'T12:00:00').getDay(); const o = (wd[y] = wd[y] || {}); (o[w] = o[w] || []).push(t);
+            const m = parseInt(d.date.slice(5, 7), 10); const mm = (mAvg[y] = mAvg[y] || {}); (mm[m] = mm[m] || []).push(t);
+        }
+    });
+    const mkChart = (id, cfg) => { const el = document.getElementById(id); if (!el) return; if (ch[id]) ch[id].destroy(); cfg.options = Object.assign({ animation: false, responsive: true, maintainAspectRatio: false }, cfg.options || {}); ch[id] = new Chart(el, cfg); };
+    // data di riferimento: l'ultimo giorno con dati; le altre stagioni sono tagliate alla stessa data
+    const refDate = docs.reduce((a, d) => (d.date > a ? d.date : a), '0000-00-00');
+    const refY = getSeasonStartYear(refDate);
+    const [ry, rm, rd] = refDate.split('-').map(Number);
+    const cut = y => fmtDateISO(new Date(ry + (y - refY), rm - 1, rd));
+    const ytd = {}; seasons.forEach(y => { const c = cut(y); ytd[y] = docs.filter(d => getSeasonStartYear(d.date) === y && d.date <= c).reduce((a, d) => a + (d.incasso_totale || 0), 0); });
+    const refLbl = `${String(rd).padStart(2, '0')}/${String(rm).padStart(2, '0')}`;
+    const note = document.getElementById('inc-st-note');
+    if (note) note.innerText = `Il passo stagione confronta le stagioni alla stessa data (${refLbl}). Ultimo giorno registrato: ${refDate.split('-').reverse().join('/')}.`;
+
+    // ---------- KPI per stagione ----------
+    const recent = seasons.slice(-4);
+    document.getElementById('inc-kpis').innerHTML = recent.map(y => {
+        const pi = seasons.indexOf(y) - 1, py = pi >= 0 ? seasons[pi] : null;
+        const d = py != null && ytd[py] ? Math.round((ytd[y] / ytd[py] - 1) * 100) : null;
+        const complete = y !== refY;
+        return `<div class="st-kpi" style="border-color:${col(y)}66"><small style="color:${col(y)}; filter:brightness(0.85)">Stagione ${lbl(y)}</small><b>${eur0(ytd[y])}</b><em>fino al ${refLbl}${complete ? '' : ' (in corso)'}</em>`
+            + (d != null ? `<em style="font-weight:600">vs ${lbl(py)}: ${d >= 0 ? '+' : ''}${d}% <span style="color:${d >= 0 ? '#059669' : '#dc2626'}">${d >= 0 ? '▲' : '▼'}</span></em>` : '')
+            + `<em>Stagione intera: ${eur0(S[y].tot)}${S[y].days ? ` · media ${eur0(S[y].tot / S[y].days)}/giorno` : ''}</em></div>`;
+    }).join('');
+
+    // ---------- incasso cumulato (giorno di stagione) ----------
+    const dayIdx = (ds, y) => Math.round((new Date(ds + 'T12:00:00') - new Date(y, 8, 1, 12)) / 86400000);
+    const N = 366; const labelsCum = []; for (let k = 0; k < N; k++) { const dd = new Date(2025, 8, 1 + k); labelsCum.push(dd.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })); }
+    const cumSets = seasons.map(y => {
+        const arr = new Array(N).fill(0); docs.forEach(d => { if (getSeasonStartYear(d.date) === y) { const k = dayIdx(d.date, y); if (k >= 0 && k < N) arr[k] += d.incasso_totale || 0; } });
+        const lastDoc = docs.filter(d => getSeasonStartYear(d.date) === y).reduce((a, d) => (d.date > a ? d.date : a), '');
+        const lastK = y === refY ? dayIdx(refDate, y) : N - 1;
+        let run = 0; const out = arr.map((v, k) => { run += v; return k <= lastK ? Math.round(run) : null; });
+        return { label: 'Stagione ' + lbl(y), data: out, borderColor: col(y), backgroundColor: col(y), borderWidth: y === refY ? 3 : 2, pointRadius: 0, tension: 0.15, spanGaps: false };
+    });
+    mkChart('chartIncCum', { type: 'line', data: { labels: labelsCum, datasets: cumSets }, options: { interaction: { mode: 'index', intersect: false }, scales: { x: { ticks: { maxTicksLimit: 12, autoSkip: true, maxRotation: 0 } }, y: { beginAtZero: true, ticks: { callback: v => eur0(v) } } }, plugins: { tooltip: { callbacks: { label: c => c.parsed.y == null ? '' : `${c.dataset.label}: ${eur0(c.parsed.y)}` } } } } });
+
+    // ---------- composizione per stagione ----------
+    const cats = [['n4', 'Corsi', '#14b8a6'], ['ss', 'Società Sportive', '#0ea5e9'], ['ing', 'Ingressi', '#2563eb'], ['abb', 'Abbonamenti', '#a855f7'], ['acc', 'Accessori', '#f59e0b'], ['fat', 'Fatture', '#ef4444']];
+    mkChart('chartIncCompAbs', { type: 'bar', data: { labels: seasons.map(lbl), datasets: cats.map(([k, l, c]) => ({ label: l, data: seasons.map(y => Math.round(S[y][k])), backgroundColor: c })) },
+        options: { scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => eur0(v) } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${eur0(c.parsed.y)}` } } } } });
+    const sumCat = y => cats.reduce((a, [k]) => a + S[y][k], 0) || 1;
+    mkChart('chartIncCompPct', { type: 'bar', data: { labels: seasons.map(lbl), datasets: cats.map(([k, l, c]) => ({ label: l, data: seasons.map(y => Math.round(S[y][k] / sumCat(y) * 1000) / 10), backgroundColor: c })) },
+        options: { scales: { x: { stacked: true }, y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } } } });
+
+    // ---------- metodi di pagamento ----------
+    const pm = [['pos', 'POS', '#2563eb'], ['sat', 'Satispay', '#ef4444'], ['bon', 'Bonifico', '#a855f7'], ['con', 'Contanti', '#16a34a']];
+    const payChart = (id, key) => mkChart(id, { type: 'bar', data: { labels: seasons.map(lbl), datasets: pm.map(([k, l, c]) => ({ label: l, data: seasons.map(y => Math.round(S[y][key][k])), backgroundColor: c })) },
+        options: { scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: v => eur0(v) } } }, plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => { const tot = pm.reduce((a, [k]) => a + S[seasons[c.dataIndex]][key][k], 0) || 1; return `${c.dataset.label}: ${eur0(c.parsed.y)} (${Math.round(c.parsed.y / tot * 100)}%)`; } } } } } });
+    payChart('chartIncPayEsente', 'ep'); payChart('chartIncPayIva', 'ip');
+    // quota contanti per mese di stagione
+    const MS = ['Set','Ott','Nov','Dic','Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago'], MO = [9,10,11,12,1,2,3,4,5,6,7,8];
+    const cashSets = seasons.map(y => ({ label: 'Stagione ' + lbl(y), borderColor: col(y), backgroundColor: col(y), tension: 0.25, spanGaps: true, data: MO.map(m => {
+        const yy = m >= 9 ? y : y + 1; const key = `${yy}-${String(m).padStart(2, '0')}`; let con = 0, tot = 0;
+        docs.forEach(d => { if (d.date.slice(0, 7) === key) { con += (d.corsi_n4_contanti || 0) + (d.iva_contanti || 0); tot += (d.corsi_n4_pos || 0) + (d.corsi_n4_satispay || 0) + (d.corsi_n4_bonifico || 0) + (d.corsi_n4_contanti || 0) + (d.iva_pos || 0) + (d.iva_satispay || 0) + (d.iva_bonifico || 0) + (d.iva_contanti || 0); } });
+        return tot > 0 ? Math.round(con / tot * 1000) / 10 : null; }) }));
+    mkChart('chartIncCashTrend', { type: 'line', data: { labels: MS, datasets: cashSets }, options: { scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } }, plugins: { tooltip: { callbacks: { label: c => c.parsed.y == null ? '' : `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } } } });
+
+    // ---------- calendario ----------
+    const GN = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'], WO = [1,2,3,4,5,6,0];
+    const avg = a => a && a.length ? a.reduce((x, y2) => x + y2, 0) / a.length : null;
+    mkChart('chartIncWd', { type: 'bar', data: { labels: WO.map(w => GN[w]), datasets: seasons.map(y => ({ label: 'Stagione ' + lbl(y), data: WO.map(w => { const v = avg(wd[y] && wd[y][w]); return v == null ? null : Math.round(v); }), backgroundColor: col(y), borderRadius: 4 })) },
+        options: { scales: { y: { beginAtZero: true, ticks: { callback: v => eur0(v) } } }, plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${eur0(c.parsed.y)}` } } } } });
+    mkChart('chartIncMonthAvg', { type: 'bar', data: { labels: MS, datasets: seasons.map(y => ({ label: 'Stagione ' + lbl(y), data: MO.map(m => { const v = avg(mAvg[y] && mAvg[y][m]); return v == null ? null : Math.round(v); }), backgroundColor: col(y), borderRadius: 4 })) },
+        options: { scales: { y: { beginAtZero: true, ticks: { callback: v => eur0(v) } } }, plugins: { tooltip: { callbacks: { label: c => `${c.dataset.label}: ${eur0(c.parsed.y)}` } } } } });
+    const fmtD = ds => new Date(ds + 'T12:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' });
+    const tbl = rows => '<table style="width:100%; min-width:0; border-collapse:collapse; font-size:0.85rem">' + rows.map((r, i) => `<tr><td style="padding:7px 8px; width:26px; color:#94a3b8; border-bottom:1px solid rgba(0,0,0,0.06)">${i + 1}</td><td style="padding:7px 8px; border-bottom:1px solid rgba(0,0,0,0.06)">${r[0]}</td><td style="padding:7px 8px; text-align:right; border-bottom:1px solid rgba(0,0,0,0.06)"><b>${r[1]}</b></td></tr>`).join('') + '</table>';
+    document.getElementById('inc-top-days').innerHTML = tbl([...docs].sort((a, b) => (b.incasso_totale || 0) - (a.incasso_totale || 0)).slice(0, 10).map(d => [fmtD(d.date), eur(d.incasso_totale || 0)]));
+    const byM = {}; docs.forEach(d => { const k = d.date.slice(0, 7); byM[k] = (byM[k] || 0) + (d.incasso_totale || 0); });
+    const MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+    document.getElementById('inc-top-months').innerHTML = tbl(Object.keys(byM).sort((a, b) => byM[b] - byM[a]).slice(0, 10).map(k => [`${MESI[+k.slice(5, 7) - 1]} ${k.slice(0, 4)}`, eur(byM[k])]));
 }
 
 // ============ INCASSI: Settimanale ============
