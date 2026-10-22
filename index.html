@@ -3846,10 +3846,11 @@ function renderSeasonDetailExtra(selectedSeason) {
     // distribuzione degli incassi giornalieri
     if (m.open.length) {
         const vals = m.open.map(d => d.incasso_totale), mx = Math.max(...vals);
-        const raw = mx / 10, mag = Math.pow(10, Math.floor(Math.log10(raw || 1))); const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(v => v >= raw) || mag;
-        const nb = Math.ceil((mx + 1) / step); const cnt = new Array(nb).fill(0); vals.forEach(v => { cnt[Math.min(Math.floor(v / step), nb - 1)]++; });
-        mkChart('chartSdDist', { type: 'bar', data: { labels: cnt.map((_, i) => `${Math.round(i * step / 100) / 10}–${Math.round((i + 1) * step / 100) / 10}k`), datasets: [{ label: 'Giorni', data: cnt, backgroundColor: '#fb7185', borderRadius: 4 }] },
-            options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `Incasso da ${eur0(i[0].dataIndex * step)} a ${eur0((i[0].dataIndex + 1) * step)}`, label: c => `${c.parsed.y} giorni` } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
+        const edges = [0, 500, 1000, 2000]; while (edges[edges.length - 1] <= mx) edges.push(edges[edges.length - 1] + 2000);
+        const cnt = new Array(edges.length - 1).fill(0); vals.forEach(v => { for (let i = 0; i < cnt.length; i++) { if (v >= edges[i] && v < edges[i + 1]) { cnt[i]++; break; } } });
+        const fk = v => (v >= 1000 ? (v / 1000) + 'k' : String(v));
+        mkChart('chartSdDist', { type: 'bar', data: { labels: cnt.map((_, i) => `${fk(edges[i])}–${fk(edges[i + 1])}`), datasets: [{ label: 'Giorni', data: cnt, backgroundColor: '#fb7185', borderRadius: 4 }] },
+            options: { plugins: { legend: { display: false }, tooltip: { callbacks: { title: i => `Incasso da ${eur0(edges[i[0].dataIndex])} a ${eur0(edges[i[0].dataIndex + 1])}`, label: c => `${c.parsed.y} giorni` } } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
     } else if (ch['chartSdDist']) { ch['chartSdDist'].destroy(); ch['chartSdDist'] = null; }
     const tbl = rows => '<table style="width:100%; min-width:0; border-collapse:collapse; font-size:0.85rem">' + rows.map((r, i) => `<tr><td style="padding:7px 8px; width:26px; color:#94a3b8; border-bottom:1px solid rgba(0,0,0,0.06)">${i + 1}</td><td style="padding:7px 8px; border-bottom:1px solid rgba(0,0,0,0.06)">${r[0]}</td><td style="padding:7px 8px; text-align:right; border-bottom:1px solid rgba(0,0,0,0.06)"><b>${r[1]}</b></td></tr>`).join('') + '</table>';
     const srt = [...m.open].sort((a, b) => b.incasso_totale - a.incasso_totale);
