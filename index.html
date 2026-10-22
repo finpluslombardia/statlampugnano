@@ -277,12 +277,12 @@
                     </select>
                 </div>
                 <div class="inp-field" style="flex:1.5"><label>Fascia</label>
-                    <select id="i-fascia"><optgroup label="🏊 Vasca Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="☀️ Vasca Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
+                    <select id="i-fascia" onchange="updateMeteoSuggestion()"><optgroup label="🏊 Vasca Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="☀️ Vasca Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
                 </div>
                 <div class="inp-field" style="flex:1.2"><label>Meteo <span id="meteo-auto-hint" style="font-weight:600; color:#2563eb; margin-left:4px"></span></label>
                     <select id="i-meteo" onchange="markMeteoManual()"></select>
                 </div>
-                <div class="inp-field" style="flex:0.55"><label>Temp. media °C</label>
+                <div class="inp-field" style="flex:0.55"><label>Temp. °C</label>
                     <input type="number" step="0.1" id="i-temp" placeholder="auto" oninput="markTempManualIng()">
                 </div>
                 <div class="inp-field" style="flex:0.3; align-items:center; justify-content:center; padding-bottom:8px">
@@ -481,7 +481,7 @@
                 <div id="temp-corr-summary" style="font-size:0.9rem; color:#334155; margin:4px 0 8px"></div>
                 <div class="chart-wrapper"><canvas id="chartTemp"></canvas></div>
                 <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:10px">
-                    <button class="btn" onclick="backfillTemps()" title="Scarica da Open-Meteo la temperatura media dei giorni già registrati">🌡️ Recupera temperature storiche</button>
+                    <button class="btn" onclick="backfillTemps()" title="Scarica da Open-Meteo la temperatura media dei giorni già registrati">🌡️ Recupera temperature mancanti</button>
                     <span id="temp-backfill-info" style="font-size:0.8rem; color:#64748b"></span>
                 </div></div></div>
             <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Popolarità Fasce Orarie</div><div class="chart-wrapper"><canvas id="chartFasce"></canvas></div></div></div>
@@ -1598,6 +1598,7 @@ function startListening() {
             dataIngressi = snap.docs.map(d=>({id:d.id,...d.data()})); 
             try { populateStatFilters(); } catch(e) { console.error('populateStatFilters', e); }
             debouncedRefresh();
+            if (!autoTempBackfillDone && dataIngressi.length) { autoTempBackfillDone = true; setTimeout(() => { backfillTemps(true); }, 2500); }
         }, errHandler);
         
 
@@ -1877,7 +1878,7 @@ function renderTempStats(rows) {
     const info = document.getElementById('temp-backfill-info');
     if (info) { const missing = new Set(rows.filter(d => typeof d.temp !== 'number' && d.date).map(d => d.date)).size; info.innerText = missing ? `${missing} giorni senza temperatura` : 'Tutti i giorni hanno la temperatura'; }
     if (ch['chartTemp']) { ch['chartTemp'].destroy(); ch['chartTemp'] = null; }
-    if (list.length < 10) { sumEl.innerText = 'Dati insufficienti: servono almeno 10 giorni con temperatura. Usa il pulsante qui sotto per recuperare quelle storiche.'; return; }
+    if (list.length < 10) { sumEl.innerText = 'Dati insufficienti: servono almeno 10 giorni con temperatura. Le temperature storiche vengono inserite in automatico: riprova tra poco.'; return; }
     const n = list.length, mx = list.reduce((a, x) => a + x.temp, 0) / n, my = list.reduce((a, x) => a + x.ratio, 0) / n;
     let sxy = 0, sxx = 0, syy = 0;
     list.forEach(x => { sxy += (x.temp - mx) * (x.ratio - my); sxx += (x.temp - mx) ** 2; syy += (x.ratio - my) ** 2; });
@@ -1893,24 +1894,23 @@ function renderTempStats(rows) {
             plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const b = bands[c.dataIndex]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.avg)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi)' : ''}`]; } } } } }
     });
 }
-// Recupera da Open-Meteo la temperatura media (min+max)/2 dei giorni già registrati senza temperatura
-window.backfillTemps = async () => {
-    const missingRows = dataIngressi.filter(d => d.date && typeof d.temp !== 'number');
-    const dates = [...new Set(missingRows.map(d => d.date))].sort();
-    if (!dates.length) return showToast('Tutti i giorni hanno già la temperatura');
-    if (!confirm(`Recupero la temperatura media di ${dates.length} giorni (${missingRows.length} registrazioni) da Open-Meteo e la salvo nei dati. Procedo?`)) return;
+// Recupera da Open-Meteo la temperatura oraria (all'ora rappresentativa della fascia) dei giorni già registrati senza temperatura
+window.backfillTemps = async (auto) => {
     const todayStr = fmtDateISO(new Date());
-    const tmap = {};
+    const missingRows = dataIngressi.filter(d => d.date && d.date < todayStr && typeof d.temp !== 'number');
+    const dates = [...new Set(missingRows.map(d => d.date))].sort();
+    if (!dates.length) { if (!auto) showToast('Tutti i giorni hanno già la temperatura'); return; }
+    if (!auto && !confirm(`Recupero la temperatura di ${dates.length} giorni (${missingRows.length} registrazioni) da Open-Meteo e la salvo nei dati. Procedo?`)) return;
+    const th = {}; // data -> array 24 temperature orarie
     try {
         const fetchRange = async (a, b) => {
             const diff = Math.round((new Date(todayStr + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
             const base = diff > 80 ? 'https://archive-api.open-meteo.com/v1/archive' : 'https://api.open-meteo.com/v1/forecast';
-            const r = await fetch(`${base}?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&start_date=${a}&end_date=${b}`);
+            const r = await fetch(`${base}?latitude=${METEO_LAT}&longitude=${METEO_LON}&hourly=temperature_2m&timezone=Europe%2FRome&start_date=${a}&end_date=${b}`);
             if (!r.ok) throw new Error('Open-Meteo HTTP ' + r.status);
-            const j = await r.json(); const t = j.daily && j.daily.time || [];
-            t.forEach((dt, i) => { const mx = j.daily.temperature_2m_max[i], mn = j.daily.temperature_2m_min[i]; if (mx != null && mn != null) tmap[dt] = Math.round(((mx + mn) / 2) * 10) / 10; });
+            const j = await r.json(); const t = (j.hourly && j.hourly.time) || [], v = (j.hourly && j.hourly.temperature_2m) || [];
+            t.forEach((ts, i) => { const [dt, hh] = ts.split('T'); (th[dt] = th[dt] || [])[parseInt(hh)] = v[i]; });
         };
-        // blocchi di date consecutive entro 300 giorni
         let start = dates[0], prev = dates[0];
         const toMs = d => new Date(d + 'T00:00:00').getTime();
         for (let k = 1; k <= dates.length; k++) {
@@ -1918,14 +1918,16 @@ window.backfillTemps = async () => {
             if (cur === undefined || (toMs(cur) - toMs(start)) / 86400000 > 300) { await fetchRange(start, prev); start = cur; }
             prev = cur;
         }
-        const todo = missingRows.filter(d => tmap[d.date] != null);
-        showToast(`Salvo ${todo.length} registrazioni...`);
+        const tempFor = d => { const h = FASCIA_HOUR[d.fascia] ?? 12; const v = th[d.date] && th[d.date][h]; return v == null ? null : Math.round(v * 10) / 10; };
+        const todo = missingRows.map(d => ({ d, t: tempFor(d) })).filter(x => x.t != null);
+        if (!auto) showToast(`Salvo ${todo.length} registrazioni...`);
         for (let k = 0; k < todo.length; k += 20) {
-            await Promise.all(todo.slice(k, k + 20).map(d => updateDoc(doc(db, 'sessioni', d.id), { temp: tmap[d.date] })));
+            await Promise.all(todo.slice(k, k + 20).map(x => updateDoc(doc(db, 'sessioni', x.d.id), { temp: x.t })));
         }
-        showToast(`Temperature salvate (${todo.length} registrazioni)`);
-    } catch (e) { showToast('Errore: ' + e.message, 'error'); }
+        showToast(`Temperature storiche inserite (${todo.length} registrazioni)`);
+    } catch (e) { if (!auto) showToast('Errore: ' + e.message, 'error'); }
 };
+let autoTempBackfillDone = false;
 function renderMultiBar(id,l,ds,ax='x') { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'bar',data:{labels:l,datasets:ds},options:{animation:false, responsive:true,maintainAspectRatio:false,indexAxis:ax,plugins:{legend:{display:true}}}}); }
 
 window.renderOverview = () => { renderOverviewKPI(); renderOverviewCharts(); }
@@ -5191,18 +5193,20 @@ async function fetchMeteoInfo(dateStr) {
     const key = dateStr + (isToday ? '|' + Math.floor(Date.now() / 600000) : '');
     if (meteoCache[key]) return meteoCache[key];
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}` +
-        `&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum` +
+        `&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=temperature_2m` +
         `&timezone=Europe%2FRome&start_date=${dateStr}&end_date=${dateStr}`;
     const r = await fetch(url);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const j = await r.json();
     const dly = j.daily || {};
-    const info = { isToday, dCode: dly.weather_code && dly.weather_code[0], dMax: dly.temperature_2m_max && dly.temperature_2m_max[0], dMin: dly.temperature_2m_min && dly.temperature_2m_min[0], dRain: dly.precipitation_sum && dly.precipitation_sum[0], cCode: j.current && j.current.weather_code, cTemp: j.current && j.current.temperature_2m };
+    const info = { isToday, dCode: dly.weather_code && dly.weather_code[0], dMax: dly.temperature_2m_max && dly.temperature_2m_max[0], dMin: dly.temperature_2m_min && dly.temperature_2m_min[0], dRain: dly.precipitation_sum && dly.precipitation_sum[0], cCode: j.current && j.current.weather_code, cTemp: j.current && j.current.temperature_2m, hourly: (j.hourly && j.hourly.temperature_2m) || [] };
     meteoCache[key] = info;
     return info;
 }
 
 // ---- Nuoto Libero: selezione automatica del meteo ----
+// Ora rappresentativa di ogni fascia (le registrazioni non salvano l'orario): serve per la temperatura oraria dei giorni passati
+const FASCIA_HOUR = {'Mattina':10,'Mattina intera':11,'Pranzo':13,'Sera':20,'Sabato pom':16,'Domenica':11,'Festivo':11,'Unico':12,'Estiva - Mattina':10,'Estiva - Pomeriggio':15,'Estiva - Unico':13};
 let meteoManualIng = false, tempManualIng = false;
 window.markTempManualIng = () => { tempManualIng = true; };
 window.markMeteoManual = () => { meteoManualIng = true; const h = document.getElementById('meteo-auto-hint'); if (h) h.innerText = ''; };
@@ -5216,14 +5220,17 @@ window.updateMeteoSuggestion = async () => {
         if (dateStr !== document.getElementById('i-date').value || editIdIngressi) return; // contesto cambiato nel frattempo
         if (!info) { hint.innerText = ''; return; }
         let code, desc;
-        const avg = (info.dMax != null && info.dMin != null) ? Math.round(((info.dMax + info.dMin) / 2) * 10) / 10 : null;
+        const hr = FASCIA_HOUR[document.getElementById('i-fascia').value] ?? 12;
+        let tv = info.isToday ? info.cTemp : (info.hourly && info.hourly[hr]);
+        if (tv == null && info.hourly) tv = info.hourly[hr];
+        const avg = tv != null ? Math.round(tv * 10) / 10 : null;
         if (info.isToday && info.cCode != null) { code = info.cCode; desc = `Meteo attuale (Milano): ${WMO_IT[code] || '-'}`; }
         else if (info.dCode != null) { code = info.dCode; desc = `Meteo del giorno (Milano): ${WMO_IT[code] || '-'}`; }
         else { hint.innerText = ''; return; }
         if (!meteoManualIng) document.getElementById('i-meteo').value = meteoOptionFor(code);
         if (!tempManualIng && avg != null) document.getElementById('i-temp').value = avg;
-        hint.innerText = '🌐 auto';
-        hint.title = desc + (avg != null ? `, min ${Math.round(info.dMin)}° / max ${Math.round(info.dMax)}° → media ${avg}°C` : '') + (info.dRain > 0 ? `, pioggia ${info.dRain.toFixed(1)} mm` : '');
+        hint.innerText = '🌐 auto' + (avg != null ? ` · ${avg.toLocaleString('it-IT')}°C` : '');
+        hint.title = desc + (avg != null ? `, ${info.isToday ? 'temperatura attuale' : 'temperatura alle ' + hr + ':00'} ${avg}°C` : '') + (info.dRain > 0 ? `, pioggia ${info.dRain.toFixed(1)} mm` : '');
     } catch (e) { hint.innerText = ''; }
 };
 
