@@ -390,7 +390,7 @@
 
                 <!-- BOX 3: METEO -->
                 <div class="kpi-card glass-card" style="height:140px; border-left:4px solid #10b981; justify-content:center; align-items:center; text-align:center">
-                    <div class="kpi-head" style="color:#047857; margin-bottom:10px">☀️ Fattore Meteo</div>
+                    <div class="kpi-head" style="color:#047857; margin-bottom:10px">🌦️ Effetto Meteo</div>
                     <div class="kpi-val" id="hl-sun-pct" style="font-size:2.8rem; color:#10b981; line-height:1">0%</div>
                     <div class="kpi-sub" id="hl-sun-sub" style="font-size:0.85rem; color:#065f46; margin-top:5px">Giorni di Sole nel Mese</div>
                 </div>
@@ -2089,24 +2089,51 @@ function renderOverviewKPI() {
             document.getElementById('hl-worstday-avg').innerText = `Media: ${minAvg.toFixed(0)}`;
         }
 
-        const sunnyCount = dCurrent.filter(d => d.meteo && (d.meteo.includes('Sole') || d.meteo.includes('Sereno') || d.meteo.includes('Caldo'))).length;
-        const pct = (sunnyCount / dCurrent.length) * 100;
-        
-        // WEATHER COMPARISON LOGIC
-        const sunnyCountYoy = dYoyFullMonth.filter(d => d.meteo && (d.meteo.includes('Sole') || d.meteo.includes('Sereno') || d.meteo.includes('Caldo'))).length;
-        const pctYoy = dYoyFullMonth.length > 0 ? (sunnyCountYoy / dYoyFullMonth.length) * 100 : 0;
-
-        document.getElementById('hl-sun-pct').innerText = pct.toFixed(0) + "%";
-        document.getElementById('hl-sun-sub').innerHTML = `Giorni di Sole<br><span style="font-size:0.75rem; color:#065f46; opacity:0.8">vs ${pctYoy.toFixed(0)}% (${targetYoyYear})</span>`;
+        renderMeteoEffect(anchorDate);
 
     } else {
         document.getElementById('hl-record-val').innerText = "-";
         document.getElementById('hl-min-val').innerText = "-";
         document.getElementById('hl-bestday-val').innerText = "-";
         document.getElementById('hl-worstday-val').innerText = "-";
-        document.getElementById('hl-sun-pct').innerText = "-%";
-        document.getElementById('hl-sun-sub').innerText = "Giorni di Sole nel Mese";
+        renderMeteoEffect(anchorDate);
     }
+}
+
+// Effetto meteo: scostamento degli ingressi nei giorni di maltempo/bel tempo rispetto al normale per lo stesso giorno della settimana (ultimi 12 mesi)
+function renderMeteoEffect(anchor) {
+    const pctEl = document.getElementById('hl-sun-pct'), subEl = document.getElementById('hl-sun-sub');
+    if (!pctEl || !subEl) return;
+    const end = getStrDate(anchor);
+    const [ey, em, ed] = end.split('-').map(Number);
+    const start = fmtDateISO(new Date(ey - 1, em - 1, ed));
+    const days = {};
+    dataIngressi.forEach(d => {
+        if (!d.date || d.date < start || d.date >= end || d.excludeStats || (d.type && d.type !== 'standard')) return;
+        const o = days[d.date] || (days[d.date] = { tot: 0, m: {} });
+        o.tot += d.totale || 0;
+        if (d.meteo && !d.meteo.includes('N/D')) o.m[d.meteo] = (o.m[d.meteo] || 0) + 1;
+    });
+    const list = Object.keys(days).map(date => {
+        const o = days[date]; const mk = Object.keys(o.m).sort((a, b) => o.m[b] - o.m[a])[0];
+        return { wd: new Date(date + 'T12:00:00').getDay(), tot: o.tot, meteo: mk || '' };
+    }).filter(x => x.tot > 0);
+    const wdAvg = {};
+    list.forEach(x => { (wdAvg[x.wd] = wdAvg[x.wd] || []).push(x.tot); });
+    Object.keys(wdAvg).forEach(k => { wdAvg[k] = wdAvg[k].reduce((a, b) => a + b, 0) / wdAvg[k].length; });
+    const bad = [], good = [];
+    list.forEach(x => {
+        const r = x.tot / wdAvg[x.wd];
+        if (/Pioggia|Piog|Temporale/.test(x.meteo)) bad.push(r);
+        else if (/Sole|Parz/.test(x.meteo)) good.push(r);
+    });
+    const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+    const fmt = v => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
+    if (bad.length < 5) { pctEl.innerText = '-'; subEl.innerText = 'Dati insufficienti (servono almeno 5 giorni di pioggia)'; return; }
+    const eb = mean(bad) - 1;
+    pctEl.innerText = fmt(eb);
+    pctEl.style.color = eb < 0 ? '#dc2626' : '#10b981';
+    subEl.innerHTML = `Giorni di pioggia vs normale<br><span style="font-size:0.75rem; opacity:0.85">${good.length >= 5 ? 'Bel tempo ' + fmt(mean(good) - 1) + ' · ' : ''}${bad.length} gg di pioggia, ultimi 12 mesi</span>`;
 }
 
 window.renderOverviewCharts = () => {
