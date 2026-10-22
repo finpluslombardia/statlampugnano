@@ -280,7 +280,10 @@
                     <select id="i-fascia"><optgroup label="🏊 Vasca Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="☀️ Vasca Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
                 </div>
                 <div class="inp-field" style="flex:1.2"><label>Meteo <span id="meteo-auto-hint" style="font-weight:600; color:#2563eb; margin-left:4px"></span></label>
-                    <select id="i-meteo" onchange="markMeteoManual()"><option value="☀️ Sole">☀️ Sole</option><option value="🔥 Sole + Caldo">🔥 Sole + Caldo</option><option value="❄️ Sole + Freddo">❄️ Sole + Freddo</option><option value="🌦️ Variabile">🌦️ Variabile</option><option value="🌤️ Parz Nuvoloso">🌤️ Parz Nuvoloso</option><option value="☁️ Nuvoloso">☁️ Nuvoloso</option><option value="🌥️ Nuv + Freddo">🌥️ Nuv + Freddo</option><option value="🌧️ Pioggia">🌧️ Pioggia</option><option value="🌨️ Piog + Freddo">🌨️ Piog + Freddo</option><option value="⛈️ Temporale">⛈️ Temporale</option><option value="❓ N/D">❓ N/D</option></select>
+                    <select id="i-meteo" onchange="markMeteoManual()"></select>
+                </div>
+                <div class="inp-field" style="flex:0.55"><label>Temp. media °C</label>
+                    <input type="number" step="0.1" id="i-temp" placeholder="auto" oninput="markTempManualIng()">
                 </div>
                 <div class="inp-field" style="flex:0.3; align-items:center; justify-content:center; padding-bottom:8px">
                     <label style="cursor:pointer; display:flex; flex-direction:column; align-items:center; color:#ef4444" title="Escludi">
@@ -474,6 +477,13 @@
                 </div>
                 <div class="chart-card glass-card"><div class="chart-header">Performance Meteo <span style="font-size:0.75rem;font-weight:500;color:#64748b">· ingressi per giorno vs normale (stesso giorno della settimana)</span></div><div class="chart-wrapper"><canvas id="chartMeteo"></canvas></div></div>
             </div>
+            <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Temperatura vs Ingressi <span style="font-size:0.75rem;font-weight:500;color:#64748b">· ingressi per giorno vs normale, per fascia di temperatura media</span></div>
+                <div id="temp-corr-summary" style="font-size:0.9rem; color:#334155; margin:4px 0 8px"></div>
+                <div class="chart-wrapper"><canvas id="chartTemp"></canvas></div>
+                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:10px">
+                    <button class="btn" onclick="backfillTemps()" title="Scarica da Open-Meteo la temperatura media dei giorni già registrati">🌡️ Recupera temperature storiche</button>
+                    <span id="temp-backfill-info" style="font-size:0.8rem; color:#64748b"></span>
+                </div></div></div>
             <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Popolarità Fasce Orarie</div><div class="chart-wrapper"><canvas id="chartFasce"></canvas></div></div></div>
 
             <div class="table-wrap glass-card" style="margin-top:25px">
@@ -537,7 +547,7 @@
                 <div class="arch-group"><span class="arch-label">DA:</span><input type="date" id="arch-date-start" class="arch-input" onchange="renderIngressiArchive()"></div>
                 <div class="arch-group"><span class="arch-label">A:</span><input type="date" id="arch-date-end" class="arch-input" onchange="renderIngressiArchive()"></div>
                 <select id="arch-filter-fascia" class="arch-select" onchange="renderIngressiArchive()"><option value="all">Tutte le Fasce</option><optgroup label="Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
-                <select id="arch-filter-meteo" class="arch-select" onchange="renderIngressiArchive()"><option value="all">Tutto il Meteo</option><option value="☀️ Sole">☀️ Sole</option><option value="🔥 Sole + Caldo">🔥 Sole + Caldo</option><option value="❄️ Sole + Freddo">❄️ Sole + Freddo</option><option value="🌦️ Variabile">🌦️ Variabile</option><option value="🌤️ Parz Nuvoloso">🌤️ Parz Nuvoloso</option><option value="☁️ Nuvoloso">☁️ Nuvoloso</option><option value="🌥️ Nuv + Freddo">🌥️ Nuv + Freddo</option><option value="🌧️ Pioggia">🌧️ Pioggia</option><option value="🌨️ Piog + Freddo">🌨️ Piog + Freddo</option><option value="⛈️ Temporale">⛈️ Temporale</option><option value="❓ N/D">❓ N/D</option></select>
+                <select id="arch-filter-meteo" class="arch-select" onchange="renderIngressiArchive()"></select>
                 <select id="arch-sort" class="arch-select" style="min-width:100px" onchange="renderIngressiArchive()"><option value="desc">⬇️ Recenti</option><option value="asc">⬆️ Vecchi</option></select>
                 <button class="btn btn-danger" style="height:36px; width:36px; padding:0" onclick="resetArchiveFilters()">✕</button>
                 <button class="btn btn-primary" style="height:36px; font-size:0.8rem; padding:0 20px" onclick="downloadCSV()">Scarica Excel</button>
@@ -1821,29 +1831,32 @@ function renderDynamicChart(id, labels, datasets, type, isStacked=false) {
     });
 }
 function renderPie(id,l,d) { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'doughnut',data:{labels:l,datasets:[{data:d,backgroundColor:['#2563eb','#60a5fa','#a855f7','#d8b4fe','#f59e0b','#ef4444'],borderWidth:0}]},options:{animation:false, responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{usePointStyle:true}}}}}); }
-function renderMeteoPerformance(rows) {
-    if (!isChartReady()) return;
+// Giorni aggregati (totale, famiglia meteo, temperatura) e rapporto rispetto al normale dello stesso giorno della settimana
+function buildMeteoDays(rows) {
     const days = {};
     rows.forEach(d => {
         if (!d.date) return;
-        const o = days[d.date] || (days[d.date] = { tot: 0, m: {} });
+        const o = days[d.date] || (days[d.date] = { tot: 0, m: {}, t: [] });
         o.tot += d.totale || 0;
-        const m = d.meteo || '❓ N/D';
-        o.m[m] = (o.m[m] || 0) + 1;
+        const f = meteoFamily(d.meteo);
+        if (f) o.m[f] = (o.m[f] || 0) + 1;
+        if (typeof d.temp === 'number') o.t.push(d.temp);
     });
-    const list = Object.keys(days).map(date => {
-        const o = days[date]; const m = Object.keys(o.m).sort((a, b) => o.m[b] - o.m[a])[0];
-        return { wd: new Date(date + 'T12:00:00').getDay(), tot: o.tot, meteo: m };
-    }).filter(x => x.tot > 0 && !x.meteo.includes('N/D'));
-    const wdSum = {};
-    list.forEach(x => { const w = wdSum[x.wd] || (wdSum[x.wd] = { s: 0, n: 0 }); w.s += x.tot; w.n++; });
+    const list = Object.keys(days).filter(k => days[k].tot > 0).map(date => {
+        const o = days[date]; const f = Object.keys(o.m).sort((a, b) => o.m[b] - o.m[a])[0] || null;
+        return { date, wd: new Date(date + 'T12:00:00').getDay(), tot: o.tot, fam: f, temp: o.t.length ? o.t.reduce((a, b) => a + b, 0) / o.t.length : null };
+    });
+    const w = {};
+    list.forEach(x => { const a = w[x.wd] || (w[x.wd] = { s: 0, n: 0 }); a.s += x.tot; a.n++; });
+    list.forEach(x => { x.ratio = x.tot / (w[x.wd].s / w[x.wd].n); });
+    return list;
+}
+function renderMeteoPerformance(rows) {
+    if (!isChartReady()) return;
+    const list = buildMeteoDays(rows).filter(x => x.fam);
     const by = {};
-    list.forEach(x => {
-        const b = by[x.meteo] || (by[x.meteo] = { n: 0, tot: 0, r: 0 });
-        b.n++; b.tot += x.tot; b.r += x.tot / (wdSum[x.wd].s / wdSum[x.wd].n);
-    });
-    const order = ['☀️ Sole','🔥 Sole + Caldo','❄️ Sole + Freddo','🌤️ Parz Nuvoloso','☁️ Nuvoloso','🌥️ Nuv + Freddo','🌦️ Variabile','🌧️ Pioggia','🌨️ Piog + Freddo','⛈️ Temporale'];
-    const keys = Object.keys(by).sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b)));
+    list.forEach(x => { const b = by[x.fam] || (by[x.fam] = { n: 0, tot: 0, r: 0 }); b.n++; b.tot += x.tot; b.r += x.ratio; });
+    const keys = METEO_FAMILIES.filter(k => by[k]);
     const vals = keys.map(k => Math.round((by[k].r / by[k].n - 1) * 1000) / 10);
     if (ch['chartMeteo']) ch['chartMeteo'].destroy();
     ch['chartMeteo'] = new Chart(document.getElementById('chartMeteo'), {
@@ -1856,6 +1869,63 @@ function renderMeteoPerformance(rows) {
                 label: c => { const b = by[keys[c.dataIndex]]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.tot / b.n)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi, poco affidabile)' : ''}`]; } } } } }
     });
 }
+const TEMP_BANDS = [[-99,5,'< 5°'],[5,10,'5–10°'],[10,15,'10–15°'],[15,20,'15–20°'],[20,25,'20–25°'],[25,30,'25–30°'],[30,99,'≥ 30°']];
+function renderTempStats(rows) {
+    const sumEl = document.getElementById('temp-corr-summary');
+    if (!sumEl || !isChartReady()) return;
+    const list = buildMeteoDays(rows).filter(x => x.temp != null);
+    const info = document.getElementById('temp-backfill-info');
+    if (info) { const missing = new Set(rows.filter(d => typeof d.temp !== 'number' && d.date).map(d => d.date)).size; info.innerText = missing ? `${missing} giorni senza temperatura` : 'Tutti i giorni hanno la temperatura'; }
+    if (ch['chartTemp']) { ch['chartTemp'].destroy(); ch['chartTemp'] = null; }
+    if (list.length < 10) { sumEl.innerText = 'Dati insufficienti: servono almeno 10 giorni con temperatura. Usa il pulsante qui sotto per recuperare quelle storiche.'; return; }
+    const n = list.length, mx = list.reduce((a, x) => a + x.temp, 0) / n, my = list.reduce((a, x) => a + x.ratio, 0) / n;
+    let sxy = 0, sxx = 0, syy = 0;
+    list.forEach(x => { sxy += (x.temp - mx) * (x.ratio - my); sxx += (x.temp - mx) ** 2; syy += (x.ratio - my) ** 2; });
+    const r = sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0, slope = sxx ? sxy / sxx * 10 * 100 : 0; // % ogni +10°C
+    const force = Math.abs(r) < 0.2 ? 'molto debole' : Math.abs(r) < 0.4 ? 'debole' : Math.abs(r) < 0.6 ? 'moderata' : 'forte';
+    sumEl.innerHTML = `Correlazione temperatura–ingressi: <b>r = ${r.toFixed(2).replace('.', ',')}</b> (${force}${r < 0 ? ', inversa' : ''}) · circa <b>${slope >= 0 ? '+' : ''}${slope.toFixed(0)}%</b> ogni +10°C · su ${n} giorni. <span style="color:#64748b">Attenzione: la temperatura segue la stagione (es. vasca estiva), quindi non è l'unico fattore.</span>`;
+    const bands = TEMP_BANDS.map(([lo, hi, lab]) => { const g = list.filter(x => x.temp >= lo && x.temp < hi); return { lab, n: g.length, r: g.length ? g.reduce((a, x) => a + x.ratio, 0) / g.length : null, avg: g.length ? g.reduce((a, x) => a + x.tot, 0) / g.length : 0 }; }).filter(b => b.n > 0);
+    ch['chartTemp'] = new Chart(document.getElementById('chartTemp'), {
+        type: 'bar',
+        data: { labels: bands.map(b => `${b.lab} (${b.n} gg)`), datasets: [{ label: 'Scostamento dal normale', data: bands.map(b => Math.round((b.r - 1) * 1000) / 10), backgroundColor: bands.map(b => b.n < 5 ? '#cbd5e1' : (b.r >= 1 ? '#10b981' : '#ef4444')), borderRadius: 4 }] },
+        options: { animation: false, responsive: true, maintainAspectRatio: false,
+            scales: { y: { ticks: { callback: v => (v > 0 ? '+' : '') + v + '%' } } },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const b = bands[c.dataIndex]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.avg)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi)' : ''}`]; } } } } }
+    });
+}
+// Recupera da Open-Meteo la temperatura media (min+max)/2 dei giorni già registrati senza temperatura
+window.backfillTemps = async () => {
+    const missingRows = dataIngressi.filter(d => d.date && typeof d.temp !== 'number');
+    const dates = [...new Set(missingRows.map(d => d.date))].sort();
+    if (!dates.length) return showToast('Tutti i giorni hanno già la temperatura');
+    if (!confirm(`Recupero la temperatura media di ${dates.length} giorni (${missingRows.length} registrazioni) da Open-Meteo e la salvo nei dati. Procedo?`)) return;
+    const todayStr = fmtDateISO(new Date());
+    const tmap = {};
+    try {
+        const fetchRange = async (a, b) => {
+            const diff = Math.round((new Date(todayStr + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+            const base = diff > 80 ? 'https://archive-api.open-meteo.com/v1/archive' : 'https://api.open-meteo.com/v1/forecast';
+            const r = await fetch(`${base}?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&start_date=${a}&end_date=${b}`);
+            if (!r.ok) throw new Error('Open-Meteo HTTP ' + r.status);
+            const j = await r.json(); const t = j.daily && j.daily.time || [];
+            t.forEach((dt, i) => { const mx = j.daily.temperature_2m_max[i], mn = j.daily.temperature_2m_min[i]; if (mx != null && mn != null) tmap[dt] = Math.round(((mx + mn) / 2) * 10) / 10; });
+        };
+        // blocchi di date consecutive entro 300 giorni
+        let start = dates[0], prev = dates[0];
+        const toMs = d => new Date(d + 'T00:00:00').getTime();
+        for (let k = 1; k <= dates.length; k++) {
+            const cur = dates[k];
+            if (cur === undefined || (toMs(cur) - toMs(start)) / 86400000 > 300) { await fetchRange(start, prev); start = cur; }
+            prev = cur;
+        }
+        const todo = missingRows.filter(d => tmap[d.date] != null);
+        showToast(`Salvo ${todo.length} registrazioni...`);
+        for (let k = 0; k < todo.length; k += 20) {
+            await Promise.all(todo.slice(k, k + 20).map(d => updateDoc(doc(db, 'sessioni', d.id), { temp: tmap[d.date] })));
+        }
+        showToast(`Temperature salvate (${todo.length} registrazioni)`);
+    } catch (e) { showToast('Errore: ' + e.message, 'error'); }
+};
 function renderMultiBar(id,l,ds,ax='x') { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'bar',data:{labels:l,datasets:ds},options:{animation:false, responsive:true,maintainAspectRatio:false,indexAxis:ax,plugins:{legend:{display:true}}}}); }
 
 window.renderOverview = () => { renderOverviewKPI(); renderOverviewCharts(); }
@@ -2142,26 +2212,10 @@ function renderMeteoEffect(anchor) {
     const end = getStrDate(anchor);
     const [ey, em, ed] = end.split('-').map(Number);
     const start = fmtDateISO(new Date(ey - 1, em - 1, ed));
-    const days = {};
-    dataIngressi.forEach(d => {
-        if (!d.date || d.date < start || d.date >= end || d.excludeStats || (d.type && d.type !== 'standard')) return;
-        const o = days[d.date] || (days[d.date] = { tot: 0, m: {} });
-        o.tot += d.totale || 0;
-        if (d.meteo && !d.meteo.includes('N/D')) o.m[d.meteo] = (o.m[d.meteo] || 0) + 1;
-    });
-    const list = Object.keys(days).map(date => {
-        const o = days[date]; const mk = Object.keys(o.m).sort((a, b) => o.m[b] - o.m[a])[0];
-        return { wd: new Date(date + 'T12:00:00').getDay(), tot: o.tot, meteo: mk || '' };
-    }).filter(x => x.tot > 0);
-    const wdAvg = {};
-    list.forEach(x => { (wdAvg[x.wd] = wdAvg[x.wd] || []).push(x.tot); });
-    Object.keys(wdAvg).forEach(k => { wdAvg[k] = wdAvg[k].reduce((a, b) => a + b, 0) / wdAvg[k].length; });
-    const bad = [], good = [];
-    list.forEach(x => {
-        const r = x.tot / wdAvg[x.wd];
-        if (/Pioggia|Piog|Temporale/.test(x.meteo)) bad.push(r);
-        else if (/Sole|Parz/.test(x.meteo)) good.push(r);
-    });
+    const rows = dataIngressi.filter(d => d.date && d.date >= start && d.date < end && !d.excludeStats && !(d.type && d.type !== 'standard'));
+    const list = buildMeteoDays(rows).filter(x => x.fam);
+    const bad = list.filter(x => /Pioggia|Temporale|Neve/.test(x.fam)).map(x => x.ratio);
+    const good = list.filter(x => /Sereno|Parz/.test(x.fam)).map(x => x.ratio);
     const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
     const fmt = v => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
     if (bad.length < 5) { pctEl.innerText = '-'; subEl.innerText = 'Dati insufficienti (servono almeno 5 giorni di pioggia)'; return; }
@@ -2503,6 +2557,7 @@ window.renderStats = () => {
         return { labels: sortedL, datasets: [{ label: `Totale`, data: dp, backgroundColor: '#2563eb' }] };
     };
     renderMeteoPerformance(fMain);
+    renderTempStats(fMain);
     const fasceData = buildMultiSeries(d => ({key: d.fascia, val: d.totale}));
     renderMultiBar('chartFasce', fasceData.labels, fasceData.datasets, 'y');
 
@@ -4809,15 +4864,15 @@ window.downloadUtenzeCSV = () => {
 window.saveIngressi = async () => {
     const d = document.getElementById('i-date').value; if(!d) return showToast("Data mancante","error");
     // Removed all zero checks here
-    const p = { date:d, type:document.getElementById('i-type').value, fascia:document.getElementById('i-fascia').value, meteo:document.getElementById('i-meteo').value, excludeStats: document.getElementById('i-exclude').checked, int:parseInt(document.getElementById('q-intero').value)||0, rid:parseInt(document.getElementById('q-ridotto').value)||0, grat:parseInt(document.getElementById('q-gratuito').value)||0, abb_int:parseInt(document.getElementById('q-abb-int').value)||0, abb_rid:parseInt(document.getElementById('q-abb-rid').value)||0 };
+    const p = { date:d, type:document.getElementById('i-type').value, fascia:document.getElementById('i-fascia').value, meteo:document.getElementById('i-meteo').value, temp: (document.getElementById('i-temp').value === '' ? null : parseFloat(document.getElementById('i-temp').value)), excludeStats: document.getElementById('i-exclude').checked, int:parseInt(document.getElementById('q-intero').value)||0, rid:parseInt(document.getElementById('q-ridotto').value)||0, grat:parseInt(document.getElementById('q-gratuito').value)||0, abb_int:parseInt(document.getElementById('q-abb-int').value)||0, abb_rid:parseInt(document.getElementById('q-abb-rid').value)||0 };
     p.totale = p.int + p.rid + p.grat + p.abb_int + p.abb_rid;
     
     try {
-        if(editIdIngressi) { await updateDoc(doc(db,"sessioni",editIdIngressi), p); showToast("Aggiornato"); cancelEditIngressi(); switchSubView('archive'); } else { await addDoc(collection(db,"sessioni"), p); showToast("Salvato"); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; meteoManualIng = false; }
+        if(editIdIngressi) { await updateDoc(doc(db,"sessioni",editIdIngressi), p); showToast("Aggiornato"); cancelEditIngressi(); switchSubView('archive'); } else { await addDoc(collection(db,"sessioni"), p); showToast("Salvato"); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; meteoManualIng = false; tempManualIng = false; updateMeteoSuggestion(); }
     } catch(e){ showToast(e.message,"error"); }
 };
-window.editIngressi = (id) => { const d = dataIngressi.find(x=>x.id===id); if(!d) return; editIdIngressi = id; document.getElementById('i-date').value=d.date; document.getElementById('i-type').value=d.type||'standard'; document.getElementById('i-fascia').value=d.fascia; document.getElementById('i-meteo').value=d.meteo; document.getElementById('i-exclude').checked = d.excludeStats || false; document.getElementById('q-intero').value=d.int; document.getElementById('q-ridotto').value=d.rid; document.getElementById('q-gratuito').value=d.grat; document.getElementById('q-abb-int').value=d.abb_int; document.getElementById('q-abb-rid').value=d.abb_rid; switchSubView('register'); document.getElementById('title-ingressi').innerText="✏️ Modifica Ingressi"; document.getElementById('btn-save-ingressi').innerText="AGGIORNA"; document.getElementById('btn-save-ingressi').style.background="#f59e0b"; document.getElementById('cancel-ingressi').classList.remove('hidden'); document.getElementById('cb-ingressi-form').classList.add('editing'); };
-window.cancelEditIngressi = () => { editIdIngressi=null; document.getElementById('title-ingressi').innerText="➕ Registra Ingressi"; document.getElementById('btn-save-ingressi').innerText="SALVA"; document.getElementById('btn-save-ingressi').style.background=""; document.getElementById('cancel-ingressi').classList.add('hidden'); document.getElementById('cb-ingressi-form').classList.remove('editing'); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; meteoManualIng = false; updateMeteoSuggestion(); };
+window.editIngressi = (id) => { const d = dataIngressi.find(x=>x.id===id); if(!d) return; editIdIngressi = id; document.getElementById('i-date').value=d.date; document.getElementById('i-type').value=d.type||'standard'; document.getElementById('i-fascia').value=d.fascia; setMeteoSelectValue(d.meteo); document.getElementById('i-temp').value = (typeof d.temp === 'number') ? d.temp : ''; document.getElementById('i-exclude').checked = d.excludeStats || false; document.getElementById('q-intero').value=d.int; document.getElementById('q-ridotto').value=d.rid; document.getElementById('q-gratuito').value=d.grat; document.getElementById('q-abb-int').value=d.abb_int; document.getElementById('q-abb-rid').value=d.abb_rid; switchSubView('register'); document.getElementById('title-ingressi').innerText="✏️ Modifica Ingressi"; document.getElementById('btn-save-ingressi').innerText="AGGIORNA"; document.getElementById('btn-save-ingressi').style.background="#f59e0b"; document.getElementById('cancel-ingressi').classList.remove('hidden'); document.getElementById('cb-ingressi-form').classList.add('editing'); };
+window.cancelEditIngressi = () => { editIdIngressi=null; fillMeteoSelects(); document.getElementById('title-ingressi').innerText="➕ Registra Ingressi"; document.getElementById('btn-save-ingressi').innerText="SALVA"; document.getElementById('btn-save-ingressi').style.background=""; document.getElementById('cancel-ingressi').classList.add('hidden'); document.getElementById('cb-ingressi-form').classList.remove('editing'); document.querySelectorAll('#module-ingressi .t-box input').forEach(i=>i.value=0); document.getElementById('i-exclude').checked = false; meteoManualIng = false; tempManualIng = false; document.getElementById('i-temp').value = ''; updateMeteoSuggestion(); };
 window.delDoc = async (c,i) => { if(confirm("Eliminare?")){ await deleteDoc(doc(db,c,i)); showToast("Eliminato"); } };
 window.toggleExcludeStats = async (id, currentVal) => { try { await updateDoc(doc(db, "sessioni", id), { excludeStats: !currentVal }); showToast(!currentVal ? "Giorno escluso dalla media" : "Giorno reincluso nella media"); } catch(e) { showToast(e.message, "error"); } };
 window.loadMoreIngressi = () => { limitIngressi += 200; renderIngressiArchive(); };
@@ -4825,7 +4880,7 @@ window.loadMoreUtenze = () => { limitUtenze += 200; renderUtenze(); };
 
 window.renderIngressiArchive = () => {
     const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const sort = document.getElementById('arch-sort').value;
-    const f = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && d.meteo !== meteo) return false; return true; });
+    const f = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && meteoFamily(d.meteo) !== meteo) return false; return true; });
     f.sort((a,b)=>{const da=new Date(a.date), db=new Date(b.date); return sort==='desc'?db-da:da-db});
     const t=document.getElementById('tbody-ingressi'); 
     
@@ -4847,7 +4902,7 @@ window.renderIngressiArchive = () => {
             const isExcluded = d.excludeStats === true;
             const rowStyle = isExcluded ? "opacity:0.5; background: repeating-linear-gradient(45deg,rgba(0,0,0,0.02),rgba(0,0,0,0.02) 10px,rgba(0,0,0,0.06) 10px,rgba(0,0,0,0.06) 20px);" : "";
             const excludeIcon = isExcluded ? "✅" : "🚫";
-            rowsBuffer.push(`<tr style="${b}; ${rowStyle}">${i===0?`<td rowspan="${e.length}" style="vertical-align:middle;background:rgba(255,255,255,0.4)">${dh}</td>`:''} <td><b>${d.fascia}</b>${badge}<br><small style="color:#64748b">${d.meteo}</small>${isExcluded?'<br><b style="color:#ef4444;font-size:0.65rem">ESCLUSO MEDIA</b>':''}</td> <td class="col-detail bg-sub-blue">${d.int}</td><td class="col-detail bg-sub-blue">${d.rid}</td><td class="col-subtot bg-sub-blue" style="color:var(--primary)">${(d.int||0)+(d.rid||0)}</td> <td class="col-detail bg-sub-purp">${d.abb_int}</td><td class="col-detail bg-sub-purp">${d.abb_rid}</td><td class="col-subtot bg-sub-purp" style="color:#a855f7">${(d.abb_int||0)+(d.abb_rid||0)}</td> <td class="col-detail">${d.grat}</td><td class="col-total">${d.totale}</td> <td style="text-align:right; min-width:110px"><button class="btn btn-icon" style="color:#64748b;background:transparent;border:1px solid #e2e8f0;margin-right:5px;width:30px;height:30px" onclick="toggleExcludeStats('${d.id}', ${isExcluded})">${excludeIcon}</button><button class="btn btn-icon" style="color:var(--primary);background:#eef2ff" onclick="editIngressi('${d.id}')">✏️</button><button class="btn btn-icon" style="color:#ef4444;background:#fef2f2" onclick="delDoc('sessioni','${d.id}')">🗑️</button></td></tr>`);
+            rowsBuffer.push(`<tr style="${b}; ${rowStyle}">${i===0?`<td rowspan="${e.length}" style="vertical-align:middle;background:rgba(255,255,255,0.4)">${dh}</td>`:''} <td><b>${d.fascia}</b>${badge}<br><small style="color:#64748b">${d.meteo}${typeof d.temp === 'number' ? ' · ' + d.temp.toLocaleString('it-IT') + '°C' : ''}</small>${isExcluded?'<br><b style="color:#ef4444;font-size:0.65rem">ESCLUSO MEDIA</b>':''}</td> <td class="col-detail bg-sub-blue">${d.int}</td><td class="col-detail bg-sub-blue">${d.rid}</td><td class="col-subtot bg-sub-blue" style="color:var(--primary)">${(d.int||0)+(d.rid||0)}</td> <td class="col-detail bg-sub-purp">${d.abb_int}</td><td class="col-detail bg-sub-purp">${d.abb_rid}</td><td class="col-subtot bg-sub-purp" style="color:#a855f7">${(d.abb_int||0)+(d.abb_rid||0)}</td> <td class="col-detail">${d.grat}</td><td class="col-total">${d.totale}</td> <td style="text-align:right; min-width:110px"><button class="btn btn-icon" style="color:#64748b;background:transparent;border:1px solid #e2e8f0;margin-right:5px;width:30px;height:30px" onclick="toggleExcludeStats('${d.id}', ${isExcluded})">${excludeIcon}</button><button class="btn btn-icon" style="color:var(--primary);background:#eef2ff" onclick="editIngressi('${d.id}')">✏️</button><button class="btn btn-icon" style="color:#ef4444;background:#fef2f2" onclick="delDoc('sessioni','${d.id}')">🗑️</button></td></tr>`);
         });
     });
     t.innerHTML = rowsBuffer.join('');
@@ -5076,18 +5131,48 @@ const METEO_HOT = 28, METEO_COLD = 8; // soglie °C per "Caldo" / "Freddo"
 const meteoCache = {};
 const WMO_IT = {0:'Sereno',1:'Prevalentemente sereno',2:'Parzialmente nuvoloso',3:'Coperto',45:'Nebbia',48:'Nebbia',51:'Pioviggine',53:'Pioviggine',55:'Pioviggine intensa',56:'Pioviggine gelata',57:'Pioviggine gelata',61:'Pioggia debole',63:'Pioggia',65:'Pioggia forte',66:'Pioggia gelata',67:'Pioggia gelata',71:'Neve debole',73:'Neve',75:'Neve forte',77:'Nevischio',80:'Rovesci',81:'Rovesci',82:'Rovesci violenti',85:'Rovesci di neve',86:'Rovesci di neve',95:'Temporale',96:'Temporale con grandine',99:'Temporale con grandine'};
 
-// Voce del menu Meteo di "Nuoto Libero" corrispondente al codice WMO
-function meteoOptionFor(code, temp) {
-    const hot = temp != null && temp >= METEO_HOT, cold = temp != null && temp <= METEO_COLD;
-    if (code === 0 || code === 1) return hot ? '🔥 Sole + Caldo' : cold ? '❄️ Sole + Freddo' : '☀️ Sole';
-    if (code === 2) return '🌤️ Parz Nuvoloso';
-    if (code === 3 || code === 45 || code === 48) return cold ? '🌥️ Nuv + Freddo' : '☁️ Nuvoloso';
-    if ([51,53,55,56,57,61,63,65,66,67].includes(code)) return (temp != null && temp <= 5) ? '🌨️ Piog + Freddo' : '🌧️ Pioggia';
-    if ([71,73,75,77,85,86].includes(code)) return '🌨️ Piog + Freddo';
-    if (code === 80 || code === 81) return '🌦️ Variabile';
-    if (code === 82) return '🌧️ Pioggia';
-    if (code >= 95) return '⛈️ Temporale';
-    return '❓ N/D';
+// Menu Meteo di "Nuoto Libero": stesse categorie fornite dal suggerimento automatico (codici WMO). La temperatura è un campo a parte.
+const METEO_OPTS = ['☀️ Sereno','🌤️ Prev. sereno','⛅ Parz. nuvoloso','☁️ Coperto','🌫️ Nebbia','🌦️ Pioviggine','🌧️ Pioggia debole','🌧️ Pioggia','🌧️ Pioggia forte','🌦️ Rovesci','⛈️ Temporale','❄️ Neve','❓ N/D'];
+function meteoOptionFor(code) {
+    if (code === 0) return METEO_OPTS[0];
+    if (code === 1) return METEO_OPTS[1];
+    if (code === 2) return METEO_OPTS[2];
+    if (code === 3) return METEO_OPTS[3];
+    if (code === 45 || code === 48) return METEO_OPTS[4];
+    if ([51,53,55,56,57].includes(code)) return METEO_OPTS[5];
+    if (code === 61) return METEO_OPTS[6];
+    if (code === 63 || code === 66 || code === 67) return METEO_OPTS[7];
+    if (code === 65 || code === 82) return METEO_OPTS[8];
+    if (code === 80 || code === 81) return METEO_OPTS[9];
+    if (code >= 95) return METEO_OPTS[10];
+    if ([71,73,75,77,85,86].includes(code)) return METEO_OPTS[11];
+    return METEO_OPTS[12];
+}
+// Famiglie per le statistiche: accorpano anche i valori vecchi (Sole, Sole + Caldo, Nuv + Freddo, ...) e quelli nuovi
+const METEO_FAMILIES = ['☀️ Sereno / Sole','⛅ Parz. nuvoloso','☁️ Nuvoloso / Coperto','🌦️ Variabile / Rovesci','🌧️ Pioggia','⛈️ Temporale','❄️ Neve'];
+function meteoFamily(m) {
+    if (!m || m.includes('N/D')) return null;
+    if (/Temporale/.test(m)) return METEO_FAMILIES[5];
+    if (/Neve/.test(m)) return METEO_FAMILIES[6];
+    if (/Parz/.test(m)) return METEO_FAMILIES[1];
+    if (/Pioggia|Piog|Piovigg/.test(m)) return METEO_FAMILIES[4];
+    if (/Variabile|Rovesci/.test(m)) return METEO_FAMILIES[3];
+    if (/Nuv|Copert|Nebbia/.test(m)) return METEO_FAMILIES[2];
+    if (/Sole|Sereno|Prev/.test(m)) return METEO_FAMILIES[0];
+    return null;
+}
+function fillMeteoSelects() {
+    const a = document.getElementById('i-meteo'), b = document.getElementById('arch-filter-meteo');
+    if (a) a.innerHTML = METEO_OPTS.map(o => `<option value="${o}">${o}</option>`).join('');
+    if (b) b.innerHTML = '<option value="all">Tutto il Meteo</option>' + METEO_FAMILIES.map(o => `<option value="${o}">${o}</option>`).join('');
+}
+fillMeteoSelects();
+// Imposta il valore del menu anche per valori vecchi non più in elenco (es. in modifica)
+function setMeteoSelectValue(v) {
+    const sel = document.getElementById('i-meteo');
+    if (v && ![...sel.options].some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = v + ' (vecchio)'; o.className = 'legacy-opt'; sel.appendChild(o); }
+    else if (!v) v = METEO_OPTS[12];
+    sel.value = v;
 }
 // Voce del menu Meteo di "Utenze" (4 sole opzioni)
 function meteoOptionForUtenze(code) {
@@ -5118,24 +5203,27 @@ async function fetchMeteoInfo(dateStr) {
 }
 
 // ---- Nuoto Libero: selezione automatica del meteo ----
-let meteoManualIng = false;
+let meteoManualIng = false, tempManualIng = false;
+window.markTempManualIng = () => { tempManualIng = true; };
 window.markMeteoManual = () => { meteoManualIng = true; const h = document.getElementById('meteo-auto-hint'); if (h) h.innerText = ''; };
-window.onIngressiDateChange = () => { meteoManualIng = false; updateMeteoSuggestion(); };
+window.onIngressiDateChange = () => { meteoManualIng = false; tempManualIng = false; updateMeteoSuggestion(); };
 window.updateMeteoSuggestion = async () => {
     const hint = document.getElementById('meteo-auto-hint');
     const dateStr = document.getElementById('i-date').value;
-    if (!hint || !dateStr || editIdIngressi || meteoManualIng) return;
+    if (!hint || !dateStr || editIdIngressi || (meteoManualIng && tempManualIng)) return;
     try {
         const info = await fetchMeteoInfo(dateStr);
-        if (dateStr !== document.getElementById('i-date').value || meteoManualIng || editIdIngressi) return; // contesto cambiato nel frattempo
+        if (dateStr !== document.getElementById('i-date').value || editIdIngressi) return; // contesto cambiato nel frattempo
         if (!info) { hint.innerText = ''; return; }
-        let code, temp, desc;
-        if (info.isToday && info.cCode != null) { code = info.cCode; temp = info.cTemp; desc = `Meteo attuale (Milano): ${WMO_IT[code] || '-'}, ${Math.round(temp)}°C`; }
-        else if (info.dCode != null) { code = info.dCode; temp = info.dMax; desc = `Meteo del giorno (Milano): ${WMO_IT[code] || '-'}, ${Math.round(info.dMin)}–${Math.round(info.dMax)}°C`; }
+        let code, desc;
+        const avg = (info.dMax != null && info.dMin != null) ? Math.round(((info.dMax + info.dMin) / 2) * 10) / 10 : null;
+        if (info.isToday && info.cCode != null) { code = info.cCode; desc = `Meteo attuale (Milano): ${WMO_IT[code] || '-'}`; }
+        else if (info.dCode != null) { code = info.dCode; desc = `Meteo del giorno (Milano): ${WMO_IT[code] || '-'}`; }
         else { hint.innerText = ''; return; }
-        document.getElementById('i-meteo').value = meteoOptionFor(code, temp);
-        hint.innerText = `🌐 auto · ${Math.round(temp)}°C`;
-        hint.title = desc + (info.dRain > 0 ? `, pioggia ${info.dRain.toFixed(1)} mm` : '');
+        if (!meteoManualIng) document.getElementById('i-meteo').value = meteoOptionFor(code);
+        if (!tempManualIng && avg != null) document.getElementById('i-temp').value = avg;
+        hint.innerText = '🌐 auto';
+        hint.title = desc + (avg != null ? `, min ${Math.round(info.dMin)}° / max ${Math.round(info.dMax)}° → media ${avg}°C` : '') + (info.dRain > 0 ? `, pioggia ${info.dRain.toFixed(1)} mm` : '');
     } catch (e) { hint.innerText = ''; }
 };
 
@@ -5170,7 +5258,7 @@ window.switchSubView=(s)=>{ ['overview','stats','riepilogo','archive','register'
 function refreshCurrentView(){ if(!document.getElementById('sub-overview').classList.contains('hidden')) renderOverview(); if(!document.getElementById('sub-stats').classList.contains('hidden')) renderStats(); if(!document.getElementById('sub-riepilogo').classList.contains('hidden')) renderRiepilogoMensile(); if(!document.getElementById('sub-archive').classList.contains('hidden')) renderIngressiArchive(); }
 setInterval(()=>{ const n=new Date(); const s=n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'); if(document.getElementById('d-time')) document.getElementById('d-time').value=s; if(document.getElementById('note-time')) document.getElementById('note-time').value=s; },1000);
 const today=fmtDateISO(new Date()); document.getElementById('i-date').value=today; document.getElementById('d-date').value=today; document.getElementById('u-date').value=today; document.getElementById('inc-date').value=today;
-window.downloadCSV = () => { const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const filtered = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && d.meteo !== meteo) return false; return true; }); if(!filtered.length) return showToast("Nessun dato da scaricare", "error"); let csvContent = "data:text/csv;charset=utf-8,Data;Tipo;Fascia;Meteo;EsclusoMedia;Intero;Ridotto;Abbonamenti;Gratuiti;Totale\n"; filtered.forEach(row => { csvContent += `${row.date};${row.type||'standard'};${row.fascia};${row.meteo};${row.excludeStats?'SI':'NO'};${row.int};${row.rid};${row.abb_int + row.abb_rid};${row.grat};${row.totale}\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "archivio_ingressi.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); };
+window.downloadCSV = () => { const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const filtered = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && meteoFamily(d.meteo) !== meteo) return false; return true; }); if(!filtered.length) return showToast("Nessun dato da scaricare", "error"); let csvContent = "data:text/csv;charset=utf-8,Data;Tipo;Fascia;Meteo;TempMedia;EsclusoMedia;Intero;Ridotto;Abbonamenti;Gratuiti;Totale\n"; filtered.forEach(row => { csvContent += `${row.date};${row.type||'standard'};${row.fascia};${row.meteo};${typeof row.temp === 'number' ? row.temp : ''};${row.excludeStats?'SI':'NO'};${row.int};${row.rid};${row.abb_int + row.abb_rid};${row.grat};${row.totale}\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "archivio_ingressi.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); };
 window.resetArchiveFilters = () => { document.getElementById('arch-date-start').value=""; document.getElementById('arch-date-end').value=""; document.getElementById('arch-filter-fascia').value="all"; document.getElementById('arch-filter-meteo').value="all"; limitIngressi = 200; renderIngressiArchive(); };
 </script>
 
