@@ -132,9 +132,26 @@
     .kpi-context { font-size: 0.75rem; color: #64748b; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.05); width: 100%; display: flex; justify-content: space-between; font-weight: 500; }
     
     .chart-card { @extend .glass-card; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border-radius: 24px; box-shadow: var(--glass-shadow); border: var(--glass-border); padding: 25px; display: flex; flex-direction: column; height: 360px; }
+    /* Statistiche: sezioni colorate */
+    .stat-section, .stat-section .chart-card, .stat-section .table-wrap { min-width: 0; }
+    .stat-section { --sc: 59,130,246; background: rgba(var(--sc), 0.09); border: 1px solid rgba(var(--sc), 0.28); border-left: 6px solid rgb(var(--sc)); border-radius: 28px; padding: 22px; margin-bottom: 30px; }
+    .stat-section-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+    .stat-section-head h3 { margin: 0; font-size: 1.25rem; font-weight: 900; color: rgb(var(--sc)); filter: brightness(0.7); }
+    .stat-section-head span { font-size: 0.8rem; color: #64748b; font-weight: 500; }
+    .stat-section .charts-row-main:last-child, .stat-section .charts-row-split:last-child { margin-bottom: 0; }
+    .chart-card.auto-h { height: auto; min-height: 120px; }
+    .chart-sub { font-size: 0.75rem; font-weight: 500; color: #64748b; }
+    .st-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 25px; }
+    .st-kpi { background: rgba(255,255,255,0.7); border: 1px solid rgba(var(--sc), 0.25); border-radius: 18px; padding: 14px 16px; }
+    .st-kpi small { display: block; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; }
+    .st-kpi b { display: block; font-size: 1.6rem; font-weight: 900; color: #0f172a; line-height: 1.2; margin-top: 4px; }
+    .st-kpi em { display: block; font-style: normal; font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+    .st-rank table, #st-types table { min-width: 0; width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .st-rank td, #st-types td, #st-types th { padding: 7px 8px; border-bottom: 1px solid rgba(0,0,0,0.06); }
+    #st-types th { text-align: left; color: #64748b; font-size: 0.75rem; text-transform: uppercase; }
     .chart-wrapper { position: relative; flex: 1; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
-    .charts-row-main { display: grid; grid-template-columns: 1fr; gap: 25px; margin-bottom: 25px; }
-    .charts-row-split { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+    .charts-row-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 25px; margin-bottom: 25px; }
+    .charts-row-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 25px; margin-bottom: 25px; }
 
     /* TABLE */
     .table-wrap { @extend .glass-card; background: var(--glass-bg); backdrop-filter: var(--glass-blur); border-radius: 24px; box-shadow: var(--glass-shadow); border: var(--glass-border); padding: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -464,48 +481,81 @@
                 </div>
             </div>
 
-            <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header" id="yoy-title">Andamento Stagionale</div><div class="chart-wrapper"><canvas id="chartYoY"></canvas></div></div></div>
-            <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Performance Settimanale (Per Fascia)</div><div class="chart-wrapper" style="padding:0 15px"><canvas id="chartWeek"></canvas></div></div></div>
-            <div class="charts-row-split">
-                <div class="chart-card glass-card" style="justify-content:center; text-align:center">
-                    <div class="chart-header" style="width:100%; text-align:left">Composizione (Periodo Selezionato)</div>
-                    <div class="chart-wrapper" style="max-height:220px; display:flex; justify-content:center"><canvas id="chartPie"></canvas></div>
-                    <div style="margin-top:auto; width:100%; padding-top:15px; border-top:1px solid rgba(0,0,0,0.05)">
-                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:5px; font-weight:700" id="pie-label-text">TOTALE PERIODO</div>
-                        <div id="deep-total" style="color:var(--primary); font-size:1.8rem; font-weight:900">0</div>
+            <!-- SEZIONE 1: ANDAMENTO -->
+            <div class="stat-section" style="--sc:59,130,246">
+                <div class="stat-section-head"><h3>📈 Andamento</h3><span>Totali del periodo, trend stagionale e giorni della settimana</span></div>
+                <div id="st-kpis" class="st-kpis"></div>
+                <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header" id="yoy-title">Andamento Stagionale</div><div class="chart-wrapper"><canvas id="chartYoY"></canvas></div></div></div>
+                <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Performance Settimanale (Per Fascia)</div><div class="chart-wrapper" style="padding:0 15px"><canvas id="chartWeek"></canvas></div></div></div>
+            </div>
+
+            <!-- SEZIONE 2: CLIENTI -->
+            <div class="stat-section" style="--sc:168,85,247">
+                <div class="stat-section-head"><h3>🧩 Clienti e Abbonamenti</h3><span>Come sono composti gli ingressi e come cambia il mix nel tempo</span></div>
+                <div class="charts-row-split">
+                    <div class="chart-card glass-card" style="justify-content:center; text-align:center">
+                        <div class="chart-header" style="width:100%; text-align:left">Composizione (Periodo Selezionato)</div>
+                        <div class="chart-wrapper" style="max-height:220px; display:flex; justify-content:center"><canvas id="chartPie"></canvas></div>
+                        <div style="margin-top:auto; width:100%; padding-top:15px; border-top:1px solid rgba(0,0,0,0.05)">
+                            <div style="font-size:0.8rem; color:#64748b; margin-bottom:5px; font-weight:700" id="pie-label-text">TOTALE PERIODO</div>
+                            <div id="deep-total" style="color:var(--primary); font-size:1.8rem; font-weight:900">0</div>
+                        </div>
+                    </div>
+                    <div class="chart-card glass-card"><div class="chart-header">Mix Clienti per Mese <span class="chart-sub">· % sul totale ingressi del mese</span></div><div class="chart-wrapper"><canvas id="chartMix"></canvas></div></div>
+                </div>
+            </div>
+
+            <!-- SEZIONE 3: FASCE ORARIE -->
+            <div class="stat-section" style="--sc:245,158,11">
+                <div class="stat-section-head"><h3>⏰ Fasce Orarie</h3><span>Quali fasce funzionano meglio e come cambiano nel tempo</span></div>
+                <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Popolarità Fasce Orarie</div><div class="chart-wrapper"><canvas id="chartFasce"></canvas></div></div></div>
+                <div class="table-wrap glass-card" style="margin-bottom:25px">
+                    <h3 style="padding:15px 20px; margin:0; font-size:1rem; border-bottom:1px solid rgba(0,0,0,0.05)">🔥 Heatmap Giorno Settimana × Fascia Oraria (Media Ingressi)</h3>
+                    <div style="overflow-x:auto; padding:15px">
+                        <table id="table-heatmap-fasce" style="border-collapse:separate; border-spacing:3px">
+                            <thead><tr id="heatmap-fasce-head"></tr></thead>
+                            <tbody id="heatmap-fasce-body"></tbody>
+                        </table>
+                        <div style="font-size:0.75rem; color:#64748b; margin-top:10px">Il colore più intenso indica una media ingressi più alta per quella combinazione giorno/fascia, nel periodo selezionato.</div>
                     </div>
                 </div>
-                <div class="chart-card glass-card"><div class="chart-header">Performance Meteo <span style="font-size:0.75rem;font-weight:500;color:#64748b">· ingressi per giorno vs normale (stesso giorno della settimana)</span></div><div class="chart-wrapper"><canvas id="chartMeteo"></canvas></div></div>
-            </div>
-            <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Temperatura vs Ingressi <span style="font-size:0.75rem;font-weight:500;color:#64748b">· ingressi per giorno vs normale, per fascia di temperatura media</span></div>
-                <div id="temp-corr-summary" style="font-size:0.9rem; color:#334155; margin:4px 0 8px"></div>
-                <div class="chart-wrapper"><canvas id="chartTemp"></canvas></div>
-                <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:10px">
-                    <button class="btn" onclick="backfillTemps()" title="Scarica da Open-Meteo la temperatura media dei giorni già registrati">🌡️ Aggiorna temperature storiche</button>
-                    <span id="temp-backfill-info" style="font-size:0.8rem; color:#64748b"></span>
-                </div></div></div>
-            <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Meteo × Temperatura <span style="font-size:0.75rem;font-weight:500;color:#64748b">· scostamento degli ingressi dal normale per ogni combinazione (stesso giorno della settimana)</span></div>
-                <div id="meteo-temp-matrix" style="overflow-x:auto; margin-top:8px"></div>
-                <div style="font-size:0.75rem; color:#64748b; margin-top:10px">Verde = più ingressi del normale, rosso = meno. Il numero piccolo sono i giorni osservati; le celle con meno di 3 giorni sono in grigio e poco affidabili.</div>
-            </div></div>
-            <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Popolarità Fasce Orarie</div><div class="chart-wrapper"><canvas id="chartFasce"></canvas></div></div></div>
-
-            <div class="table-wrap glass-card" style="margin-top:25px">
-                <h3 style="padding:15px 20px; margin:0; font-size:1rem; border-bottom:1px solid rgba(0,0,0,0.05)">🔥 Heatmap Giorno Settimana × Fascia Oraria (Media Ingressi)</h3>
-                <div style="overflow-x:auto; padding:15px">
-                    <table id="table-heatmap-fasce" style="border-collapse:separate; border-spacing:3px">
-                        <thead><tr id="heatmap-fasce-head"></tr></thead>
-                        <tbody id="heatmap-fasce-body"></tbody>
-                    </table>
-                    <div style="font-size:0.75rem; color:#64748b; margin-top:10px">Il colore più intenso indica una media ingressi più alta per quella combinazione giorno/fascia, nel periodo selezionato.</div>
+                <div class="charts-row-main" style="margin-bottom:0">
+                    <div class="chart-card glass-card">
+                        <div class="chart-header">📊 Confronto Fasce nel Tempo (Trend Mensile)</div>
+                        <div class="chart-wrapper"><canvas id="chartFasceTrend"></canvas></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="charts-row-main">
-                <div class="chart-card glass-card">
-                    <div class="chart-header">📊 Confronto Fasce nel Tempo (Trend Mensile)</div>
-                    <div class="chart-wrapper"><canvas id="chartFasceTrend"></canvas></div>
+            <!-- SEZIONE 4: METEO E TEMPERATURA -->
+            <div class="stat-section" style="--sc:16,185,129">
+                <div class="stat-section-head"><h3>🌦️ Meteo e Temperatura</h3><span>Quanto incidono pioggia, sole e caldo sugli ingressi (a parità di giorno della settimana)</span></div>
+                <div class="charts-row-main"><div class="chart-card glass-card"><div class="chart-header">Performance Meteo <span class="chart-sub">· ingressi per giorno vs normale</span></div><div class="chart-wrapper"><canvas id="chartMeteo"></canvas></div></div></div>
+                <div class="charts-row-main"><div class="chart-card glass-card auto-h"><div class="chart-header">Temperatura vs Ingressi <span class="chart-sub">· ingressi per giorno vs normale, per fascia di temperatura</span></div>
+                    <div id="temp-corr-summary" style="font-size:0.9rem; color:#334155; margin:4px 0 8px"></div>
+                    <div class="chart-wrapper" style="height:260px; flex:none"><canvas id="chartTemp"></canvas></div>
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:10px">
+                        <button class="btn" onclick="backfillTemps()" title="Scarica da Open-Meteo la temperatura dei giorni già registrati">🌡️ Aggiorna temperature storiche</button>
+                        <span id="temp-backfill-info" style="font-size:0.8rem; color:#64748b"></span>
+                    </div></div></div>
+                <div class="charts-row-main" style="margin-bottom:0"><div class="chart-card glass-card auto-h"><div class="chart-header">Meteo × Temperatura <span class="chart-sub">· scostamento dal normale per ogni combinazione</span></div>
+                    <div id="meteo-temp-matrix" style="overflow-x:auto; margin-top:8px"></div>
+                    <div style="font-size:0.75rem; color:#64748b; margin-top:10px">Verde = più ingressi del normale, rosso = meno. Il numero piccolo sono i giorni osservati; le celle con meno di 3 giorni sono in grigio e poco affidabili.</div>
+                </div></div>
+            </div>
+
+            <!-- SEZIONE 5: CALENDARIO E RECORD -->
+            <div class="stat-section" style="--sc:244,63,94">
+                <div class="stat-section-head"><h3>📅 Calendario e Record</h3><span>Giorni della settimana, stagionalità, giorni migliori e peggiori</span></div>
+                <div class="charts-row-split">
+                    <div class="chart-card glass-card"><div class="chart-header">Media per Giorno della Settimana <span class="chart-sub">· ingressi/giorno</span></div><div class="chart-wrapper"><canvas id="chartWd"></canvas></div></div>
+                    <div class="chart-card glass-card"><div class="chart-header">Media Giornaliera per Mese <span class="chart-sub">· ingressi/giorno di apertura</span></div><div class="chart-wrapper"><canvas id="chartMonthAvg"></canvas></div></div>
                 </div>
+                <div class="charts-row-split">
+                    <div class="chart-card glass-card auto-h"><div class="chart-header">🏆 10 Giorni Migliori</div><div id="st-top" class="st-rank"></div></div>
+                    <div class="chart-card glass-card auto-h"><div class="chart-header">📉 10 Giorni Più Deboli <span class="chart-sub">· escluso oggi</span></div><div id="st-bottom" class="st-rank"></div></div>
+                </div>
+                <div class="charts-row-main" style="margin-bottom:0"><div class="chart-card glass-card auto-h"><div class="chart-header">Tipo di Giorno <span class="chart-sub">· standard, festivi, eventi, maltempo</span></div><div id="st-types" style="overflow-x:auto"></div></div></div>
             </div>
         </div>
 
@@ -1898,6 +1948,92 @@ function renderTempStats(rows) {
             plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { const b = bands[c.dataIndex]; const v = c.parsed.y; return [`${v > 0 ? '+' : ''}${v.toFixed(1)}% rispetto al normale`, `Media: ${Math.round(b.avg)} ingressi/giorno`, `Giorni osservati: ${b.n}${b.n < 5 ? ' (pochi)' : ''}`]; } } } } }
     });
 }
+// ---- Statistiche aggiuntive: KPI, mix clienti, giorni della settimana, stagionalità, classifiche, tipi di giorno ----
+function renderStatsExtra(rows) {
+    if (!isChartReady() || !document.getElementById('st-kpis')) return;
+    const MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    const GIORNI = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+    const fmtN = v => Math.round(v).toLocaleString('it-IT');
+    const fmtD = ds => { const d = new Date(ds + 'T12:00:00'); return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: '2-digit' }); };
+    const dayMap = {};
+    rows.forEach(d => {
+        if (!d.date) return;
+        const o = dayMap[d.date] || (dayMap[d.date] = { date: d.date, tot: 0, types: {}, fasce: 0 });
+        o.tot += d.totale || 0; o.fasce++;
+        o.types[d.type || 'standard'] = 1;
+    });
+    const days = Object.values(dayMap).filter(x => x.tot > 0);
+    const kp = document.getElementById('st-kpis');
+    ['chartMix','chartWd','chartMonthAvg'].forEach(id => { if (ch[id]) { ch[id].destroy(); ch[id] = null; } });
+    if (!days.length) { kp.innerHTML = '<div style="color:#64748b">Nessun dato nel periodo selezionato.</div>'; ['st-top','st-bottom','st-types'].forEach(id => document.getElementById(id).innerHTML = ''); return; }
+
+    // KPI
+    const tot = days.reduce((a, x) => a + x.tot, 0), n = days.length;
+    const sorted = days.map(x => x.tot).sort((a, b) => a - b);
+    const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+    const rec = days.reduce((a, b) => (a.tot >= b.tot ? a : b));
+    const sum = k => rows.reduce((a, d) => a + (d[k] || 0), 0);
+    const abb = sum('abb_int') + sum('abb_rid'), grat = sum('grat'), paganti = sum('int') + sum('rid');
+    const wds = {}; days.forEach(x => { const w = new Date(x.date + 'T12:00:00').getDay(); (wds[w] = wds[w] || []).push(x.tot); });
+    const wdAvg = Object.keys(wds).map(w => ({ w: +w, avg: wds[w].reduce((a, b) => a + b, 0) / wds[w].length }));
+    const bestWd = wdAvg.reduce((a, b) => (a.avg >= b.avg ? a : b));
+    const kpi = (l, v, sub) => `<div class="st-kpi"><small>${l}</small><b>${v}</b>${sub ? `<em>${sub}</em>` : ''}</div>`;
+    kp.innerHTML = kpi('Ingressi totali', fmtN(tot), `${n} giorni di apertura`)
+        + kpi('Media giornaliera', fmtN(tot / n), `mediana ${fmtN(median)}`)
+        + kpi('Record giornaliero', fmtN(rec.tot), fmtD(rec.date))
+        + kpi('Giorno migliore', ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'][bestWd.w], `media ${fmtN(bestWd.avg)}`)
+        + kpi('Abbonati', tot ? Math.round(abb / tot * 100) + '%' : '-', `${fmtN(abb)} ingressi`)
+        + kpi('Gratuiti', tot ? Math.round(grat / tot * 100) + '%' : '-', `${fmtN(grat)} ingressi`)
+        + kpi('Ridotti su paganti', paganti ? Math.round(sum('rid') / paganti * 100) + '%' : '-', `${fmtN(sum('rid'))} ridotti`);
+
+    // Mix clienti per mese (% impilata)
+    const byM = {};
+    rows.forEach(d => { if (!d.date) return; const m = d.date.slice(0, 7); const o = byM[m] || (byM[m] = { int: 0, rid: 0, ai: 0, ar: 0, g: 0 }); o.int += d.int || 0; o.rid += d.rid || 0; o.ai += d.abb_int || 0; o.ar += d.abb_rid || 0; o.g += d.grat || 0; });
+    const mk = Object.keys(byM).sort();
+    const lab = m => { const [y, mm] = m.split('-'); return MESI[+mm - 1] + " '" + y.slice(2); };
+    const pc = (k, m) => { const o = byM[m]; const t = o.int + o.rid + o.ai + o.ar + o.g; return t ? Math.round(o[k] / t * 1000) / 10 : 0; };
+    const mixDef = [['int','Intero','#2563eb'],['rid','Ridotto','#60a5fa'],['ai','Abb. Per.','#a855f7'],['ar','Abb. 11','#d8b4fe'],['g','Gratis','#f59e0b']];
+    ch['chartMix'] = new Chart(document.getElementById('chartMix'), { type: 'bar',
+        data: { labels: mk.map(lab), datasets: mixDef.map(([k, l, c]) => ({ label: l, data: mk.map(m => pc(k, m)), backgroundColor: c })) },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, max: 100, ticks: { callback: v => v + '%' } } },
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }, tooltip: { callbacks: { label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } } } });
+
+    // Media per giorno della settimana (Lun..Dom)
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    const maxAvg = Math.max(...wdAvg.map(x => x.avg));
+    ch['chartWd'] = new Chart(document.getElementById('chartWd'), { type: 'bar',
+        data: { labels: order.map(w => GIORNI[w]), datasets: [{ label: 'Media ingressi', data: order.map(w => wds[w] ? Math.round(wds[w].reduce((a, b) => a + b, 0) / wds[w].length) : 0), backgroundColor: order.map(w => wds[w] && (wds[w].reduce((a, b) => a + b, 0) / wds[w].length) === maxAvg ? '#f43f5e' : '#fda4af'), borderRadius: 6 }] },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: c => { const w = order[c.dataIndex]; return wds[w] ? `Giorni osservati: ${wds[w].length}` : ''; } } } } } });
+
+    // Media giornaliera per mese
+    const mDays = {}; days.forEach(x => { const m = x.date.slice(0, 7); const o = mDays[m] || (mDays[m] = { t: 0, n: 0 }); o.t += x.tot; o.n++; });
+    const mk2 = Object.keys(mDays).sort();
+    ch['chartMonthAvg'] = new Chart(document.getElementById('chartMonthAvg'), { type: 'bar',
+        data: { labels: mk2.map(lab), datasets: [{ label: 'Media/giorno', data: mk2.map(m => Math.round(mDays[m].t / mDays[m].n)), backgroundColor: '#fb7185', borderRadius: 6 }] },
+        options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { afterLabel: c => `Giorni di apertura: ${mDays[mk2[c.dataIndex]].n}` } } } } });
+
+    // Classifiche
+    const rank = (arr) => '<table>' + arr.map((x, i) => `<tr><td style="color:#94a3b8; width:26px">${i + 1}</td><td>${fmtD(x.date)}</td><td style="text-align:right"><b>${fmtN(x.tot)}</b></td></tr>`).join('') + '</table>';
+    const desc = [...days].sort((a, b) => b.tot - a.tot);
+    document.getElementById('st-top').innerHTML = rank(desc.slice(0, 10));
+    // giorni deboli: esclude oggi (giornata ancora in corso) e giorni con una sola fascia registrata se ci sono altre
+    const todayStr = fmtDateISO(new Date());
+    const full = days.filter(x => x.date !== todayStr);
+    document.getElementById('st-bottom').innerHTML = rank([...full].sort((a, b) => a.tot - b.tot).slice(0, 10));
+
+    // Tipo di giorno
+    const TL = { standard: '🏢 Standard', festivo: '🔴 Festivo', evento: '🏆 Gara/Evento', maltempo: '⛈️ Maltempo', extra: '⚠️ Straordinario' };
+    const tg = {};
+    days.forEach(x => { const t = Object.keys(x.types).find(k => k !== 'standard') || 'standard'; (tg[t] = tg[t] || []).push(x.tot); });
+    const stdAvg = tg.standard ? tg.standard.reduce((a, b) => a + b, 0) / tg.standard.length : null;
+    let th = '<table><thead><tr><th>Tipo</th><th style="text-align:right">Giorni</th><th style="text-align:right">Media</th><th style="text-align:right">Min</th><th style="text-align:right">Max</th><th style="text-align:right">vs Standard</th></tr></thead><tbody>';
+    Object.keys(tg).sort((a, b) => (a === 'standard' ? -1 : b === 'standard' ? 1 : a.localeCompare(b))).forEach(t => {
+        const v = tg[t], avg = v.reduce((a, b) => a + b, 0) / v.length;
+        const d = (t !== 'standard' && stdAvg) ? Math.round((avg / stdAvg - 1) * 100) : null;
+        th += `<tr><td>${TL[t] || t}</td><td style="text-align:right">${v.length}</td><td style="text-align:right"><b>${fmtN(avg)}</b></td><td style="text-align:right">${fmtN(Math.min(...v))}</td><td style="text-align:right">${fmtN(Math.max(...v))}</td><td style="text-align:right; color:${d == null ? '#94a3b8' : d >= 0 ? '#059669' : '#dc2626'}">${d == null ? '–' : (d >= 0 ? '+' : '') + d + '%'}</td></tr>`;
+    });
+    document.getElementById('st-types').innerHTML = th + '</tbody></table>';
+}
 const MX_BANDS = [[-99,10,'< 10°'],[10,15,'10–15°'],[15,20,'15–20°'],[20,25,'20–25°'],[25,30,'25–30°'],[30,99,'≥ 30°']];
 function renderMeteoTempMatrix(rows) {
     const el = document.getElementById('meteo-temp-matrix');
@@ -1913,7 +2049,7 @@ function renderMeteoTempMatrix(rows) {
         return `<td style="text-align:center; padding:8px; background:${bg}; font-weight:700; color:#0f172a">${v >= 0 ? '+' : ''}${Math.round(v * 100)}%<br><small style="font-weight:500">${g.length} gg · ${Math.round(g.reduce((a2, x) => a2 + x.tot, 0) / g.length)} ing.</small></td>`;
     };
     const fams = METEO_FAMILIES.filter(f => list.some(x => x.fam === f));
-    let h = '<table style="width:100%; border-collapse:separate; border-spacing:3px; font-size:0.85rem"><thead><tr><th style="text-align:left; padding:6px"></th>' + MX_BANDS.map(b => `<th style="padding:6px; color:#475569">${b[2]}</th>`).join('') + '<th style="padding:6px; color:#475569">Tutte</th></tr></thead><tbody>';
+    let h = '<table style="width:100%; min-width:640px; border-collapse:separate; border-spacing:3px; font-size:0.85rem"><thead><tr><th style="text-align:left; padding:6px"></th>' + MX_BANDS.map(b => `<th style="padding:6px; color:#475569">${b[2]}</th>`).join('') + '<th style="padding:6px; color:#475569">Tutte</th></tr></thead><tbody>';
     fams.forEach(f => {
         const rowL = list.filter(x => x.fam === f);
         h += `<tr><th style="text-align:left; padding:6px; white-space:nowrap; color:#334155">${f}</th>` + MX_BANDS.map(([lo, hi]) => cell(rowL.filter(x => x.temp >= lo && x.temp < hi))).join('') + cell(rowL) + '</tr>';
@@ -2595,6 +2731,7 @@ window.renderStats = () => {
     renderMeteoPerformance(fMain);
     renderTempStats(fMain);
     renderMeteoTempMatrix(fMain);
+    renderStatsExtra(fMain);
     const fasceData = buildMultiSeries(d => ({key: d.fascia, val: d.totale}));
     renderMultiBar('chartFasce', fasceData.labels, fasceData.datasets, 'y');
 
