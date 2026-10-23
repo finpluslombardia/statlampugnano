@@ -679,10 +679,6 @@
                     <div class="inp-field" style="width:150px; flex:none;"><label>Data</label><input type="date" id="u-date" onchange="onUtenzeDateChange()"></div>
                     <div class="inp-field" id="u-f-meteo" style="flex:1; min-width:170px"><label>Meteo Giornata</label>
                         <select id="u-meteo" onchange="markUtenzeMeteo()">
-                            <option value="☀️ Sole">☀️ Sole</option>
-                            <option value="⛅ Variabile">⛅ Variabile</option>
-                            <option value="☁️ Nuvoloso">☁️ Nuvoloso</option>
-                            <option value="🌧️ Pioggia">🌧️ Pioggia</option>
                         </select>
                     </div>
                     <div class="inp-field" id="u-f-temp" style="width:150px; flex:none;"><label>Temp. media (°C)</label><input type="number" id="u-temp" placeholder="°C" step="0.1" oninput="markUtenzeTemp()"></div>
@@ -3231,7 +3227,7 @@ window.editUtenze = (id) => {
     document.getElementById('u-date').value = d.date; document.getElementById('u-note').value = d.note || '';
     if(d.type === U_TYPES.elec) {
         document.getElementById('u-a1').value = d.a1; document.getElementById('u-a2').value = d.a2; document.getElementById('u-a3').value = d.a3;
-        document.getElementById('u-meteo').value = d.meteo || '☀️ Sole'; document.getElementById('u-temp').value = d.temp != null ? d.temp : '';
+        setMeteoSelectValue(d.meteo, 'u-meteo'); document.getElementById('u-temp').value = d.temp != null ? d.temp : '';
         updateUtenzeElecTotal();
     } else if(d.type === U_TYPES.water) {
         document.getElementById('u-val-water').value = d.val;
@@ -3245,6 +3241,7 @@ window.cancelEditUtenze = () => {
     editIdUtenze = null; editTypeUtenze = null;
     document.getElementById('title-utenze').innerText = "➕ Registra Utenze"; document.getElementById('btn-save-utenze').innerText = "SALVA"; document.getElementById('btn-save-utenze').style.background = ""; document.getElementById('cb-utenze').classList.remove('editing'); document.getElementById('cancel-utenze').classList.add('hidden');
     setUtenzeEditLayout(null); resetUtenzeForm(); document.getElementById('u-temp').value = '';
+    document.querySelectorAll('#u-meteo .legacy-opt').forEach(o => o.remove());
     utenzeMeteoManual = false; utenzeTempManual = false; updateUtenzeAuto();
 };
 window.switchSubViewUtenze=(s)=>{
@@ -5189,10 +5186,10 @@ window.renderUtenze = () => {
 
 // ================= UTENZE: STATISTICHE =================
 const UC = { elec: '#eab308', gas: '#ef4444', water: '#3b82f6' };
-const U_METEO_CLASSES = ['Sole', 'Variabile', 'Nuvoloso', 'Pioggia'];
-const U_METEO_ICON = { Sole: '☀️ Sole', Variabile: '⛅ Variabile', Nuvoloso: '☁️ Nuvoloso', Pioggia: '🌧️ Pioggia' };
+const U_METEO_CLASSES = ['☀️ Sereno / Sole','⛅ Parz. nuvoloso','☁️ Nuvoloso / Coperto','🌦️ Variabile / Rovesci','🌧️ Pioggia','⛈️ Temporale','❄️ Neve']; // stesse famiglie del Nuoto Libero
+const U_METEO_ICON = Object.fromEntries(U_METEO_CLASSES.map(c => [c, c]));
 const HDD_BASE = 18; // temperatura base dei gradi-giorno di riscaldamento
-function uMeteoClass(m) { if (!m) return null; for (const c of U_METEO_CLASSES) if (m.includes(c)) return c; return null; }
+function uMeteoClass(m) { return meteoFamily(m); }
 function uNum(v) { return typeof v === 'number' && isFinite(v); }
 function uLinReg(pts) {
     const n = pts.length; if (n < 8) return null;
@@ -5843,24 +5840,18 @@ function meteoFamily(m) {
     return null;
 }
 function fillMeteoSelects() {
-    const a = document.getElementById('i-meteo'), b = document.getElementById('arch-filter-meteo');
+    const a = document.getElementById('i-meteo'), b = document.getElementById('arch-filter-meteo'), u = document.getElementById('u-meteo');
     if (a) a.innerHTML = METEO_OPTS.map(o => `<option value="${o}">${o}</option>`).join('');
+    if (u) u.innerHTML = METEO_OPTS.map(o => `<option value="${o}">${o}</option>`).join('');
     if (b) b.innerHTML = '<option value="all">Tutto il Meteo</option>' + METEO_FAMILIES.map(o => `<option value="${o}">${o}</option>`).join('');
 }
 fillMeteoSelects();
 // Imposta il valore del menu anche per valori vecchi non più in elenco (es. in modifica)
-function setMeteoSelectValue(v) {
-    const sel = document.getElementById('i-meteo');
+function setMeteoSelectValue(v, id) {
+    const sel = document.getElementById(id || 'i-meteo');
     if (v && ![...sel.options].some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = v + ' (vecchio)'; o.className = 'legacy-opt'; sel.appendChild(o); }
     else if (!v) v = METEO_OPTS[12];
     sel.value = v;
-}
-// Voce del menu Meteo di "Utenze" (4 sole opzioni)
-function meteoOptionForUtenze(code) {
-    if (code === 0 || code === 1) return '☀️ Sole';
-    if (code === 2 || code === 80 || code === 81) return '⛅ Variabile';
-    if (code === 3 || code === 45 || code === 48) return '☁️ Nuvoloso';
-    return '🌧️ Pioggia';
 }
 
 // Recupera meteo corrente (solo se oggi) e riepilogo giornaliero per la data. null = data fuori intervallo.
@@ -5934,7 +5925,7 @@ window.updateUtenzeAuto = async () => {
         if (dateStr !== document.getElementById('u-date').value || editIdUtenze) return;
         if (!info || info.dCode == null || info.dMax == null || info.dMin == null) { hint.innerText = ''; return; }
         const avg = Math.round(((info.dMax + info.dMin) / 2) * 10) / 10;
-        if (!utenzeMeteoManual) document.getElementById('u-meteo').value = meteoOptionForUtenze(info.dCode);
+        if (!utenzeMeteoManual) document.getElementById('u-meteo').value = meteoOptionFor(info.dCode);
         if (!utenzeTempManual) document.getElementById('u-temp').value = avg;
         hint.innerText = `🌐 Compilati in automatico per il giorno precedente (${prevStr.split('-').reverse().join('/')}, Milano): ${WMO_IT[info.dCode] || '-'} · min ${Math.round(info.dMin)}° / max ${Math.round(info.dMax)}° → media ${avg.toLocaleString('it-IT')}°C. Puoi modificarli.`;
     } catch (e) { hint.innerText = '🌐 Meteo automatico non disponibile: inseriscilo a mano.'; }
