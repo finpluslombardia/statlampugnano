@@ -1023,133 +1023,136 @@
 
         <!-- Incassi Sub-View: Panoramica -->
         <div id="sub-inc-overview">
+            <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>💰 Mese e stagione</h3><span>Incassi correnti, media e proiezioni</span></div>
             <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 20px;">
-                <div class="kpi-card glass-card" style="border-left: 4px solid #16a34a">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">💰 Incasso Mese Corrente</div>
                     <div class="kpi-val kpi-val-money" id="ov-month-mtd-val">-</div>
                     <div class="kpi-sub" id="ov-month-mtd-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #7c3aed">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🗓️ Incasso Stagione Corrente</div>
                     <div class="kpi-val kpi-val-money" id="ov-season-tot-val">-</div>
                     <div class="kpi-sub" id="ov-season-tot-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #dc2626">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">📊 Media per Giorno Aperto</div>
                     <div class="kpi-val kpi-val-money" id="ov-avg-open-val">-</div>
                     <div class="kpi-sub" id="ov-avg-open-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #ea580c">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">📅 Miglior Giorno Settimana</div>
                     <div class="kpi-val kpi-val-money" id="ov-bestday-val">-</div>
                     <div class="kpi-sub" id="ov-bestday-sub">-</div>
                 </div>
             </div>
 
-            <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 30px;">
-                <div class="kpi-card glass-card" style="border-left: 4px solid #16a34a">
+            <div class="kpi-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 0;">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🎯 Proiezione Fine Mese</div>
                     <div class="kpi-val kpi-val-money" id="ov-forecast-month-val">-</div>
                     <div class="kpi-sub" id="ov-forecast-month-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #16a34a">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🎯 Proiezione Fine Stagione</div>
                     <div class="kpi-val kpi-val-money" id="ov-forecast-season-val">-</div>
                     <div class="kpi-sub" id="ov-forecast-season-sub">-</div>
                 </div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px">
-                <h3 style="margin:0; font-size:1.1rem; color:var(--text-main)">📅 Confronto Mensile</h3>
-                <input type="month" id="inc-kpi-month-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8)" onchange="renderIncassi()">
             </div>
+            <div class="stat-section" style="--sc:13,148,136"><div class="stat-section-head"><h3>⚡ Giorni recenti</h3><span id="iov-asof"></span></div>
+                <div class="ov-hl-grid" id="iov-recent" style="margin-bottom:0"></div>
+            </div>
+            <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>🎯 Obiettivi e record</h3><span>Mese in corso a confronto con lo scorso anno, record e regolarità</span></div>
+                <div class="ov-hl-grid" id="iov-month" style="margin-bottom:0"></div>
+            </div>
+            <div class="stat-section" style="--sc:37,99,235"><div class="stat-section-head"><h3>📅 Confronto Mensile</h3><span>Scegli il mese da confrontare con lo stesso mese dell'anno scorso</span><input type="month" id="inc-kpi-month-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8); margin-left:auto" onchange="renderIncassi()"></div>
             <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 25px;">
-                <div class="kpi-card glass-card" style="border-left: 4px solid #16a34a">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">💰 Incasso Totale</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-tot-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-tot-sub">-</div>
                     <div class="kpi-context" id="inc-kpi-tot-context"></div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #ef4444">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">📚 Corsi</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-n4-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-n4-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #a16207">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🏅 Società Sportive</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-ss-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-ss-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #2563eb">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🎫 Ingressi</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-ingressi-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-ingressi-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #7c3aed">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🎟️ Abbonamenti</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-abbonamenti-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-abbonamenti-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #ea580c">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🛍️ Accessori</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-accessori-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-accessori-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #0891b2">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">📄 Fatture</div>
                     <div class="kpi-val kpi-val-money" id="inc-kpi-fatture-val">-</div>
                     <div class="kpi-sub" id="inc-kpi-fatture-sub">-</div>
                 </div>
             </div>
 
-            <div class="chart-card glass-card" style="height:320px; padding:15px; margin-bottom:30px">
+            <div class="chart-card glass-card" style="height:320px; padding:15px; margin-bottom:0">
                 <div class="chart-header" style="font-size:0.85rem">🧾 Composizione Incasso (mese)</div>
                 <div class="chart-wrapper"><canvas id="chartIncPaymentMix"></canvas></div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:15px">
-                <h3 style="margin:0; font-size:1.1rem; color:var(--text-main)">📅 Confronto Settimanale</h3>
-                <input type="week" id="inc-weekly-week-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8)" onchange="renderIncassiWeekly()">
             </div>
+            <div class="stat-section" style="--sc:124,58,237"><div class="stat-section-head"><h3>📆 Confronto Settimanale</h3><span>Scegli la settimana</span><input type="week" id="inc-weekly-week-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8); margin-left:auto" onchange="renderIncassiWeekly()"></div>
             <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 25px;">
-                <div class="kpi-card glass-card" style="border-left: 4px solid #16a34a">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">💰 Incasso Totale</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-tot-val">-</div>
                     <div class="kpi-sub" id="inc-wk-tot-sub">-</div>
                     <div class="kpi-context" id="inc-wk-tot-context"></div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #ef4444">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">📚 Corsi</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-n4-val">-</div>
                     <div class="kpi-sub" id="inc-wk-n4-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #a16207">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🏅 Società Sportive</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-ss-val">-</div>
                     <div class="kpi-sub" id="inc-wk-ss-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #2563eb">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🎫 Ingressi</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-ingressi-val">-</div>
                     <div class="kpi-sub" id="inc-wk-ingressi-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #7c3aed">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🎟️ Abbonamenti</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-abbonamenti-val">-</div>
                     <div class="kpi-sub" id="inc-wk-abbonamenti-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #ea580c">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">🛍️ Accessori</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-accessori-val">-</div>
                     <div class="kpi-sub" id="inc-wk-accessori-sub">-</div>
                 </div>
-                <div class="kpi-card glass-card" style="border-left: 4px solid #0891b2">
+                <div class="kpi-card glass-card">
                     <div class="kpi-head">📄 Fatture</div>
                     <div class="kpi-val kpi-val-money" id="inc-wk-fatture-val">-</div>
                     <div class="kpi-sub" id="inc-wk-fatture-sub">-</div>
                 </div>
             </div>
-            <div class="table-wrap glass-card" style="margin-bottom:30px">
+            <div class="table-wrap glass-card" style="margin-bottom:0">
                 <div style="overflow-x:auto;">
                     <table id="table-incassi-weekly">
                         <thead>
@@ -1169,9 +1172,12 @@
                 </div>
             </div>
 
-            <div class="chart-card glass-card" style="height:340px; padding:15px">
+            </div>
+            <div class="stat-section" style="--sc:244,63,94"><div class="stat-section-head"><h3>📈 Andamento</h3><span>Incasso giornaliero degli ultimi 90 giorni</span></div>
+            <div class="chart-card glass-card" style="height:340px; padding:15px; margin-bottom:0">
                 <div class="chart-header" style="font-size:0.85rem">📈 Andamento Incasso Giornaliero — Ultimi 90 gg (Stagione in Corso)</div>
                 <div class="chart-wrapper"><canvas id="chartIncTrend"></canvas></div>
+            </div>
             </div>
         </div>
 
@@ -3438,13 +3444,118 @@ window.renderIncassi = () => {
     const archiveVisible = !document.getElementById('sub-inc-archive').classList.contains('hidden');
     const registerVisible = !document.getElementById('sub-inc-register').classList.contains('hidden');
 
-    if (overviewVisible) { renderIncassiOverview(); renderIncassiWeekly(); }
+    if (overviewVisible) { renderIncassiOverview(); try { renderIncassiOverviewHighlights(); } catch (e) { console.error('renderIncassiOverviewHighlights', e); } renderIncassiWeekly(); }
     if (seasonDetailVisible) renderIncassiSeasonDetail();
     if (statsVisible) renderIncassiStats();
     if (riepilogoVisible) renderRiepilogoIncassi();
     if (archiveVisible) renderIncassiArchive();
     if (registerVisible) { toggleSeasonalFields(); updateIncassiLiveTotal(); }
 };
+
+// ---- Panoramica Incassi: sezioni "Giorni recenti" e "Obiettivi e record" ----
+function renderIncassiOverviewHighlights() {
+    const boxR = document.getElementById('iov-recent'), boxM = document.getElementById('iov-month');
+    if (!boxR || !boxM) return;
+    const docs = (dataIncassi || []).filter(d => d.date && (d.incasso_totale || 0) > 0);
+    if (!docs.length) { boxR.innerHTML = ''; boxM.innerHTML = ''; return; }
+    const WD = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'], WS = ['D','L','M','M','G','V','S'];
+    const MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+    const eur0 = v => '€ ' + Math.round(v).toLocaleString('it-IT');
+    const pct = (a, b) => (b > 0 ? Math.round((a / b - 1) * 100) : null);
+    const pctHtml = v => (v == null ? '' : `<span class="${v >= 0 ? 'ov-up' : 'ov-down'}">${v >= 0 ? '▲ +' : '▼ '}${v}%</span>`);
+    const dow = ds => new Date(ds + 'T12:00:00').getDay();
+    const addD = (ds, k) => { const [y, m, d] = ds.split('-').map(Number); return fmtDateISO(new Date(y, m - 1, d + k)); };
+    const dm = ds => ds.slice(8, 10) + '/' + ds.slice(5, 7);
+    const dd = ds => WD[dow(ds)].slice(0, 3).toLowerCase() + ' ' + dm(ds);
+    const byDay = {}; docs.forEach(d => { byDay[d.date] = (byDay[d.date] || 0) + d.incasso_totale; });
+    const dayDoc = {}; docs.forEach(d => { dayDoc[d.date] = d; });
+    const last = docs.reduce((a, d) => (d.date > a ? d.date : a), '0000-00-00');
+    const seasonY = getSeasonStartYear(last), month = last.slice(0, 7);
+    const asof = document.getElementById('iov-asof'); if (asof) asof.innerText = `ultimo dato: ${WD[dow(last)].toLowerCase()} ${dm(last)}`;
+    const card = (c, lab, body) => `<div class="ov-card" style="--c:${c}"><div class="ov-lab">${lab}</div>${body}</div>`;
+    const R = [], M = [];
+
+    // 1. Ultimo incasso
+    const ld = dayDoc[last], lt = byDay[last];
+    const sameWd = Object.keys(byDay).filter(d => d < last && dow(d) === dow(last) && getSeasonStartYear(d) === seasonY);
+    const avgWd = sameWd.length ? sameWd.reduce((a, d) => a + byDay[d], 0) / sameWd.length : null;
+    const CAT = [['Corsi', ld.corsi_n4_tot], ['Società Sportive', ld.societa_sportive_tot], ['Ingressi', ld.ingressi_tot], ['Abbonamenti', ld.abbonamenti_tot], ['Accessori', ld.accessori_tot], ['Fatture', (ld.fatture_spazi_acqua || 0) + (ld.fatture_altro || 0)]].filter(c => (c[1] || 0) > 0).sort((a, b) => b[1] - a[1]);
+    R.push(card('37,99,235', '📍 Ultimo incasso registrato',
+        `<div class="ov-big">${eur0(lt)}<small>${dd(last)}</small></div>`
+        + `<div class="ov-sub">${avgWd != null ? `${pctHtml(pct(lt, avgWd))} rispetto alla media del ${WD[dow(last)].toLowerCase()} (${eur0(avgWd)}, ${sameWd.length} gg)` : 'Nessun confronto disponibile'}</div>`
+        + (CAT.length ? `<div class="ov-sub">Voce principale: <b>${CAT[0][0]}</b> ${eur0(CAT[0][1])} (${Math.round(CAT[0][1] / lt * 100)}%)</div>` : '')));
+
+    // 2. Ultimi 7 giorni
+    const l7 = [], p7 = []; for (let k = 6; k >= 0; k--) { l7.push(addD(last, -k)); p7.push(addD(last, -k - 7)); }
+    const dv = d => byDay[d] || 0, s7 = l7.reduce((a, d) => a + dv(d), 0), sp7 = p7.reduce((a, d) => a + dv(d), 0), mx7 = Math.max(...l7.map(dv), 1);
+    R.push(card('13,148,136', '📆 Ultimi 7 giorni',
+        `<div class="ov-big">${eur0(s7)}</div>`
+        + `<div class="ov-sub">${pctHtml(pct(s7, sp7))} ${sp7 ? `rispetto ai 7 giorni prima (${eur0(sp7)})` : ''}</div>`
+        + `<div class="ov-bars">${l7.map((d, i) => `<div class="${i === 6 ? 'last' : ''}" title="${WD[dow(d)]} ${dm(d)}: ${eur0(dv(d))}"><i style="height:${Math.max(4, Math.round(dv(d) / mx7 * 100))}%"></i>${WS[dow(d)]}</div>`).join('')}</div>`));
+
+    // 3. Atteso prossimo giorno
+    const tmr = addD(last, 1), tw = dow(tmr);
+    const hist = Object.keys(byDay).filter(d => d <= last && dow(d) === tw).sort().reverse().slice(0, 6).map(d => byDay[d]);
+    if (hist.length >= 2) {
+        const av = hist.reduce((a, b) => a + b, 0) / hist.length;
+        R.push(card('124,58,237', '🔮 Atteso prossimo giorno',
+            `<div class="ov-big">~${eur0(av)}<small>${dd(tmr)}</small></div>`
+            + `<div class="ov-sub">Media degli ultimi ${hist.length} ${WD[tw].toLowerCase()} con incasso · intervallo <b>${eur0(Math.min(...hist))} – ${eur0(Math.max(...hist))}</b></div>`
+            + `<div class="ov-sub" style="font-size:0.74rem; color:#94a3b8">Stima indicativa: non considera chiusure, festività o corsi particolari.</div>`));
+    }
+
+    // 4. Obiettivo del mese: quanto del totale dello stesso mese dell'anno scorso è già stato raggiunto
+    const my = +month.slice(0, 4), mm = +month.slice(5, 7), pm = `${my - 1}-${month.slice(5, 7)}`;
+    const mtd = docs.filter(d => d.date.startsWith(month)).reduce((a, d) => a + d.incasso_totale, 0);
+    const prevFull = docs.filter(d => d.date.startsWith(pm)).reduce((a, d) => a + d.incasso_totale, 0);
+    const mLab = MESI[mm - 1] + ' ' + (my - 1);
+    if (prevFull > 0) {
+        const pr = Math.round(mtd / prevFull * 100);
+        M.push(card('22,163,74', `🎯 Obiettivo · ${MESI[mm - 1]}`,
+            `<div class="ov-big">${pr}%<small>del totale di ${mLab}</small></div>`
+            + `<div class="ov-seg"><i style="width:${Math.min(100, pr)}%; background:#16a34a"></i></div>`
+            + `<div class="ov-sub">${eur0(mtd)} su ${eur0(prevFull)} · ${pr >= 100 ? `<b class="ov-up">superato di ${eur0(mtd - prevFull)}</b>` : `mancano <b>${eur0(prevFull - mtd)}</b> per eguagliarlo`}</div>`));
+    }
+
+    // 5. Esente IVA vs IVA (mese)
+    const mdocs = docs.filter(d => d.date.startsWith(month));
+    const ex = mdocs.reduce((a, d) => a + (d.corsi_n4_tot || 0) + (d.societa_sportive_tot || 0), 0), mt = mdocs.reduce((a, d) => a + d.incasso_totale, 0);
+    if (mt > 0) M.push(card('37,99,235', '🧾 Esente IVA e Parte IVA · mese',
+        `<div class="ov-big">${eur0(mt)}<small>incasso del mese</small></div>`
+        + `<div class="ov-seg"><i style="width:${ex / mt * 100}%; background:#ef4444" title="Esente IVA"></i><i style="width:${(1 - ex / mt) * 100}%; background:#2563eb" title="Parte IVA"></i></div>`
+        + `<div class="ov-leg"><span style="--k:#ef4444">Esente IVA <b>${Math.round(ex / mt * 100)}%</b> (${eur0(ex)})</span><span style="--k:#2563eb">Parte IVA <b>${Math.round((1 - ex / mt) * 100)}%</b> (${eur0(mt - ex)})</span></div>`));
+
+    // 6. Migliori e peggiori giorni del mese
+    const md = Object.keys(byDay).filter(d => d.startsWith(month)).map(d => ({ d, v: byDay[d] }));
+    if (md.length >= 3) {
+        const best = md.reduce((a, b) => (a.v >= b.v ? a : b)), worst = md.reduce((a, b) => (a.v <= b.v ? a : b));
+        M.push(card('217,119,6', '🏆 Giorni estremi · mese',
+            `<div class="ov-sub" style="margin-top:2px">Migliore</div><div class="ov-big" style="font-size:1.6rem">${eur0(best.v)}<small>${dd(best.d)}</small></div>`
+            + `<div class="ov-sub" style="margin-top:6px">Più debole</div><div class="ov-big" style="font-size:1.6rem; color:#dc2626">${eur0(worst.v)}<small>${dd(worst.d)}</small></div>`));
+    }
+
+    // 7. Regolarità
+    const avgM = md.length ? mt / md.length : 0, above = md.filter(x => x.v >= avgM).length;
+    const miss = []; for (let k = 29; k >= 0; k--) { const d = addD(last, -k); if (!byDay[d]) miss.push(d); }
+    if (md.length >= 3) M.push(card('22,163,74', '📈 Regolarità · mese',
+        `<div class="ov-big">${md.length}<small>giorni con incasso · media ${eur0(avgM)}</small></div>`
+        + `<div class="ov-sub"><b>${above}</b> giorni sopra la media</div>`
+        + `<div class="ov-sub" style="color:${miss.length ? '#b45309' : '#16a34a'}">${miss.length ? `🗓️ Senza registrazioni negli ultimi 30 gg: <b>${miss.length}</b> (${miss.slice(-6).map(dm).join(', ')}${miss.length > 6 ? '…' : ''})` : '✓ Nessun giorno senza registrazioni negli ultimi 30'}</div>`));
+
+    // 8. Stagione
+    const sdays = Object.keys(byDay).filter(d => getSeasonStartYear(d) === seasonY).map(d => ({ d, v: byDay[d] }));
+    if (sdays.length) {
+        const rec = sdays.reduce((a, b) => (a.v >= b.v ? a : b)), bm = {}; sdays.forEach(x => { const k = x.d.slice(0, 7); bm[k] = (bm[k] || 0) + x.v; });
+        const bk = Object.keys(bm).sort((a, b) => bm[b] - bm[a])[0];
+        const start = new Date(seasonY, 8, 1, 12), end = new Date(seasonY + 1, 7, 31, 12), now = new Date(last + 'T12:00:00');
+        const prog = Math.max(0, Math.min(100, Math.round((now - start) / (end - start) * 100)));
+        M.push(card('79,70,229', `🏊 Stagione ${getSeasonLabel(seasonY)}`,
+            `<div class="ov-big">${prog}%<small>della stagione trascorsa</small></div>`
+            + `<div class="ov-seg"><i style="width:${prog}%; background:#4f46e5"></i></div>`
+            + `<div class="ov-sub">🏆 Record <b>${eur0(rec.v)}</b> (${dm(rec.d)}) · mese migliore <b>${MESI[+bk.slice(5, 7) - 1]}</b> (${eur0(bm[bk])})</div>`));
+    }
+    boxR.innerHTML = R.join(''); boxM.innerHTML = M.join('');
+}
 
 function renderIncassiOverview() {
     if (!dataIncassi || dataIncassi.length === 0) return;
