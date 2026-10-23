@@ -352,9 +352,9 @@
                 </div>
                 <!-- NEW YTD BOX INSTEAD OF FORECAST -->
                 <div class="kpi-card glass-card">
-                    <div class="kpi-head">Trend Anno (YTD)</div>
+                    <div class="kpi-head">Trend Stagione</div>
                     <div class="kpi-val" id="ov-ytd">0%</div>
-                    <div class="kpi-sub" id="ov-ytd-label">vs anno prec.</div>
+                    <div class="kpi-sub" id="ov-ytd-label">vs stagione prec.</div>
                 </div>
             </div>
             
@@ -816,9 +816,9 @@
                     </div>
                 </div>
 
-                <!-- BOX 3: YTD VS PREVIOUS YTD -->
+                <!-- BOX 3: TREND STAGIONE VS STAGIONE PRECEDENTE (stessa data) -->
                 <div class="kpi-card glass-card" style="height:110px; border-left:4px solid #f97316">
-                    <div class="kpi-head" style="color:#c2410c">📊 Trend Anno Corrente (YTD)</div>
+                    <div class="kpi-head" style="color:#c2410c">📊 Trend Stagione <span id="u-ytd-season-lbl" style="font-weight:600; opacity:.7"></span></div>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px">
                         <div style="font-size:0.8rem; font-weight:600; color:#eab308">⚡ <span id="u-ytd-elec-pct">-</span></div>
                         <div style="font-size:0.7rem; color:#64748b">vs anno prec.</div>
@@ -2048,7 +2048,6 @@ function renderStatsExtra(rows, comps) {
         + kpi('Record giornaliero', fmtN(rec.tot), fmtD(rec.date), cmpPct(m => m.rec, rec.tot, fmtN))
         + kpi('Giorno migliore', ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'][bestWd.w], `media ${fmtN(bestWd.avg)}`)
         + kpi('Abbonati', tot ? Math.round(abbP) + '%' : '-', `${fmtN(abb)} ingressi`, cmpPp(m => m.abb, abbP))
-        + kpi('Gratuiti', tot ? Math.round(gratP) + '%' : '-', `${fmtN(grat)} ingressi`, cmpPp(m => m.grat, gratP))
         + kpi('Ridotti su paganti', paganti ? Math.round(ridP) + '%' : '-', `${fmtN(sum('rid'))} ridotti`, cmpPp(m => m.rid, ridP));
 
     // Mix clienti per mese (% impilata)
@@ -2303,26 +2302,14 @@ function renderOverviewKPI() {
     document.getElementById('ov-yoy').innerHTML = yoyBoxHtml;
     document.getElementById('ov-yoy-label').innerText = `vs ${targetYoyYear} (al ${maxDay})`;
 
-    // 5. YTD Trend (Anno vs Anno Prec)
-    const prevYearVal = currentYear - 1;
-    
-    const allCurrentYearData = dataIngressi.filter(x => {
-        const {y} = parseDate(x.date);
-        return y === currentYear && !x.excludeStats;
-    });
-
-    const totalYtdCurr = allCurrentYearData.reduce((a,b)=>a+b.totale,0);
-
-    const dYtdPrev = dataIngressi.filter(x => {
-        if(x.excludeStats) return false;
-        const {y, m, d} = parseDate(x.date);
-        if (y !== prevYearVal) return false;
-        // Logic for YTD limit based on currentMonth and maxDay (from anchor)
-        if (m < currentMonth) return true;
-        if (m === currentMonth && d <= maxDay) return true;
-        return false;
-    });
-    const totalYtdPrev = dYtdPrev.reduce((a,b)=>a+b.totale,0);
+    // 5. Trend Stagione (1 set - 31 ago): stagione corrente fino alla data di riferimento vs stagione precedente alla stessa data
+    const pad2 = n => String(n).padStart(2, '0');
+    const anchorStr = `${currentYear}-${pad2(currentMonth)}-${pad2(maxDay)}`;
+    const seasonCur = getSeasonStartYear(anchorStr);
+    const prevYearVal = seasonCur - 1;
+    const anchorPrevStr = `${currentYear - 1}-${pad2(currentMonth)}-${pad2(maxDay)}`;
+    const totalYtdCurr = dataIngressi.filter(x => !x.excludeStats && x.date && getSeasonStartYear(x.date) === seasonCur && x.date <= anchorStr).reduce((a,b)=>a+b.totale,0);
+    const totalYtdPrev = dataIngressi.filter(x => !x.excludeStats && x.date && getSeasonStartYear(x.date) === prevYearVal && x.date <= anchorPrevStr).reduce((a,b)=>a+b.totale,0);
 
     let ytdHtml = "";
     let diffYtd = 0;
@@ -2339,7 +2326,7 @@ function renderOverviewKPI() {
     ytdHtml = `<span style="color:${colorYtd}">${signYtd}${diffYtd.toFixed(1)}%</span>`;
     
     document.getElementById('ov-ytd').innerHTML = ytdHtml;
-    document.getElementById('ov-ytd-label').innerText = `vs ${prevYearVal} (al ${maxDay}/${currentMonth})`;
+    document.getElementById('ov-ytd-label').innerText = `vs ${getSeasonLabel(prevYearVal)} (al ${maxDay}/${currentMonth})`;
 
     // 6. Forecast & Total Comparison (basata su trend storico per giorno della settimana)
     const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
@@ -4857,32 +4844,20 @@ window.renderUtenze = () => {
     const currentAnchorDay = realToday.getDate();
     const currentAnchorMonth = realToday.getMonth() + 1; // 1-12
     const currentAnchorYear = realToday.getFullYear();
-    const prevAnchorYear = currentAnchorYear - 1;
-    
+    const pad2u = n => String(n).padStart(2, '0');
+    const anchorStrU = `${currentAnchorYear}-${pad2u(currentAnchorMonth)}-${pad2u(currentAnchorDay)}`;
+    const anchorPrevStrU = `${currentAnchorYear - 1}-${pad2u(currentAnchorMonth)}-${pad2u(currentAnchorDay)}`;
+    const seasonCurU = getSeasonStartYear(anchorStrU);
+
     let ytdSum = { elec: 0, water: 0, gas: 0 };
     let ytdPrevSum = { elec: 0, water: 0, gas: 0 };
-    
+
+    // Trend Stagione (1 set - 31 ago): stagione corrente fino a oggi vs stagione precedente alla stessa data
     Object.keys(deltas).forEach(dateStr => {
-        const d = new Date(dateStr);
-        const y = d.getFullYear();
-        const m = d.getMonth() + 1;
-        const day = d.getDate();
-        
-        // Check if date is within YTD limit (Jan 1 to Today's Month/Day)
-        const isWithinDateLimit = (m < currentAnchorMonth) || (m === currentAnchorMonth && day <= currentAnchorDay);
-        
-        if (isWithinDateLimit) {
-            const dVals = deltas[dateStr];
-            if (y === currentAnchorYear) {
-                ytdSum.elec += dVals.elec || 0;
-                ytdSum.water += dVals.water || 0;
-                ytdSum.gas += dVals.gas || 0;
-            } else if (y === prevAnchorYear) {
-                ytdPrevSum.elec += dVals.elec || 0;
-                ytdPrevSum.water += dVals.water || 0;
-                ytdPrevSum.gas += dVals.gas || 0;
-            }
-        }
+        const sy = getSeasonStartYear(dateStr);
+        const dVals = deltas[dateStr];
+        const tgt = (sy === seasonCurU && dateStr <= anchorStrU) ? ytdSum : ((sy === seasonCurU - 1 && dateStr <= anchorPrevStrU) ? ytdPrevSum : null);
+        if (tgt) { tgt.elec += dVals.elec || 0; tgt.water += dVals.water || 0; tgt.gas += dVals.gas || 0; }
     });
     
     const calcPct = (curr, prev) => {
@@ -4896,6 +4871,7 @@ window.renderUtenze = () => {
     };
     
     if(document.getElementById('u-ytd-elec-pct')) {
+        const lblU = document.getElementById('u-ytd-season-lbl'); if (lblU) lblU.innerText = '(' + getSeasonLabel(seasonCurU) + ')';
         document.getElementById('u-ytd-elec-pct').innerHTML = calcPct(ytdSum.elec, ytdPrevSum.elec);
         document.getElementById('u-ytd-water-pct').innerHTML = calcPct(ytdSum.water, ytdPrevSum.water);
         document.getElementById('u-ytd-gas-pct').innerHTML = calcPct(ytdSum.gas, ytdPrevSum.gas);
