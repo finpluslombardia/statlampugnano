@@ -1360,14 +1360,17 @@
                         <div class="ex-hint">Seleziona una o più stagioni (1 settembre – 31 agosto).</div>
                         <div class="ex-chips" id="ex-seasons"></div>
                         <div class="ex-links"><a onclick="exSeasonsAll(true)">Tutte</a><a onclick="exSeasonsAll(false)">Nessuna</a><a onclick="exSeasonsCurrent()">Solo in corso</a></div>
+                        <h4 style="margin-top:18px">Mesi</h4>
+                        <div class="ex-hint">Quali mesi confrontare tra le stagioni.</div>
+                        <div class="ex-chips" id="ex-months"></div>
+                        <div class="ex-links"><a onclick="exMonthsAll(true)">Tutti</a><a onclick="exMonthsAll(false)">Nessuno</a><a onclick="exMonthsCurrent()">Solo mese in corso</a></div>
                     </div>
                     <div class="ex-card">
                         <h4>2 · Dati da includere</h4>
-                        <div class="ex-hint">Dati grezzi sommati per mese. Le colonne scelte compaiono in tutti i fogli.</div>
+                        <div class="ex-hint">Righe = dati scelti, colonne = stagioni. Valori grezzi, sommati per mese.</div>
                         <div class="ex-group"><div class="ex-group-title">Fogli</div><div class="ex-chips">
-                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="month" checked onchange="exUpdateSummary()">Dati per mese</label>
-                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="cmp" checked onchange="exUpdateSummary()">Confronto mese per mese (stagioni affiancate)</label>
-                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="season" checked onchange="exUpdateSummary()">Totali di stagione</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="month" checked onchange="exUpdateSummary()">Mese per mese</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="period" checked onchange="exUpdateSummary()">Totale dei mesi scelti</label>
                         </div></div>
                         <div class="ex-group"><div class="ex-group-title">Incassi</div><div class="ex-chips">
                             <label class="ex-chip"><input type="checkbox" class="ex-col" value="tot" checked>Incasso totale</label>
@@ -4199,24 +4202,32 @@ function renderSeasonDetailExtra(selectedSeason) {
 // ============ INCASSI: Statistiche (confronto tra stagioni) ============
 // ---- Incassi > Statistiche: esportazione dati ----
 let exSelSeasons = null; // Set di anni di inizio stagione selezionati (null = non ancora inizializzato)
+let exSelMonths = null;  // Set di mesi (1-12) selezionati
+const EX_MO = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8];
 function exSeasonList() { return [...new Set((dataIncassi || []).filter(d => d.date).map(d => getSeasonStartYear(d.date)))].sort(); }
 function renderIncassiExportPanel() {
     const box = document.getElementById('ex-seasons'); if (!box) return;
     const ys = exSeasonList();
     if (exSelSeasons === null) exSelSeasons = new Set(ys); else exSelSeasons = new Set([...exSelSeasons].filter(y => ys.includes(y)));
     box.innerHTML = ys.slice().reverse().map(y => `<label class="ex-chip"><input type="checkbox" value="${y}" ${exSelSeasons.has(y) ? 'checked' : ''} onchange="exSeasonToggle(${y}, this.checked)">Stagione ${getSeasonLabel(y)}</label>`).join('') || '<span style="color:#64748b">Nessun dato disponibile.</span>';
+    if (exSelMonths === null) exSelMonths = new Set(EX_MO);
+    const mb = document.getElementById('ex-months');
+    if (mb) mb.innerHTML = EX_MO.map(m => `<label class="ex-chip"><input type="checkbox" ${exSelMonths.has(m) ? 'checked' : ''} onchange="exMonthToggle(${m}, this.checked)">${EX_MESI[m - 1][0].toUpperCase() + EX_MESI[m - 1].slice(1, 3)}</label>`).join('');
     exUpdateSummary();
 }
+window.exMonthToggle = (m, on) => { if (on) exSelMonths.add(m); else exSelMonths.delete(m); exUpdateSummary(); };
+window.exMonthsAll = (on) => { exSelMonths = new Set(on ? EX_MO : []); renderIncassiExportPanel(); };
+window.exMonthsCurrent = () => { const l = (dataIncassi || []).reduce((a, d) => (d.date && d.date > a ? d.date : a), ''); exSelMonths = new Set(l ? [+l.slice(5, 7)] : []); renderIncassiExportPanel(); };
 window.exSeasonToggle = (y, on) => { if (on) exSelSeasons.add(y); else exSelSeasons.delete(y); exUpdateSummary(); };
 window.exSeasonsAll = (on) => { exSelSeasons = new Set(on ? exSeasonList() : []); renderIncassiExportPanel(); };
 window.exSeasonsCurrent = () => { const ys = exSeasonList(); exSelSeasons = new Set(ys.length ? [ys[ys.length - 1]] : []); renderIncassiExportPanel(); };
 window.exColsAll = (on) => { document.querySelectorAll('.ex-col').forEach(c => { c.checked = on; }); exUpdateSummary(); };
-function exRows() { return (dataIncassi || []).filter(d => d.date && exSelSeasons && exSelSeasons.has(getSeasonStartYear(d.date))).sort((a, b) => (a.date < b.date ? -1 : 1)); }
+function exRows() { return (dataIncassi || []).filter(d => d.date && exSelSeasons && exSelSeasons.has(getSeasonStartYear(d.date)) && exSelMonths && exSelMonths.has(+d.date.slice(5, 7))).sort((a, b) => (a.date < b.date ? -1 : 1)); }
 window.exUpdateSummary = () => {
     const el = document.getElementById('ex-summary'); if (!el) return;
     const rows = exRows(), n = exSelSeasons ? exSelSeasons.size : 0, sh = document.querySelectorAll('.ex-sh:checked').length;
-    const nm = new Set(rows.map(d => d.date.slice(0, 7))).size;
-    el.innerHTML = !n ? '⚠️ Seleziona almeno una stagione.' : !sh ? '⚠️ Seleziona almeno un foglio.' : `<b>${nm}</b> mesi di dati in <b>${n}</b> ${n === 1 ? 'stagione' : 'stagioni'} · <b>${sh}</b> ${sh === 1 ? 'foglio' : 'fogli'}`;
+    const nmo = exSelMonths ? exSelMonths.size : 0;
+    el.innerHTML = !n ? '⚠️ Seleziona almeno una stagione.' : !nmo ? '⚠️ Seleziona almeno un mese.' : !sh ? '⚠️ Seleziona almeno un foglio.' : `<b>${n}</b> ${n === 1 ? 'stagione' : 'stagioni'} (colonne) · <b>${nmo}</b> ${nmo === 1 ? 'mese' : 'mesi'} · <b>${sh}</b> ${sh === 1 ? 'foglio' : 'fogli'}`;
 };
 function exColumns() {
     const on = new Set([...document.querySelectorAll('.ex-col:checked')].map(c => c.value)), C = [];
@@ -4246,23 +4257,20 @@ const EX_MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio
 const exR2 = v => Math.round(v * 100) / 100;
 function exBuildSheets() {
     const rows = exRows(), { C } = exColumns(), sh = new Set([...document.querySelectorAll('.ex-sh:checked')].map(c => c.value)), out = [];
-    const group = (keyFn, headFn) => {
-        const g = {}; rows.forEach(d => { const k = keyFn(d); (g[k] = g[k] || []).push(d); });
-        return Object.keys(g).sort().map(k => { const arr = g[k], o = headFn(k, arr); C.forEach(c => { o[c.h] = exR2(arr.reduce((a, d) => a + c.f(d), 0)); }); return o; });
-    };
-    const monthRows = group(d => d.date.slice(0, 7), k => ({ 'Stagione': getSeasonLabel(getSeasonStartYear(k + '-01')), 'Mese': k, 'Nome mese': EX_MESI[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) }));
-    if (sh.has('month')) out.push({ name: 'Dati per mese', rows: monthRows });
-    if (sh.has('cmp')) {
-        // una riga per mese di stagione (set -> ago), colonne: ogni dato per ogni stagione scelta
-        const ys = [...exSelSeasons].sort(), MO = [9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8];
-        const key = (y, mm) => `${mm >= 9 ? y : y + 1}-${String(mm).padStart(2, '0')}`;
-        const byKey = {}; monthRows.forEach(r => { byKey[r['Mese']] = r; });
-        out.push({ name: 'Confronto stagioni', rows: MO.map(mm => {
-            const o = { 'Mese': EX_MESI[mm - 1][0].toUpperCase() + EX_MESI[mm - 1].slice(1) };
-            C.forEach(c => ys.forEach(y => { const r = byKey[key(y, mm)]; o[`${c.h} · ${getSeasonLabel(y)}`] = r ? r[c.h] : ''; }));
-            return o; }) });
+    const ys = [...exSelSeasons].sort(), months = EX_MO.filter(m => exSelMonths.has(m));
+    const mk = (y, m) => `${m >= 9 ? y : y + 1}-${String(m).padStart(2, '0')}`;
+    const cell = (y, m, c) => { const arr = rows.filter(d => d.date.startsWith(mk(y, m))); return arr.length ? exR2(arr.reduce((a, d) => a + c.f(d), 0)) : ''; };
+    const cap = m => EX_MESI[m - 1][0].toUpperCase() + EX_MESI[m - 1].slice(1);
+    if (sh.has('month')) {
+        const r = []; months.forEach(m => C.forEach(c => { const o = { 'Mese': cap(m), 'Dato': c.h }; ys.forEach(y => { o[getSeasonLabel(y)] = cell(y, m, c); }); r.push(o); }));
+        out.push({ name: 'Mese per mese', rows: r });
     }
-    if (sh.has('season')) out.push({ name: 'Totali stagione', rows: group(d => String(getSeasonStartYear(d.date)), k => ({ 'Stagione': getSeasonLabel(+k) })) });
+    if (sh.has('period')) {
+        const r = C.map(c => { const o = { 'Dato': c.h }; ys.forEach(y => { const v = months.map(m => cell(y, m, c)).filter(x => x !== ''); o[getSeasonLabel(y)] = v.length ? exR2(v.reduce((a, b) => a + b, 0)) : ''; }); return o; });
+        const cnt = { 'Dato': 'Mesi con dati' }; ys.forEach(y => { cnt[getSeasonLabel(y)] = months.filter(m => rows.some(d => d.date.startsWith(mk(y, m)))).length; });
+        r.push(cnt);
+        out.push({ name: 'Totale mesi scelti', rows: r });
+    }
     return out;
 }
 const exCsvEsc = v => { if (typeof v === 'number') return String(v).replace('.', ','); const t = String(v == null ? '' : v); return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
