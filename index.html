@@ -155,6 +155,22 @@
     .ov-hbar { display:grid; grid-template-columns:96px 1fr 38px; gap:8px; align-items:center; font-size:0.78rem; color:#475569; }
     .ov-hbar em { font-style:normal; height:9px; border-radius:6px; background:rgba(var(--c),0.18); display:block; overflow:hidden; } .ov-hbar em i { display:block; height:100%; background:rgb(var(--c)); border-radius:6px; }
     .ov-hbar b { text-align:right; color:#0f172a; }
+    /* Esporta dati (Incassi > Statistiche) */
+    .ex-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.6fr); gap:20px; margin-bottom:20px; }
+    @media (max-width:900px) { .ex-grid { grid-template-columns:minmax(0,1fr); } }
+    .ex-card { background:var(--glass-bg); backdrop-filter:var(--glass-blur); border-radius:22px; box-shadow:var(--glass-shadow); border:var(--glass-border); padding:18px 20px; min-width:0; }
+    .ex-card h4 { margin:0 0 4px; font-size:0.95rem; font-weight:800; color:#1e293b; }
+    .ex-card .ex-hint { font-size:0.78rem; color:#64748b; margin-bottom:12px; }
+    .ex-chips { display:flex; flex-wrap:wrap; gap:8px; }
+    .ex-chip { display:inline-flex; align-items:center; gap:7px; padding:7px 13px; border-radius:999px; background:rgba(255,255,255,0.7); border:1.5px solid rgba(100,116,139,0.25); font-size:0.85rem; font-weight:600; color:#334155; cursor:pointer; user-select:none; }
+    .ex-chip:has(input:checked) { background:rgba(37,99,235,0.12); border-color:#2563eb; color:#1d4ed8; }
+    .ex-chip input { accent-color:#2563eb; width:15px; height:15px; margin:0; }
+    .ex-group { margin-bottom:14px; } .ex-group:last-child { margin-bottom:0; }
+    .ex-group-title { font-size:0.7rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:#64748b; margin-bottom:7px; }
+    .ex-links { display:flex; gap:12px; margin-top:12px; font-size:0.78rem; }
+    .ex-links a { color:#2563eb; cursor:pointer; font-weight:700; text-decoration:none; }
+    .ex-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+    .ex-bar .ex-sum { flex:1; min-width:200px; font-size:0.85rem; color:#475569; }
     .stat-section, .stat-section .chart-card, .stat-section .table-wrap { min-width: 0; }
     .stat-section .table-wrap { width: 0; min-width: 100%; }
     .stat-section .table-wrap > div, #sub-inc-seasondetail .table-wrap > div { min-width: 0; max-width: 100%; overflow-x: auto; }
@@ -1334,6 +1350,54 @@
                 <div class="stat-section-head"><h3>📅 Calendario e Record</h3><span>Giorni della settimana, media per giorno di apertura, giorni e mesi migliori</span></div>
                 <div class="charts-row-split"><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Incasso Medio per Giorno della Settimana <span class="chart-sub">· € per giorno con incasso</span></div><div class="chart-wrapper"><canvas id="chartIncWd"></canvas></div></div><div class="chart-card glass-card" style="height:340px"><div class="chart-header">Incasso Medio per Giorno di Apertura <span class="chart-sub">· per mese</span></div><div class="chart-wrapper"><canvas id="chartIncMonthAvg"></canvas></div></div></div>
                 <div class="charts-row-split" style="margin-bottom:0"><div class="chart-card glass-card auto-h"><div class="chart-header">🏆 10 Giorni Migliori <span class="chart-sub">· tutte le stagioni</span></div><div id="inc-top-days" style="overflow-x:auto"></div></div><div class="chart-card glass-card auto-h"><div class="chart-header">🏆 10 Mesi Migliori <span class="chart-sub">· tutte le stagioni</span></div><div id="inc-top-months" style="overflow-x:auto"></div></div></div>
+            </div>
+            <!-- I6: ESPORTA DATI -->
+            <div class="stat-section" style="--sc:71,85,105">
+                <div class="stat-section-head"><h3>📤 Esporta Dati</h3><span>Scegli stagioni e dati da scaricare in un file Excel o CSV</span></div>
+                <div class="ex-grid">
+                    <div class="ex-card">
+                        <h4>1 · Stagioni</h4>
+                        <div class="ex-hint">Seleziona una o più stagioni (1 settembre – 31 agosto).</div>
+                        <div class="ex-chips" id="ex-seasons"></div>
+                        <div class="ex-links"><a onclick="exSeasonsAll(true)">Tutte</a><a onclick="exSeasonsAll(false)">Nessuna</a><a onclick="exSeasonsCurrent()">Solo in corso</a></div>
+                    </div>
+                    <div class="ex-card">
+                        <h4>2 · Dati da includere</h4>
+                        <div class="ex-hint">Le colonne scelte compaiono in tutti i fogli selezionati.</div>
+                        <div class="ex-group"><div class="ex-group-title">Fogli</div><div class="ex-chips">
+                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="day" checked onchange="exUpdateSummary()">Giornaliero</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="month" checked onchange="exUpdateSummary()">Riepilogo mensile</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-sh" value="season" checked onchange="exUpdateSummary()">Riepilogo stagione</label>
+                        </div></div>
+                        <div class="ex-group"><div class="ex-group-title">Incassi</div><div class="ex-chips">
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="tot" checked>Incasso totale</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="cat" checked>Categorie (Corsi, Società, Ingressi, Abbonamenti, Accessori, Fatture)</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="iva" checked>Esente IVA / Parte IVA</label>
+                        </div></div>
+                        <div class="ex-group"><div class="ex-group-title">Dettagli</div><div class="ex-chips">
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="acc">Accessori (crediti, tessere, cuffie…)</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="fat">Fatture (spazi acqua, altro)</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="bors">Borsellini / correzioni</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="gran">Ingressi e abbonamenti per tipologia</label>
+                        </div></div>
+                        <div class="ex-group"><div class="ex-group-title">Metodi di pagamento</div><div class="ex-chips">
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="payE">Esente IVA (POS, Satispay, bonifico, contanti)</label>
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="payI">Parte IVA (POS, Satispay, bonifico, contanti)</label>
+                        </div></div>
+                        <div class="ex-group"><div class="ex-group-title">Altro</div><div class="ex-chips">
+                            <label class="ex-chip"><input type="checkbox" class="ex-col" value="note">Note (solo foglio giornaliero)</label>
+                        </div></div>
+                        <div class="ex-links"><a onclick="exColsAll(true)">Seleziona tutto</a><a onclick="exColsAll(false)">Deseleziona tutto</a></div>
+                    </div>
+                </div>
+                <div class="ex-card ex-bar">
+                    <div class="ex-sum" id="ex-summary">-</div>
+                    <select id="ex-format" class="filter-select" style="font-weight:700">
+                        <option value="xlsx">📗 Excel (.xlsx)</option>
+                        <option value="csv">📄 CSV (separatore ;)</option>
+                    </select>
+                    <button class="btn btn-primary" style="height:42px; padding:0 26px" onclick="exportIncassiData()">⬇️ Scarica</button>
+                </div>
             </div>
         </div>
 
@@ -4136,6 +4200,93 @@ function renderSeasonDetailExtra(selectedSeason) {
 }
 
 // ============ INCASSI: Statistiche (confronto tra stagioni) ============
+// ---- Incassi > Statistiche: esportazione dati ----
+let exSelSeasons = null; // Set di anni di inizio stagione selezionati (null = non ancora inizializzato)
+function exSeasonList() { return [...new Set((dataIncassi || []).filter(d => d.date).map(d => getSeasonStartYear(d.date)))].sort(); }
+function renderIncassiExportPanel() {
+    const box = document.getElementById('ex-seasons'); if (!box) return;
+    const ys = exSeasonList();
+    if (exSelSeasons === null) exSelSeasons = new Set(ys); else exSelSeasons = new Set([...exSelSeasons].filter(y => ys.includes(y)));
+    box.innerHTML = ys.slice().reverse().map(y => `<label class="ex-chip"><input type="checkbox" value="${y}" ${exSelSeasons.has(y) ? 'checked' : ''} onchange="exSeasonToggle(${y}, this.checked)">Stagione ${getSeasonLabel(y)}</label>`).join('') || '<span style="color:#64748b">Nessun dato disponibile.</span>';
+    exUpdateSummary();
+}
+window.exSeasonToggle = (y, on) => { if (on) exSelSeasons.add(y); else exSelSeasons.delete(y); exUpdateSummary(); };
+window.exSeasonsAll = (on) => { exSelSeasons = new Set(on ? exSeasonList() : []); renderIncassiExportPanel(); };
+window.exSeasonsCurrent = () => { const ys = exSeasonList(); exSelSeasons = new Set(ys.length ? [ys[ys.length - 1]] : []); renderIncassiExportPanel(); };
+window.exColsAll = (on) => { document.querySelectorAll('.ex-col').forEach(c => { c.checked = on; }); exUpdateSummary(); };
+function exRows() { return (dataIncassi || []).filter(d => d.date && exSelSeasons && exSelSeasons.has(getSeasonStartYear(d.date))).sort((a, b) => (a.date < b.date ? -1 : 1)); }
+window.exUpdateSummary = () => {
+    const el = document.getElementById('ex-summary'); if (!el) return;
+    const rows = exRows(), n = exSelSeasons ? exSelSeasons.size : 0, sh = document.querySelectorAll('.ex-sh:checked').length;
+    el.innerHTML = !n ? '⚠️ Seleziona almeno una stagione.' : !sh ? '⚠️ Seleziona almeno un foglio.' : `<b>${rows.length}</b> giorni in <b>${n}</b> ${n === 1 ? 'stagione' : 'stagioni'} · <b>${sh}</b> ${sh === 1 ? 'foglio' : 'fogli'}`;
+};
+function exColumns() {
+    const on = new Set([...document.querySelectorAll('.ex-col:checked')].map(c => c.value)), C = [];
+    const n = (d, k) => (typeof d[k] === 'number' ? d[k] : (parseFloat(d[k]) || 0));
+    const add = (h, f) => C.push({ h, f });
+    if (on.has('tot')) add('Incasso totale', d => n(d, 'incasso_totale'));
+    if (on.has('cat')) {
+        add('Corsi', d => n(d, 'corsi_n4_tot')); add('Società Sportive', d => n(d, 'societa_sportive_tot')); add('Ingressi', d => n(d, 'ingressi_tot'));
+        add('Abbonamenti', d => n(d, 'abbonamenti_tot')); add('Accessori', d => n(d, 'accessori_tot'));
+        add('Fatture', d => (d.fatture_tot != null ? n(d, 'fatture_tot') : n(d, 'fatture_spazi_acqua') + n(d, 'fatture_altro')));
+    }
+    if (on.has('iva')) { add('Esente IVA (Corsi + Società)', d => n(d, 'corsi_n4_tot') + n(d, 'societa_sportive_tot')); add('Parte IVA', d => n(d, 'incasso_totale') - n(d, 'corsi_n4_tot') - n(d, 'societa_sportive_tot')); }
+    if (on.has('acc')) [['Accessori · Crediti', 'acc_crediti'], ['Accessori · Tessere', 'acc_tessere'], ['Accessori · Cuffie', 'acc_cuffie'], ['Accessori · Noleggio', 'acc_noleggio'], ['Accessori · Altro', 'acc_altro']].forEach(([h, k]) => add(h, d => n(d, k)));
+    if (on.has('fat')) { add('Fatture · Spazi acqua', d => n(d, 'fatture_spazi_acqua')); add('Fatture · Altro', d => n(d, 'fatture_altro')); }
+    if (on.has('bors')) add('Borsellini / correzioni', d => n(d, 'borsellini_correzioni'));
+    if (on.has('gran')) {
+        const lab = (id, pre) => { const el = document.getElementById(id), l = el && el.parentElement && el.parentElement.querySelector('label'); return pre + ' · ' + (l ? l.innerText.trim() : id.replace(/^inc-/, '').replace(/-/g, ' ')); };
+        INC_ING_IDS.forEach(id => add(lab(id, 'Ingressi'), d => n(d, incKey(id))));
+        INC_ABB_IDS.forEach(id => add(lab(id, 'Abbonamenti'), d => n(d, incKey(id))));
+    }
+    if (on.has('payE')) [['POS', 'pos'], ['Satispay', 'satispay'], ['Bonifico', 'bonifico'], ['Contanti', 'contanti']].forEach(([h, k]) => add('Esente IVA · ' + h, d => n(d, 'corsi_n4_' + k)));
+    if (on.has('payI')) [['POS', 'pos'], ['Satispay', 'satispay'], ['Bonifico', 'bonifico'], ['Contanti', 'contanti']].forEach(([h, k]) => add('Parte IVA · ' + h, d => n(d, 'iva_' + k)));
+    return { C, note: on.has('note'), hasTot: on.has('tot') };
+}
+const EX_WD = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+const EX_MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const exR2 = v => Math.round(v * 100) / 100;
+function exBuildSheets() {
+    const rows = exRows(), { C, note, hasTot } = exColumns(), sh = new Set([...document.querySelectorAll('.ex-sh:checked')].map(c => c.value)), out = [];
+    const open = d => (d.incasso_totale || 0) > 0;
+    if (sh.has('day')) out.push({ name: 'Giornaliero', rows: rows.map(d => {
+        const o = { 'Data': d.date, 'Giorno': EX_WD[new Date(d.date + 'T12:00:00').getDay()], 'Stagione': getSeasonLabel(getSeasonStartYear(d.date)) };
+        C.forEach(c => { o[c.h] = exR2(c.f(d)); }); if (note) o['Note'] = d.note || ''; return o; }) });
+    const group = (keyFn, headFn) => {
+        const g = {}; rows.forEach(d => { const k = keyFn(d); (g[k] = g[k] || []).push(d); });
+        return Object.keys(g).sort().map(k => {
+            const arr = g[k], o = headFn(k, arr), op = arr.filter(open);
+            o['Giorni con incasso'] = op.length;
+            C.forEach(c => { o[c.h] = exR2(arr.reduce((a, d) => a + c.f(d), 0)); });
+            if (hasTot) { const tot = arr.reduce((a, d) => a + (d.incasso_totale || 0), 0); o['Media per giorno aperto'] = op.length ? exR2(tot / op.length) : ''; }
+            return o; });
+    };
+    if (sh.has('month')) out.push({ name: 'Mensile', rows: group(d => d.date.slice(0, 7), (k) => ({ 'Stagione': getSeasonLabel(getSeasonStartYear(k + '-01')), 'Mese': k, 'Nome mese': EX_MESI[+k.slice(5, 7) - 1] + ' ' + k.slice(0, 4) })) });
+    if (sh.has('season')) out.push({ name: 'Stagioni', rows: group(d => String(getSeasonStartYear(d.date)), (k, arr) => ({ 'Stagione': getSeasonLabel(+k), 'Primo giorno': arr[0].date, 'Ultimo giorno': arr[arr.length - 1].date })) });
+    return out;
+}
+const exCsvEsc = v => { if (typeof v === 'number') return String(v).replace('.', ','); const t = String(v == null ? '' : v); return /[";\n\r]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
+window.exportIncassiData = () => {
+    if (!exSelSeasons || !exSelSeasons.size) return showToast('Seleziona almeno una stagione', 'error');
+    if (!document.querySelectorAll('.ex-sh:checked').length) return showToast('Seleziona almeno un foglio', 'error');
+    const sheets = exBuildSheets().filter(s => s.rows.length);
+    if (!sheets.length) return showToast('Nessun dato da esportare', 'error');
+    const ys = [...exSelSeasons].sort(), all = ys.length === exSeasonList().length;
+    const tag = all ? 'tutte-le-stagioni' : ys.map(y => getSeasonLabel(y).replace('/', '-')).join('_');
+    const base = `incassi_${tag}_${fmtDateISO(new Date())}`;
+    if (document.getElementById('ex-format').value === 'xlsx') {
+        const wb = XLSX.utils.book_new();
+        sheets.forEach(s => { const ws = XLSX.utils.json_to_sheet(s.rows); ws['!cols'] = Object.keys(s.rows[0]).map(h => ({ wch: Math.max(12, h.length + 2) })); XLSX.utils.book_append_sheet(wb, ws, s.name); });
+        XLSX.writeFile(wb, base + '.xlsx');
+    } else {
+        sheets.forEach((s, i) => setTimeout(() => {
+            const hd = Object.keys(s.rows[0]), txt = '﻿' + hd.map(exCsvEsc).join(';') + '\n' + s.rows.map(r => hd.map(h => exCsvEsc(r[h])).join(';')).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' })); a.download = `${base}_${s.name.toLowerCase()}.csv`; document.body.appendChild(a); a.click(); a.remove();
+        }, i * 400));
+    }
+    showToast(`Esportati ${sheets.length} ${sheets.length === 1 ? 'foglio' : 'fogli'}`);
+};
+
 function renderIncassiStats() {
     if (!isChartReady() || !dataIncassi || dataIncassi.length === 0) return;
 
@@ -4196,7 +4347,7 @@ function renderIncassiStats() {
     buildSeasonCompareChart('chartIncYearCompareCrediti', r => r.crediti);
     buildSeasonCompareChart('chartIncYearCompareFatture', r => r.fatture);
     buildSeasonCompareChart('chartIncYearCompareSpaziAcqua', r => r.spaziAcqua);
-    try { renderIncassiStatsExtra(); } catch (e) { console.error('renderIncassiStatsExtra', e); }
+    try { renderIncassiStatsExtra(); try { renderIncassiExportPanel(); } catch (e) { console.error('renderIncassiExportPanel', e); } } catch (e) { console.error('renderIncassiStatsExtra', e); }
 }
 
 // ---- Incassi: statistiche aggiuntive (passo stagione, composizione, metodi di pagamento, calendario) ----
