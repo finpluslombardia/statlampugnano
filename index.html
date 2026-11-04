@@ -644,10 +644,10 @@
 
 <div id="sub-archive" class="hidden">
             <div class="archive-toolbar">
-                <div class="arch-group"><span class="arch-label">DA:</span><input type="date" id="arch-date-start" class="arch-input" onchange="renderIngressiArchive()"></div>
-                <div class="arch-group"><span class="arch-label">A:</span><input type="date" id="arch-date-end" class="arch-input" onchange="renderIngressiArchive()"></div>
-                <select id="arch-filter-fascia" class="arch-select" onchange="renderIngressiArchive()"><option value="all">Tutte le Fasce</option><optgroup label="Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
-                <select id="arch-filter-meteo" class="arch-select" onchange="renderIngressiArchive()"></select>
+                <div class="arch-group"><span class="arch-label">DA:</span><input type="date" id="arch-date-start" class="arch-input" onchange="renderIngressiArchive(true)"></div>
+                <div class="arch-group"><span class="arch-label">A:</span><input type="date" id="arch-date-end" class="arch-input" onchange="renderIngressiArchive(true)"></div>
+                <select id="arch-filter-fascia" class="arch-select" onchange="renderIngressiArchive(true)"><option value="all">Tutte le Fasce</option><optgroup label="Interna"><option value="Mattina">Mattina</option><option value="Mattina intera">Mattina intera</option><option value="Pranzo">Pranzo</option><option value="Sera">Sera</option><option value="Sabato pom">Sabato pom</option><option value="Domenica">Domenica</option><option value="Festivo">Festivo</option><option value="Unico">Unico</option></optgroup><optgroup label="Esterna"><option value="Estiva - Mattina">Estiva - Mattina</option><option value="Estiva - Pomeriggio">Estiva - Pomeriggio</option><option value="Estiva - Unico">Estiva - Unico</option></optgroup></select>
+                <select id="arch-filter-meteo" class="arch-select" onchange="renderIngressiArchive(true)"></select>
                 <select id="arch-sort" class="arch-select" style="min-width:100px" onchange="renderIngressiArchive()"><option value="desc">⬇️ Recenti</option><option value="asc">⬆️ Vecchi</option></select>
                 <button class="btn btn-danger" style="height:36px; width:36px; padding:0" onclick="resetArchiveFilters()">✕</button>
                 <button class="btn btn-primary" style="height:36px; font-size:0.8rem; padding:0 20px" onclick="downloadCSV()">Scarica Excel</button>
@@ -6242,7 +6242,9 @@ window.toggleExcludeStats = async (id, currentVal) => { try { await updateDoc(do
 window.loadMoreIngressi = () => { limitIngressi += 200; renderIngressiArchive(); };
 window.loadMoreUtenze = () => { limitUtenze += 200; renderUtenze(); };
 
-window.renderIngressiArchive = () => {
+let ingArchOpen = null; // gruppi aperti: "s:2025" (stagione) e "m:2025-10" (mese)
+window.toggleIngArch = (key) => { if (!ingArchOpen) ingArchOpen = new Set(); ingArchOpen.has(key) ? ingArchOpen.delete(key) : ingArchOpen.add(key); renderIngressiArchive(); };
+window.renderIngressiArchive = (resetOpen) => {
     const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const sort = document.getElementById('arch-sort').value;
     const f = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && meteoFamily(d.meteo) !== meteo) return false; return true; });
     f.sort((a,b)=>{const da=new Date(a.date), db=new Date(b.date); return sort==='desc'?db-da:da-db});
@@ -6253,10 +6255,8 @@ window.renderIngressiArchive = () => {
     const g=new Map(); f.forEach(d=>{if(!g.has(d.date))g.set(d.date,[]); g.get(d.date).push(d)});
     
     // OPTIMIZATION: Render max 200 rows
-    const limitedKeys = [...g.keys()].slice(0, limitIngressi);
-    const rowsBuffer = [];
-    
-    limitedKeys.forEach(k=>{
+    const dayRows = (k) => {
+        const rowsBuffer = [];
         const e=g.get(k);
         const dh=`<div style="font-weight:800;font-size:0.95rem;color:#1e293b">${k.split('-').reverse().join('/')}</div><div style="font-size:0.8rem;color:#64748b">${new Date(k).toLocaleDateString('it-IT',{weekday:'short'}).toUpperCase()}</div>`;
         e.forEach((d,i)=>{
@@ -6268,12 +6268,40 @@ window.renderIngressiArchive = () => {
             const excludeIcon = isExcluded ? "✅" : "🚫";
             rowsBuffer.push(`<tr style="${b}; ${rowStyle}">${i===0?`<td rowspan="${e.length}" style="vertical-align:middle;background:rgba(255,255,255,0.4)">${dh}</td>`:''} <td><b>${d.fascia}</b>${badge}<br><small style="color:#64748b">${d.meteo}${typeof d.temp === 'number' ? ' · ' + d.temp.toLocaleString('it-IT') + '°C' : ''}</small>${isExcluded?'<br><b style="color:#ef4444;font-size:0.65rem">ESCLUSO MEDIA</b>':''}</td> <td class="col-detail bg-sub-blue">${d.int}</td><td class="col-detail bg-sub-blue">${d.rid}</td><td class="col-subtot bg-sub-blue" style="color:var(--primary)">${(d.int||0)+(d.rid||0)}</td> <td class="col-detail bg-sub-purp">${d.abb_int}</td><td class="col-detail bg-sub-purp">${d.abb_rid}</td><td class="col-subtot bg-sub-purp" style="color:#a855f7">${(d.abb_int||0)+(d.abb_rid||0)}</td> <td class="col-detail">${d.grat}</td><td class="col-total">${d.totale}</td> <td style="text-align:right; min-width:110px"><button class="btn btn-icon" style="color:#64748b;background:transparent;border:1px solid #e2e8f0;margin-right:5px;width:30px;height:30px" onclick="toggleExcludeStats('${d.id}', ${isExcluded})">${excludeIcon}</button><button class="btn btn-icon" style="color:var(--primary);background:#eef2ff" onclick="editIngressi('${d.id}')">✏️</button><button class="btn btn-icon" style="color:#ef4444;background:#fef2f2" onclick="delDoc('sessioni','${d.id}')">🗑️</button></td></tr>`);
         });
-    });
-    t.innerHTML = rowsBuffer.join('');
+        return rowsBuffer.join('');
+    };
 
-    if([...g.keys()].length > limitIngressi) {
-        t.innerHTML += `<tr><td colspan="11" style="text-align:center; padding:15px"><button class="btn btn-primary" onclick="loadMoreIngressi()">⬇️ Carica altri risultati...</button></td></tr>`;
+    // raggruppo i giorni per stagione e mese (nell'ordine scelto)
+    const MESI_L = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    const seasons = [];
+    [...g.keys()].forEach(k => {
+        const sy = getSeasonStartYear(k), mk = k.slice(0, 7);
+        let S = seasons.find(x => x.sy === sy); if (!S) { S = { sy, months: [], n: 0 }; seasons.push(S); }
+        let M = S.months.find(x => x.mk === mk); if (!M) { M = { mk, keys: [] }; S.months.push(M); }
+        M.keys.push(k); S.n++;
+    });
+    const filtered = start || end || fascia !== 'all' || meteo !== 'all';
+    if (resetOpen || !ingArchOpen) {
+        ingArchOpen = new Set();
+        if (filtered) seasons.forEach(S => { ingArchOpen.add('s:' + S.sy); S.months.forEach(M => ingArchOpen.add('m:' + M.mk)); });
+        else { ingArchOpen.add('s:' + seasons[0].sy); ingArchOpen.add('m:' + seasons[0].months[0].mk); }
     }
+    const head = (key, level, label, n) => {
+        const open = ingArchOpen.has(key);
+        return `<tr onclick="toggleIngArch('${key}')" style="cursor:pointer; background:${level === 0 ? 'rgba(79,70,229,0.14)' : 'rgba(79,70,229,0.06)'}; font-weight:800"><td colspan="11" style="${level ? 'padding-left:28px;' : ''}white-space:nowrap">${open ? '▾' : '▸'} ${label} <span style="font-weight:600; color:#64748b; font-size:0.75rem">· ${n} giorni</span></td></tr>`;
+    };
+    let html = '';
+    seasons.forEach(S => {
+        const sk = 's:' + S.sy;
+        html += head(sk, 0, '📅 Stagione ' + getSeasonLabel(S.sy), S.n);
+        if (!ingArchOpen.has(sk)) return;
+        S.months.forEach(M => {
+            const mkey = 'm:' + M.mk;
+            html += head(mkey, 1, MESI_L[+M.mk.slice(5, 7) - 1] + ' ' + M.mk.slice(0, 4), M.keys.length);
+            if (ingArchOpen.has(mkey)) html += M.keys.map(dayRows).join('');
+        });
+    });
+    t.innerHTML = html;
 }
 
 // --- RIEPILOGO MENSILE INGRESSI ---
@@ -6622,7 +6650,7 @@ function refreshCurrentView(){ if(!document.getElementById('sub-overview').class
 setInterval(()=>{ const n=new Date(); const s=n.getHours().toString().padStart(2,'0')+":"+n.getMinutes().toString().padStart(2,'0'); if(document.getElementById('d-time')) document.getElementById('d-time').value=s; if(document.getElementById('note-time')) document.getElementById('note-time').value=s; },1000);
 const today=fmtDateISO(new Date()); document.getElementById('i-date').value=today; document.getElementById('d-date').value=today; document.getElementById('u-date').value=today; document.getElementById('inc-date').value=today;
 window.downloadCSV = () => { const start = document.getElementById('arch-date-start').value; const end = document.getElementById('arch-date-end').value; const fascia = document.getElementById('arch-filter-fascia').value; const meteo = document.getElementById('arch-filter-meteo').value; const filtered = dataIngressi.filter(d => { if (start && d.date < start) return false; if (end && d.date > end) return false; if (fascia !== 'all' && d.fascia !== fascia) return false; if (meteo !== 'all' && meteoFamily(d.meteo) !== meteo) return false; return true; }); if(!filtered.length) return showToast("Nessun dato da scaricare", "error"); let csvContent = "data:text/csv;charset=utf-8,Data;Tipo;Fascia;Meteo;TempMedia;EsclusoMedia;Intero;Ridotto;Abbonamenti;Gratuiti;Totale\n"; filtered.forEach(row => { csvContent += `${row.date};${row.type||'standard'};${row.fascia};${row.meteo};${typeof row.temp === 'number' ? row.temp : ''};${row.excludeStats?'SI':'NO'};${row.int};${row.rid};${row.abb_int + row.abb_rid};${row.grat};${row.totale}\n`; }); const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "archivio_ingressi.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link); };
-window.resetArchiveFilters = () => { document.getElementById('arch-date-start').value=""; document.getElementById('arch-date-end').value=""; document.getElementById('arch-filter-fascia').value="all"; document.getElementById('arch-filter-meteo').value="all"; limitIngressi = 200; renderIngressiArchive(); };
+window.resetArchiveFilters = () => { document.getElementById('arch-date-start').value=""; document.getElementById('arch-date-end').value=""; document.getElementById('arch-filter-fascia').value="all"; document.getElementById('arch-filter-meteo').value="all"; limitIngressi = 200; renderIngressiArchive(true); };
 </script>
 
 </body>
