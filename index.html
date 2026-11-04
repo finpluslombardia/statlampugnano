@@ -5031,15 +5031,7 @@ window.renderIncassiArchive = (resetOpen) => {
         const bg = level === 0 ? 'rgba(79,70,229,0.14)' : 'rgba(79,70,229,0.06)';
         const pad = level === 0 ? '' : 'padding-left:28px;';
         return `<tr onclick="toggleIncArch('${key}')" style="cursor:pointer; background:${bg}; font-weight:800">
-            <td style="${pad}white-space:nowrap">${open ? '▾' : '▸'} ${label} <span style="font-weight:600; color:#64748b; font-size:0.75rem">· ${count} giorni</span></td>
-            <td style="color:#ef4444">${fmtEUR(sum(docs, 'corsi_n4_tot'))}</td>
-            <td style="color:#a16207">${fmtEUR(sum(docs, 'societa_sportive_tot'))}</td>
-            <td style="color:#2563eb">${fmtEUR(sum(docs, 'ingressi_tot'))}</td>
-            <td style="color:#7c3aed">${fmtEUR(sum(docs, 'abbonamenti_tot'))}</td>
-            <td style="color:#ea580c">${fmtEUR(sum(docs, 'accessori_tot'))}</td>
-            <td style="color:#0891b2">${fmtEUR(sum(docs, 'fatture_tot'))}</td>
-            <td style="color:#16a34a">${fmtEUR(sum(docs, 'incasso_totale'))}</td>
-            <td></td><td></td></tr>`;
+            <td colspan="10" style="${pad}white-space:nowrap">${open ? '▾' : '▸'} ${label} <span style="font-weight:600; color:#64748b; font-size:0.75rem">· ${count} giorni</span></td></tr>`;
     };
     const dayRow = (d) => {
         const dateLabel = d.date.split('-').reverse().join('/');
