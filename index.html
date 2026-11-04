@@ -1431,7 +1431,7 @@
                 </div>
 
                 <div class="cb-row">
-                    <div class="inp-field" style="width:160px; flex:none;"><label>Data</label><input type="date" id="inc-date" onchange="loadIncassiDayIntoForm()"></div>
+                    <div class="inp-field" style="width:160px; flex:none;"><label>Data</label><input type="date" id="inc-date" onchange="onIncDateChange()"></div>
                     <div class="inp-field" style="flex:1.5;"><label>Note</label><input type="text" id="inc-note" placeholder="Opzionale..."></div>
                     <div style="width:160px; flex:none;"><button id="btn-save-incassi" class="btn btn-primary" style="height:44px; width:100%" onclick="saveIncassi()">SALVA</button></div>
                 </div>
@@ -4716,6 +4716,7 @@ function incSetLegacyNotice(doc, granSum) {
         anchor.parentNode.insertBefore(n, anchor);
     }
     n.innerHTML = `ℹ️ Questo giorno è stato registrato con la versione precedente: il dettaglio di ingressi e abbonamenti non è modificabile qui. Restano invariati Ingressi ${fmtEUR(doc.ingressi_tot)} e Abbonamenti ${fmtEUR(doc.abbonamenti_tot)}; tutto il resto si può modificare.` +
+        `<div style="margin-top:6px"><button type="button" onclick="incUnlockLegacy()" style="background:#f59e0b;color:#fff;border:none;border-radius:8px;padding:5px 12px;font-weight:700;font-size:0.75rem;cursor:pointer">Reinserisci il dettaglio</button></div>` +
         `<div style="font-weight:500; margin-top:6px; font-size:0.75rem">Dettaglio riconosciuto: ${fmtEUR(granSum || 0)} su ${fmtEUR((doc.ingressi_tot||0)+(doc.abbonamenti_tot||0))}. Campi non riconosciuti: ${incUnknownNumericKeys(doc).filter(k => !Object.values(incLearnedKeys).includes(k)).map(k => k + ' = ' + doc[k]).join(', ') || 'nessuno'}</div>`;
 }
 
@@ -4750,7 +4751,28 @@ function incFillFromDoc(d) {
     }
 }
 
+function incDupWarn() {
+    const date = document.getElementById('inc-date').value;
+    let w = document.getElementById('inc-dup-warn');
+    const dup = date && editIdIncassi ? dataIncassi.find(x => x.date === date && x.id !== editIdIncassi) : null;
+    if (!dup) { if (w) w.remove(); return; }
+    if (!w) {
+        w = document.createElement('div'); w.id = 'inc-dup-warn';
+        w.style.cssText = 'background:#fee2e2; border:1.5px solid #ef4444; color:#991b1b; font-size:0.82rem; font-weight:700; padding:10px 14px; border-radius:10px; margin:8px 0';
+        document.getElementById('inc-date').closest('.inp-field').parentNode.after(w);
+    }
+    w.innerHTML = '⚠️ Esiste già un incasso registrato il ' + date.split('-').reverse().join('/') + ' (' + fmtEUR(dup.incasso_totale || 0) + '). Salvando, quella registrazione verrà sovrascritta con i dati di questo modulo.';
+}
+
+window.onIncDateChange = () => {
+    if (editIdIncassi) { incDupWarn(); toggleSeasonalFields(); return; } // in modifica: cambio solo la data, i dati restano
+    loadIncassiDayIntoForm();
+};
+
+window.incUnlockLegacy = () => { incLegacy = null; incSetLegacyNotice(null); updateIncassiLiveTotal(); showToast('Dettaglio sbloccato: completa i campi di ingressi e abbonamenti'); };
+
 window.loadIncassiDayIntoForm = () => {
+    const dw = document.getElementById('inc-dup-warn'); if (dw) dw.remove();
     const date = document.getElementById('inc-date').value;
     const existing = date ? dataIncassi.find(x => x.date === date) : null;
     if (existing) { editIdIncassi = existing.id; incFillFromDoc(existing); incSetEditMode(true); }
@@ -4787,7 +4809,9 @@ window.saveIncassi = async () => {
     p.incasso_totale = t.totale;
 
     // stesso giorno gia' presente? aggiorna quello invece di crearne un doppione
-    const targetId = editIdIncassi || (dataIncassi.find(x => x.date === date) || {}).id || null;
+    const dupDoc = dataIncassi.find(x => x.date === date && x.id !== editIdIncassi);
+    if (dupDoc && !confirm('Esiste già un incasso il ' + date.split('-').reverse().join('/') + '. Sovrascriverlo?')) return;
+    const targetId = (dupDoc && dupDoc.id) || editIdIncassi || null;
     try {
         if (targetId) { await updateDoc(doc(db, "incassi_log", targetId), p); showToast("Incasso aggiornato"); }
         else { await addDoc(collection(db, "incassi_log"), { ...p, createdAt: new Date().toISOString() }); showToast("Incasso salvato"); }
