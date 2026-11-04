@@ -1393,8 +1393,8 @@
         <!-- Incassi Sub-View: Archivio -->
         <div id="sub-inc-archive" class="hidden">
             <div class="filter-row" style="margin-bottom:15px; flex-wrap:wrap; gap:10px; align-items:flex-end">
-                <div class="inp-field" style="flex:none; width:150px"><label>Da</label><input type="date" id="inc-arch-date-start" class="arch-select" onchange="renderIncassiArchive()"></div>
-                <div class="inp-field" style="flex:none; width:150px"><label>A</label><input type="date" id="inc-arch-date-end" class="arch-select" onchange="renderIncassiArchive()"></div>
+                <div class="inp-field" style="flex:none; width:150px"><label>Da</label><input type="date" id="inc-arch-date-start" class="arch-select" onchange="renderIncassiArchive(true)"></div>
+                <div class="inp-field" style="flex:none; width:150px"><label>A</label><input type="date" id="inc-arch-date-end" class="arch-select" onchange="renderIncassiArchive(true)"></div>
             </div>
             <div class="table-wrap glass-card">
                 <div style="overflow-x:auto;">
@@ -4996,7 +4996,10 @@ window.downloadRiepilogoIncassiCSV = () => {
 };
 
 // ============ INCASSI: Archivio ============
-window.renderIncassiArchive = () => {
+let incArchOpen = null; // gruppi aperti (stagioni "s:2025" e mesi "m:2025-10"); null = da inizializzare
+window.toggleIncArch = (key) => { if (!incArchOpen) incArchOpen = new Set(); incArchOpen.has(key) ? incArchOpen.delete(key) : incArchOpen.add(key); renderIncassiArchive(); };
+
+window.renderIncassiArchive = (resetOpen) => {
     const start = document.getElementById('inc-arch-date-start').value;
     const end = document.getElementById('inc-arch-date-end').value;
     let f = [...dataIncassi];
@@ -5007,10 +5010,41 @@ window.renderIncassiArchive = () => {
     const t = document.getElementById('tbody-incassi-archive');
     if (f.length === 0) { t.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px">Nessun dato trovato.</td></tr>'; return; }
 
-    t.innerHTML = f.map(d => {
+    const MESI_L = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    // raggruppo: stagione -> mese -> giorni (ordine decrescente, come l'elenco)
+    const seasons = [];
+    f.forEach(d => {
+        const sy = getSeasonStartYear(d.date), mk = d.date.slice(0, 7);
+        let S = seasons.find(x => x.sy === sy); if (!S) { S = { sy, months: [], docs: [] }; seasons.push(S); }
+        let M = S.months.find(x => x.mk === mk); if (!M) { M = { mk, docs: [] }; S.months.push(M); }
+        M.docs.push(d); S.docs.push(d);
+    });
+    // stato di apertura: con filtro attivo apro tutto; altrimenti solo stagione e mese piu' recenti
+    if (resetOpen || !incArchOpen) {
+        incArchOpen = new Set();
+        if (start || end) seasons.forEach(S => { incArchOpen.add('s:' + S.sy); S.months.forEach(M => incArchOpen.add('m:' + M.mk)); });
+        else { incArchOpen.add('s:' + seasons[0].sy); incArchOpen.add('m:' + seasons[0].months[0].mk); }
+    }
+    const sum = (docs, k) => docs.reduce((t, d) => t + (Number(d[k]) || 0), 0);
+    const head = (key, level, label, docs, count) => {
+        const open = incArchOpen.has(key);
+        const bg = level === 0 ? 'rgba(79,70,229,0.14)' : 'rgba(79,70,229,0.06)';
+        const pad = level === 0 ? '' : 'padding-left:28px;';
+        return `<tr onclick="toggleIncArch('${key}')" style="cursor:pointer; background:${bg}; font-weight:800">
+            <td style="${pad}white-space:nowrap">${open ? '▾' : '▸'} ${label} <span style="font-weight:600; color:#64748b; font-size:0.75rem">· ${count} giorni</span></td>
+            <td style="color:#ef4444">${fmtEUR(sum(docs, 'corsi_n4_tot'))}</td>
+            <td style="color:#a16207">${fmtEUR(sum(docs, 'societa_sportive_tot'))}</td>
+            <td style="color:#2563eb">${fmtEUR(sum(docs, 'ingressi_tot'))}</td>
+            <td style="color:#7c3aed">${fmtEUR(sum(docs, 'abbonamenti_tot'))}</td>
+            <td style="color:#ea580c">${fmtEUR(sum(docs, 'accessori_tot'))}</td>
+            <td style="color:#0891b2">${fmtEUR(sum(docs, 'fatture_tot'))}</td>
+            <td style="color:#16a34a">${fmtEUR(sum(docs, 'incasso_totale'))}</td>
+            <td></td><td></td></tr>`;
+    };
+    const dayRow = (d) => {
         const dateLabel = d.date.split('-').reverse().join('/');
         return `<tr>
-            <td style="font-weight:700">${dateLabel}</td>
+            <td style="font-weight:700; padding-left:48px">${dateLabel}</td>
             <td style="color:#ef4444">${fmtEUR(d.corsi_n4_tot)}</td>
             <td style="color:#a16207">${fmtEUR(d.societa_sportive_tot)}</td>
             <td style="color:#2563eb">${fmtEUR(d.ingressi_tot)}</td>
@@ -5026,7 +5060,19 @@ window.renderIncassiArchive = () => {
                 </div>
             </td>
         </tr>`;
-    }).join('');
+    };
+    let html = '';
+    seasons.forEach(S => {
+        const sk = 's:' + S.sy;
+        html += head(sk, 0, '📅 Stagione ' + getSeasonLabel(S.sy), S.docs, S.docs.length);
+        if (!incArchOpen.has(sk)) return;
+        S.months.forEach(M => {
+            const mkey = 'm:' + M.mk;
+            html += head(mkey, 1, MESI_L[+M.mk.slice(5, 7) - 1] + ' ' + M.mk.slice(0, 4), M.docs, M.docs.length);
+            if (incArchOpen.has(mkey)) html += M.docs.map(dayRow).join('');
+        });
+    });
+    t.innerHTML = html;
 };
 
 // NEW FUNCTION: Toggle Custom Inputs for Utenze Charts
