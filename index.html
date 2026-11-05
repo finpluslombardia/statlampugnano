@@ -4472,6 +4472,11 @@ window.rgExport = () => {
         const at = C.findIndex(c => c.h === 'Parte IVA'), add = [{ h: 'Imponibile (Parte IVA)', f: d => lordo(d) / (1 + r) }, { h: 'IVA ' + (r * 100) + '%', f: d => lordo(d) - lordo(d) / (1 + r) }];
         if (at >= 0) C.splice(at + 1, 0, ...add); else C.push(...add);
     }
+    { // Esente IVA (totale e metodi di pagamento) subito dopo Corsi e Società Sportive
+        const isEs = c => c.h === 'Esente IVA (Corsi + Società)' || c.h.startsWith('Esente IVA · ');
+        const moved = C.filter(isEs), rest = C.filter(c => !isEs(c)), at = rest.findIndex(c => c.h === 'Società Sportive');
+        C = rest.slice(0, at + 1).concat(moved, rest.slice(at + 1));
+    }
     const wantNl = document.getElementById('rg-nl').checked, wantNote = document.getElementById('rg-note').checked, wantWd = document.getElementById('rg-weekday').checked;
     if (!C.length && !wantNl) return showToast('Seleziona almeno una colonna', 'error');
     const nlByDay = {}; if (wantNl) (dataIngressi || []).forEach(d => { if (d.date) nlByDay[d.date] = (nlByDay[d.date] || 0) + (parseFloat(d.totale) || 0); });
