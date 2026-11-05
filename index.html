@@ -1640,6 +1640,53 @@
             </select>
             <button class="btn btn-primary" style="height:42px; padding:0 26px" onclick="exportData()">⬇️ Scarica</button>
         </div>
+
+        <div class="stat-section" style="--sc:124,58,237" id="ex-sec-rg">
+            <div class="stat-section-head"><h3>4 · Registro giornaliero</h3><span>Giorno per giorno di un mese, da inviare in amministrazione (stile registro IVA)</span></div>
+            <div class="ex-grid">
+                <div class="ex-card">
+                    <h4>Mesi</h4>
+                    <div class="ex-hint">Un foglio per ogni mese scelto, una riga per ogni giorno registrato, totale in fondo.</div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px"><span class="ex-hint" style="margin:0">Stagione</span><select id="rg-season" class="filter-select" style="font-weight:700" onchange="rgRender()"></select></div>
+                    <div class="ex-chips" id="rg-months"></div>
+                    <div class="ex-links"><a onclick="rgMonths('all')">Tutti</a><a onclick="rgMonths('none')">Nessuno</a><a onclick="rgMonths('last')">Ultimo mese</a></div>
+                    <h4 style="margin-top:18px">Opzioni</h4>
+                    <div class="ex-chips" style="flex-direction:column; align-items:flex-start">
+                        <label class="ex-chip"><input type="checkbox" id="rg-weekday" checked>Mostra il giorno della settimana</label>
+                        <label class="ex-chip"><input type="checkbox" id="rg-nl">Aggiungi n. ingressi Nuoto Libero del giorno</label>
+                        <label class="ex-chip"><input type="checkbox" id="rg-note">Aggiungi le note del giorno</label>
+                        <label class="ex-chip"><input type="checkbox" id="rg-scorp" onchange="document.getElementById('rg-rate').disabled=!this.checked">Scorpora IVA dalla "Parte IVA"</label>
+                        <div style="display:flex; align-items:center; gap:8px; margin-left:6px"><span class="ex-hint" style="margin:0">Aliquota %</span><input type="number" id="rg-rate" value="22" min="0" max="100" step="0.5" disabled style="width:80px"></div>
+                    </div>
+                </div>
+                <div class="ex-card">
+                    <h4>Colonne</h4>
+                    <div class="ex-group"><div class="ex-group-title">Incassi</div><div class="ex-chips">
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="cat" checked>Categorie (Corsi, Società, Ingressi, Abbonamenti, Accessori, Fatture)</label>
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="iva" checked>Esente IVA / Parte IVA</label>
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="tot" checked>Incasso totale</label>
+                    </div></div>
+                    <div class="ex-group"><div class="ex-group-title">Dettagli</div><div class="ex-chips">
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="acc">Accessori (crediti, tessere, cuffie…)</label>
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="fat">Fatture (spazi acqua, altro)</label>
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="bors">Borsellini / correzioni</label>
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="gran">Ingressi e abbonamenti per tipologia</label>
+                    </div></div>
+                    <div class="ex-group"><div class="ex-group-title">Metodi di pagamento</div><div class="ex-chips">
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="payE" checked>Esente IVA (POS, Satispay, bonifico, contanti)</label>
+                        <label class="ex-chip"><input type="checkbox" class="rg-col" value="payI" checked>Parte IVA (POS, Satispay, bonifico, contanti)</label>
+                    </div></div>
+                </div>
+            </div>
+            <div class="ex-card ex-bar" style="margin-top:14px">
+                <div class="ex-sum" id="rg-summary">-</div>
+                <select id="rg-format" class="filter-select" style="font-weight:700">
+                    <option value="xlsx">📗 Excel (.xlsx)</option>
+                    <option value="csv">📄 CSV (separatore ;)</option>
+                </select>
+                <button class="btn btn-primary" style="height:42px; padding:0 26px" onclick="rgExport()">⬇️ Scarica registro</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -4264,6 +4311,7 @@ function renderEsportaPanel() {
     const mb = document.getElementById('ex-months');
     if (mb) mb.innerHTML = EX_MO.map(m => `<label class="ex-chip"><input type="checkbox" ${exSelMonths.has(m) ? 'checked' : ''} onchange="exMonthToggle(${m}, this.checked)">${EX_MESI[m - 1][0].toUpperCase() + EX_MESI[m - 1].slice(1, 3)}</label>`).join('');
     exUpdateSummary();
+    rgRender();
 }
 window.exSeasonToggle = (y, on) => { if (on) exSelSeasons.add(y); else exSelSeasons.delete(y); exUpdateSummary(); };
 window.exSeasonsAll = (on) => { exSelSeasons = new Set(on ? exSeasonList() : []); renderEsportaPanel(); };
@@ -4287,8 +4335,8 @@ window.exUpdateSummary = () => {
     if (secN) secN.style.opacity = document.getElementById('ex-src-nl').checked ? '' : '0.45';
     el.innerHTML = !ns ? '⚠️ Seleziona almeno una fonte.' : !n ? '⚠️ Seleziona almeno una stagione.' : !nmo ? '⚠️ Seleziona almeno un mese.' : !sh ? '⚠️ Seleziona almeno un foglio.' : `<b>${n}</b> ${n === 1 ? 'stagione' : 'stagioni'} (colonne) · <b>${nmo}</b> ${nmo === 1 ? 'mese' : 'mesi'} · <b>${ns * sh}</b> ${ns * sh === 1 ? 'foglio' : 'fogli'}`;
 };
-function exColsInc() {
-    const on = new Set([...document.querySelectorAll('.ex-col:checked')].map(c => c.value)), C = [];
+function exColsInc(sel) {
+    const on = new Set([...document.querySelectorAll(sel || '.ex-col:checked')].map(c => c.value)), C = [];
     const n = (d, k) => (typeof d[k] === 'number' ? d[k] : (parseFloat(d[k]) || 0));
     const add = (h, f) => C.push({ h, f });
     if (on.has('tot')) add('Incasso totale', d => n(d, 'incasso_totale'));
@@ -4385,6 +4433,87 @@ window.exportData = () => {
         }, i * 400));
     }
     showToast(`Esportati ${sheets.length} ${sheets.length === 1 ? 'foglio' : 'fogli'}`);
+};
+
+// ============ ESPORTA: Registro giornaliero (per amministrazione) ============
+let rgSel = new Set(); // mesi scelti "YYYY-MM"
+function rgSeasons() { return [...new Set((dataIncassi || []).filter(d => d.date).map(d => getSeasonStartYear(d.date)))].sort().reverse(); }
+function rgMonthsOf(sy) { return [...new Set((dataIncassi || []).filter(d => d.date && getSeasonStartYear(d.date) === sy).map(d => d.date.slice(0, 7)))].sort(); }
+window.rgRender = () => {
+    const sel = document.getElementById('rg-season'); if (!sel) return;
+    const ss = rgSeasons(), cur = sel.value ? +sel.value : (ss[0] || 0);
+    sel.innerHTML = ss.map(y => `<option value="${y}" ${y === cur ? 'selected' : ''}>Stagione ${getSeasonLabel(y)}</option>`).join('');
+    const ms = rgMonthsOf(+sel.value || cur);
+    if (!rgSel.size && ms.length) rgSel.add(ms[ms.length - 1]);
+    document.getElementById('rg-months').innerHTML = ms.map(mk => `<label class="ex-chip"><input type="checkbox" ${rgSel.has(mk) ? 'checked' : ''} onchange="rgToggle('${mk}', this.checked)">${EX_MESI[+mk.slice(5, 7) - 1][0].toUpperCase() + EX_MESI[+mk.slice(5, 7) - 1].slice(1)} ${mk.slice(0, 4)}</label>`).join('') || '<span style="color:#64748b">Nessun dato disponibile.</span>';
+    rgSummary();
+};
+window.rgToggle = (mk, on) => { if (on) rgSel.add(mk); else rgSel.delete(mk); rgSummary(); };
+window.rgMonths = (mode) => {
+    const ms = rgMonthsOf(+document.getElementById('rg-season').value);
+    ms.forEach(m => rgSel.delete(m));
+    if (mode === 'all') ms.forEach(m => rgSel.add(m)); else if (mode === 'last' && ms.length) rgSel.add(ms[ms.length - 1]);
+    rgRender();
+};
+function rgSummary() {
+    const el = document.getElementById('rg-summary'); if (!el) return;
+    const days = (dataIncassi || []).filter(d => rgSel.has((d.date || '').slice(0, 7))).length;
+    el.innerHTML = !rgSel.size ? '⚠️ Seleziona almeno un mese.' : `<b>${rgSel.size}</b> ${rgSel.size === 1 ? 'mese' : 'mesi'} · <b>${days}</b> giorni registrati`;
+}
+document.addEventListener('change', (e) => { if (e.target && e.target.classList && e.target.classList.contains('rg-col')) rgSummary(); });
+window.rgExport = () => {
+    if (!exportAllowed) return;
+    if (!rgSel.size) return showToast('Seleziona almeno un mese', 'error');
+    const n = (d, k) => (typeof d[k] === 'number' ? d[k] : (parseFloat(d[k]) || 0));
+    let C = exColsInc('.rg-col:checked');
+    const totC = C.filter(c => c.h === 'Incasso totale'); C = C.filter(c => c.h !== 'Incasso totale').concat(totC);
+    if (document.getElementById('rg-scorp').checked) {
+        const r = (parseFloat(document.getElementById('rg-rate').value) || 0) / 100, lordo = d => n(d, 'incasso_totale') - n(d, 'corsi_n4_tot') - n(d, 'societa_sportive_tot');
+        const at = C.findIndex(c => c.h === 'Parte IVA'), add = [{ h: 'Imponibile (Parte IVA)', f: d => lordo(d) / (1 + r) }, { h: 'IVA ' + (r * 100) + '%', f: d => lordo(d) - lordo(d) / (1 + r) }];
+        if (at >= 0) C.splice(at + 1, 0, ...add); else C.push(...add);
+    }
+    const wantNl = document.getElementById('rg-nl').checked, wantNote = document.getElementById('rg-note').checked, wantWd = document.getElementById('rg-weekday').checked;
+    if (!C.length && !wantNl) return showToast('Seleziona almeno una colonna', 'error');
+    const nlByDay = {}; if (wantNl) (dataIngressi || []).forEach(d => { if (d.date) nlByDay[d.date] = (nlByDay[d.date] || 0) + (parseFloat(d.totale) || 0); });
+    const WD = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+    const sheets = [...rgSel].sort().map(mk => {
+        const docs = (dataIncassi || []).filter(d => d.date && d.date.startsWith(mk)).sort((a, b) => a.date < b.date ? -1 : 1);
+        if (!docs.length) return null;
+        const head = ['Data'].concat(wantWd ? ['Giorno'] : [], C.map(c => c.h), wantNl ? ['Ingressi Nuoto Libero'] : [], wantNote ? ['Note'] : []);
+        const rows = docs.map(d => {
+            const [y, m, dd] = d.date.split('-').map(Number);
+            return [d.date.split('-').reverse().join('/')].concat(wantWd ? [WD[new Date(y, m - 1, dd).getDay()]] : [], C.map(c => exR2(c.f(d))), wantNl ? [nlByDay[d.date] || 0] : [], wantNote ? [d.note || ''] : []);
+        });
+        const first = 1 + (wantWd ? 1 : 0), last = first + C.length + (wantNl ? 1 : 0);
+        const tot = ['TOTALE'].concat(wantWd ? [''] : []);
+        for (let c = first; c < last; c++) tot.push(exR2(rows.reduce((a, r) => a + (+r[c] || 0), 0)));
+        if (wantNote) tot.push('');
+        return { name: `${EX_MESI[+mk.slice(5, 7) - 1][0].toUpperCase() + EX_MESI[+mk.slice(5, 7) - 1].slice(1)} ${mk.slice(0, 4)}`, head, rows, tot, first, last };
+    }).filter(Boolean);
+    if (!sheets.length) return showToast('Nessun giorno registrato nei mesi scelti', 'error');
+    const base = `registro_giornaliero_${sheets.length === 1 ? sheets[0].name.toLowerCase().replace(' ', '-') : [...rgSel].sort()[0] + '_' + [...rgSel].sort().slice(-1)[0]}`;
+    if (document.getElementById('rg-format').value === 'xlsx') {
+        const wb = XLSX.utils.book_new();
+        sheets.forEach(sh => {
+            const ws = XLSX.utils.aoa_to_sheet([sh.head, ...sh.rows, sh.tot]);
+            const nr = sh.rows.length;
+            for (let c = sh.first; c < sh.last; c++) {
+                const L = XLSX.utils.encode_col(c);
+                const tc = ws[XLSX.utils.encode_cell({ r: nr + 1, c })]; if (tc) { tc.f = `SUM(${L}2:${L}${nr + 1})`; }
+                for (let r = 1; r <= nr + 1; r++) { const cell = ws[XLSX.utils.encode_cell({ r, c })]; if (cell && typeof cell.v === 'number') cell.z = '#,##0.00'; }
+            }
+            ws['!cols'] = sh.head.map((h, i) => ({ wch: i === 0 ? 12 : Math.max(12, h.length + 2) }));
+            ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+            XLSX.utils.book_append_sheet(wb, ws, sh.name.slice(0, 31));
+        });
+        XLSX.writeFile(wb, base + '.xlsx');
+    } else {
+        sheets.forEach((sh, i) => setTimeout(() => {
+            const txt = '﻿' + [sh.head, ...sh.rows, sh.tot].map(r => r.map(exCsvEsc).join(';')).join('\n');
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/csv;charset=utf-8' })); a.download = `${base}_${sh.name.toLowerCase().replace(' ', '-')}.csv`; document.body.appendChild(a); a.click(); a.remove();
+        }, i * 400));
+    }
+    showToast(`Registro esportato: ${sheets.length} ${sheets.length === 1 ? 'mese' : 'mesi'}`);
 };
 
 function renderIncassiStats() {
