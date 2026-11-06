@@ -1246,8 +1246,8 @@
                                     <th style="color:#7c3aed">Abbonamenti</th>
                                     <th style="color:#ea580c">Accessori</th>
                                     <th style="color:#0891b2">Fatture</th>
-                                    <th style="color:#a16207">Esente IVA</th>
-                                    <th style="color:#2563eb">Parte IVA</th>
+                                    <th style="background:rgba(100,116,139,0.10); color:#334155">Esente IVA</th>
+                                    <th style="background:rgba(100,116,139,0.10); color:#334155">Parte IVA</th>
                                     <th style="background:rgba(22,163,74,0.08); color:#16a34a">Incasso Totale</th>
                                 </tr>
                             </thead>
@@ -4116,8 +4116,8 @@ window.renderIncassiSeasonDetail = () => {
             <td style="color:#7c3aed">${fmt(d.abbonamenti)}</td>
             <td style="color:#ea580c">${fmt(d.accessori)}</td>
             <td style="color:#0891b2">${fmt(d.fatture)}</td>
-            <td style="font-weight:700; color:#a16207">${fmt(d.n4 + d.ss)}</td>
-            <td style="font-weight:700; color:#2563eb">${fmt(d.tot - d.n4 - d.ss)}</td>
+            <td style="font-weight:700; background:rgba(100,116,139,0.10); color:#334155">${fmt(d.n4 + d.ss)}</td>
+            <td style="font-weight:700; background:rgba(100,116,139,0.10); color:#334155">${fmt(d.tot - d.n4 - d.ss)}</td>
             <td style="font-weight:800; color:#16a34a; background:rgba(22,163,74,0.05)">${fmt(d.tot)}${yoyHtml}</td>
         </tr>`);
     });
@@ -4130,8 +4130,8 @@ window.renderIncassiSeasonDetail = () => {
         <td style="font-weight:800; color:#7c3aed">${fmt(grandTotal.abbonamenti)}</td>
         <td style="font-weight:800; color:#ea580c">${fmt(grandTotal.accessori)}</td>
         <td style="font-weight:800; color:#0891b2">${fmt(grandTotal.fatture)}</td>
-        <td style="font-weight:800; color:#a16207">${fmt(grandTotal.n4 + grandTotal.ss)}</td>
-        <td style="font-weight:800; color:#2563eb">${fmt(grandTotal.tot - grandTotal.n4 - grandTotal.ss)}</td>
+        <td style="font-weight:800; background:rgba(100,116,139,0.10); color:#334155">${fmt(grandTotal.n4 + grandTotal.ss)}</td>
+        <td style="font-weight:800; background:rgba(100,116,139,0.10); color:#334155">${fmt(grandTotal.tot - grandTotal.n4 - grandTotal.ss)}</td>
         <td style="font-weight:900; color:#16a34a; background:rgba(22,163,74,0.1)">${fmt(grandTotal.tot)}</td>
     </tr>` : '';
 
