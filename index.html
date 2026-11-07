@@ -1114,11 +1114,11 @@
             <div class="stat-section" style="--sc:13,148,136"><div class="stat-section-head"><h3>⚡ Giorni recenti</h3><span id="iov-asof"></span></div>
                 <div class="ov-hl-grid" id="iov-recent" style="margin-bottom:0"></div>
             </div>
-            <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>🎯 Obiettivi</h3><span>Imposta un obiettivo di incasso per il mese o la stagione e segui l&apos;avanzamento</span></div>
-                <div class="ov-hl-grid" id="iov-goals" style="margin-bottom:0"></div>
-            </div>
             <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>📊 Mese in corso e record</h3><span>Mese in corso a confronto con lo scorso anno, record e regolarità</span></div>
                 <div class="ov-hl-grid" id="iov-month" style="margin-bottom:0"></div>
+            </div>
+            <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>🎯 Obiettivi</h3><span>Imposta un obiettivo di incasso per il mese o la stagione e segui l&apos;avanzamento</span></div>
+                <div class="ov-hl-grid" id="iov-goals" style="margin-bottom:0"></div>
             </div>
             <div class="stat-section" style="--sc:37,99,235"><div class="stat-section-head"><h3>📅 Confronto Mensile</h3><span>Scegli il mese da confrontare con lo stesso mese dell'anno scorso</span><input type="month" id="inc-kpi-month-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8); margin-left:auto" onchange="renderIncassi()"></div>
             <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 25px;">
@@ -4027,12 +4027,11 @@ function renderIncassiOverview() {
         if (wkAvgS[wd] !== null) estRemainSeason += wkAvgS[wd]; else { hasBasisSeason = false; estRemainSeason += overallAvgSeason; }
         curS.setDate(curS.getDate()+1);
     }
-    const pjS = projectLike(seasonStartDate, lastDate, seasonEndDate, sumCurrSeason);
     window.__incProj = { month: forecastMonthTotal, season: null };
-    const forecastSeasonTotal = pjS ? pjS.total : sumCurrSeason + estRemainSeason;
+    const forecastSeasonTotal = sumCurrSeason + estRemainSeason;
     document.getElementById('ov-forecast-season-val').innerText = fmtEUR(forecastSeasonTotal);
     window.__incProj.season = forecastSeasonTotal;
-    document.getElementById('ov-forecast-season-sub').innerText = pjS ? `entro il 31 agosto (come ${pjS.n > 1 ? 'le ultime 2 stagioni' : 'la stagione scorsa'}, ritmo ${pjS.r >= 1 ? '+' : ''}${Math.round((pjS.r - 1) * 100)}%)` : `entro il 31 agosto (${hasBasisSeason ? 'su trend storico' : 'su trend storico (parziale)'})`;
+    document.getElementById('ov-forecast-season-sub').innerText = `entro il 31 agosto (${hasBasisSeason ? 'su trend storico' : 'su trend storico (parziale)'})`;
 
     // ===== Confronto Mensile (selettore mese) =====
     let kpiDateObj = new Date();
