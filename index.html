@@ -883,6 +883,26 @@
                 <div id="uov-month" style="display:contents"></div>
                 </div>
             </div>
+            <div class="stat-section" style="--sc:6,148,162"><div class="stat-section-head"><h3>🏊 Consumi per Ingresso</h3><span id="upi-asof">Quanto consumano elettricità, acqua e gas in rapporto a chi entra, mese per mese</span></div>
+                <div class="ov-hl-grid" id="upi-kpis" style="margin-bottom:14px"></div>
+                <div class="table-wrap glass-card" style="margin-bottom:0">
+                    <div style="overflow-x:auto;">
+                        <table id="table-upi" style="min-width:0">
+                            <thead><tr>
+                                <th>Mese</th>
+                                <th style="color:#a16207">⚡ kWh al giorno</th>
+                                <th style="color:#a16207">⚡ Wh per ingresso</th>
+                                <th style="color:#2563eb">💧 m³ al giorno</th>
+                                <th style="color:#2563eb">💧 litri per ingresso</th>
+                                <th style="color:#dc2626">🔥 m³ al giorno</th>
+                                <th style="color:#dc2626">🔥 litri gas per ingresso</th>
+                            </tr></thead>
+                            <tbody id="tbody-upi"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div style="margin-top:8px; font-size:0.75rem; color:#64748b">I consumi di ogni giorno sono rapportati agli ingressi del giorno prima (la lettura si fa al mattino). Le variazioni sono rispetto allo stesso mese della stagione precedente: ▼ verde = si consuma meno per ingresso. Il gas dipende molto dalla stagione e dalla temperatura, non solo dagli ingressi.</div>
+            </div>
         </div>
 
         <!-- Utenze Sub-View: Riepilogo -->
@@ -1094,7 +1114,10 @@
             <div class="stat-section" style="--sc:13,148,136"><div class="stat-section-head"><h3>⚡ Giorni recenti</h3><span id="iov-asof"></span></div>
                 <div class="ov-hl-grid" id="iov-recent" style="margin-bottom:0"></div>
             </div>
-            <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>🎯 Obiettivi e record</h3><span>Mese in corso a confronto con lo scorso anno, record e regolarità</span></div>
+            <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>🎯 Obiettivi</h3><span>Imposta un obiettivo di incasso per il mese o la stagione e segui l&apos;avanzamento</span></div>
+                <div class="ov-hl-grid" id="iov-goals" style="margin-bottom:0"></div>
+            </div>
+            <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>📊 Mese in corso e record</h3><span>Mese in corso a confronto con lo scorso anno, record e regolarità</span></div>
                 <div class="ov-hl-grid" id="iov-month" style="margin-bottom:0"></div>
             </div>
             <div class="stat-section" style="--sc:37,99,235"><div class="stat-section-head"><h3>📅 Confronto Mensile</h3><span>Scegli il mese da confrontare con lo stesso mese dell'anno scorso</span><input type="month" id="inc-kpi-month-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8); margin-left:auto" onchange="renderIncassi()"></div>
@@ -1287,6 +1310,30 @@
                     </div>
                 </div>
                 <div class="charts-row-split" style="margin-bottom:0"><div class="chart-card glass-card auto-h"><div class="chart-header">🏆 10 Giorni Migliori <span class="chart-sub">· della stagione</span></div><div id="sd-top-days" style="overflow-x:auto"></div></div><div class="chart-card glass-card auto-h"><div class="chart-header">📉 10 Giorni Più Deboli <span class="chart-sub">· giorni con incasso</span></div><div id="sd-bottom-days" style="overflow-x:auto"></div></div></div>
+            </div>
+
+            <!-- S4b: INCASSO PER INGRESSO -->
+            <div class="stat-section" style="--sc:6,148,162">
+                <div class="stat-section-head"><h3>🎟️ Incasso per Ingresso</h3><span>Quanto si incassa in media per ogni ingresso del Nuoto Libero, mese per mese</span></div>
+                <div class="ov-hl-grid" id="sd-pi-kpis" style="margin-bottom:14px"></div>
+                <div class="table-wrap glass-card" style="margin-bottom:0">
+                    <div style="overflow-x:auto;">
+                        <table id="table-sd-pi" style="min-width:0">
+                            <thead><tr>
+                                <th>Mese</th>
+                                <th>Ingressi Nuoto Libero</th>
+                                <th style="color:#2563eb">Ingressi singoli (€)</th>
+                                <th style="color:#2563eb">€ per ingresso singolo</th>
+                                <th style="color:#7c3aed">Ingressi + abbonamenti (€)</th>
+                                <th style="background:rgba(6,148,162,0.10); color:#0e7490">€ per ingresso (complessivo)</th>
+                                <th>Stagione prec.</th>
+                            </tr></thead>
+                            <tbody id="tbody-sd-pi"></tbody>
+                            <tfoot id="tfoot-sd-pi"></tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div class="chart-sub" style="margin-top:8px; font-size:0.75rem; color:#64748b">Ingresso singolo = intero o ridotto pagato al momento. Complessivo = (ingressi + abbonamenti incassati) / tutti gli ingressi, compresi abbonati e gratuiti: gli abbonamenti si incassano alla vendita, non nei giorni in cui l&apos;abbonato entra, quindi il dato mensile può oscillare.</div>
             </div>
 
             <!-- S5: ACCESSORI -->
@@ -1792,7 +1839,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc, limit, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = { apiKey: "AIzaSyCfXF61GUht7VPwkRTTiAn-nlhqEhDTW-0", authDomain: "piscinastats-64519.firebaseapp.com", projectId: "piscinastats-64519", storageBucket: "piscinastats-64519.firebasestorage.app", messagingSenderId: "297663099794", appId: "1:297663099794:web:edd9ffc2f7a90f7549c74b" };
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app);
@@ -1884,6 +1931,11 @@ function startListening() {
             dataIncassi = snap.docs.map(d=>({id:d.id,...d.data()}));
             if(!document.getElementById('module-incassi').classList.contains('hidden')) debouncedRefresh();
         }, errHandler);
+
+        onSnapshot(collection(db, "obiettivi"), (snap) => {
+            dataObiettivi = {}; snap.docs.forEach(d => { dataObiettivi[d.id] = d.data(); }); goalsPermErr = false;
+            if (!document.getElementById('module-incassi').classList.contains('hidden')) { try { renderIncassiGoals(); } catch (e) { console.warn('obiettivi', e); } }
+        }, (e) => { goalsPermErr = true; console.warn('obiettivi non leggibili (regole Firestore da aggiornare?)', e); try { renderIncassiGoals(); } catch (_) {} });
 
         onSnapshot(query(collection(db, "note_log"), orderBy("createdAt", "desc"), limit(1000)), (snap) => {
             dataNote = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -3649,7 +3701,7 @@ window.renderIncassi = () => {
     const archiveVisible = !document.getElementById('sub-inc-archive').classList.contains('hidden');
     const registerVisible = !document.getElementById('sub-inc-register').classList.contains('hidden');
 
-    if (overviewVisible) { renderIncassiOverview(); try { renderIncassiOverviewHighlights(); } catch (e) { console.error('renderIncassiOverviewHighlights', e); } renderIncassiWeekly(); }
+    if (overviewVisible) { renderIncassiOverview(); try { renderIncassiOverviewHighlights(); renderIncassiGoals(); } catch (e) { console.error('renderIncassiOverviewHighlights', e); } renderIncassiWeekly(); }
     if (seasonDetailVisible) renderIncassiSeasonDetail();
     if (statsVisible) renderIncassiStats();
     if (riepilogoVisible) renderRiepilogoIncassi();
@@ -3658,6 +3710,58 @@ window.renderIncassi = () => {
 };
 
 // ---- Panoramica Incassi: sezioni "Giorni recenti" e "Obiettivi e record" ----
+
+// ---- Obiettivi di incasso (mese / stagione) ----
+let dataObiettivi = {}, goalsPermErr = false;
+window.setIncGoal = async (key, label, suggest) => {
+    const cur = dataObiettivi[key] ? dataObiettivi[key].importo : (suggest || '');
+    const v = prompt(`Obiettivo di incasso per ${label} (in €).\nLascia vuoto per eliminarlo.`, cur !== '' ? String(Math.round(cur)) : '');
+    if (v === null) return;
+    const t = v.trim();
+    try {
+        if (!t) { await deleteDoc(doc(db, 'obiettivi', key)); showToast('Obiettivo eliminato'); return; }
+        const n = parseFloat(t.replace(/\./g, '').replace(',', '.'));
+        if (!(n > 0)) return showToast('Importo non valido', 'error');
+        await setDoc(doc(db, 'obiettivi', key), { importo: n, aggiornato: new Date().toISOString() });
+        showToast('Obiettivo salvato');
+    } catch (e) { console.error(e); showToast('Non riesco a salvare: pubblica le regole Firestore aggiornate (collezione "obiettivi")', 'error'); }
+};
+window.renderIncassiGoals = () => {
+    const box = document.getElementById('iov-goals'); if (!box) return;
+    const docs = (dataIncassi || []).filter(d => d.date);
+    if (!docs.length) { box.innerHTML = ''; return; }
+    const eur0 = v => '€ ' + Math.round(v).toLocaleString('it-IT');
+    const today = fmtDateISO(new Date());
+    const last = docs.reduce((a, d) => (d.date > a ? d.date : a), '0000-00-00');
+    const ref = today > last ? today : last; // giorno di riferimento: oggi, ma non prima dell'ultimo dato
+    const sy = getSeasonStartYear(ref), mk = ref.slice(0, 7);
+    const sum = (a, b) => docs.reduce((t, d) => (d.date >= a && d.date <= b ? t + (d.incasso_totale || 0) : t), 0);
+    const addDays = (ds, k) => { const [y, m, d] = ds.split('-').map(Number); return fmtDateISO(new Date(y, m - 1, d + k)); };
+    const dleft = (a, b) => Math.max(0, Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000));
+    const MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+    const mEnd = fmtDateISO(new Date(+mk.slice(0, 4), +mk.slice(5, 7), 0)), sEnd = `${sy + 1}-08-31`;
+    const items = [
+        { key: 'm-' + mk, label: `${MESI[+mk.slice(5, 7) - 1]} ${mk.slice(0, 4)}`, title: 'Obiettivo del mese', short: `${MESI[+mk.slice(5, 7) - 1]} ${mk.slice(0, 4)}`, done: sum(mk + '-01', ref), end: mEnd, proj: window.__incProj && window.__incProj.month,
+          sug: sum(`${+mk.slice(0, 4) - 1}-${mk.slice(5, 7)}-01`, `${+mk.slice(0, 4) - 1}-${mk.slice(5, 7)}-31`), sugLab: `${MESI[+mk.slice(5, 7) - 1]} ${+mk.slice(0, 4) - 1}`, color: '22,163,74' },
+        { key: 's-' + sy, label: `stagione ${getSeasonLabel(sy)}`, title: 'Obiettivo della stagione', short: getSeasonLabel(sy), done: sum(`${sy}-09-01`, ref), end: sEnd, proj: window.__incProj && window.__incProj.season,
+          sug: sum(`${sy - 1}-09-01`, `${sy}-08-31`), sugLab: `stagione ${getSeasonLabel(sy - 1)}`, color: '79,70,229' }
+    ];
+    box.innerHTML = items.map(it => {
+        const g = dataObiettivi[it.key] ? dataObiettivi[it.key].importo : null;
+        const btn = `<button class="btn" style="margin-top:8px; padding:5px 12px; font-size:0.78rem" onclick="setIncGoal('${it.key}', '${it.label}', ${Math.round(it.sug) || 0})">${g ? '✏️ Modifica obiettivo' : '🎯 Imposta obiettivo'}</button>`;
+        if (!g) return `<div class="ov-card" style="--c:${it.color}"><div class="ov-lab">🎯 ${it.title}</div>
+            <div class="ov-big" style="font-size:1.5rem">${eur0(it.done)}<small>incassati finora</small></div>
+            <div class="ov-sub">${goalsPermErr ? '⚠️ Per usare gli obiettivi serve pubblicare le regole Firestore aggiornate.' : 'Nessun obiettivo impostato.'}${it.sug > 0 ? ` ${it.sugLab.charAt(0).toUpperCase() + it.sugLab.slice(1)}: <b>${eur0(it.sug)}</b>.` : ''}</div>${btn}</div>`;
+        const pct = it.done / g * 100, left = Math.max(0, g - it.done), days = dleft(ref, it.end);
+        const pj = it.proj != null ? it.proj : null, ok = pj != null && pj >= g;
+        return `<div class="ov-card" style="--c:${it.color}"><div class="ov-lab">🎯 ${it.title} · ${it.short}</div>
+            <div class="ov-big">${Math.round(pct)}%<small>di ${eur0(g)}</small></div>
+            <div class="ov-seg" style="position:relative"><i style="width:${Math.min(100, pct)}%; background:#${pct >= 100 ? '16a34a' : '2563eb'}"></i>${pj != null && g > 0 ? `<span title="Proiezione" style="position:absolute; top:-3px; bottom:-3px; left:${Math.min(100, pj / g * 100)}%; width:3px; background:#ea580c; border-radius:2px"></span>` : ''}</div>
+            <div class="ov-sub">${eur0(it.done)} incassati · ${pct >= 100 ? `<b class="ov-up">obiettivo raggiunto (+${eur0(it.done - g)})</b>` : `mancano <b>${eur0(left)}</b>${days > 0 ? ` · circa <b>${eur0(left / days)}</b> al giorno nei ${days} giorni rimasti` : ''}`}</div>
+            ${pj != null && pct < 100 ? `<div class="ov-sub">Proiezione <b>${eur0(pj)}</b> <span class="${ok ? 'ov-up' : 'ov-down'}">${ok ? '▲ sopra' : '▼ sotto'} l'obiettivo di ${eur0(Math.abs(pj - g))}</span></div>` : ''}${btn}</div>`;
+    }).join('');
+};
+
 function renderIncassiOverviewHighlights() {
     const boxR = document.getElementById('iov-recent'), boxM = document.getElementById('iov-month');
     if (!boxR || !boxM) return;
@@ -3860,6 +3964,25 @@ function renderIncassiOverview() {
         document.getElementById('ov-bestday-sub').innerText = `Media ${fmtEUR(bestAvg)} (${weekdayCount[bestWd]} giorni, storico)`;
     }
 
+    // Proiezione "come gli anni scorsi": quanto è stato incassato nel resto dello stesso periodo nelle ultime 2 stagioni,
+    // riportato al livello di quest'anno (rapporto tra l'andamento attuale e quello dello stesso periodo: dall'inizio e ultimi 60 giorni; limitato tra 0,6 e 1,4)
+    const sumRange = (a, b) => dataIncassi.reduce((t, d) => (d.date >= a && d.date <= b ? t + (d.incasso_totale || 0) : t), 0);
+    const shiftY = (ds, k) => (+ds.slice(0, 4) - k) + ds.slice(4);
+    const projectLike = (startCur, refStr, endCur, curToDate) => {
+        const out = [];
+        for (let k = 1; k <= 2; k++) {
+            const sK = shiftY(startCur, k), rK = shiftY(refStr, k), eK = shiftY(endCur, k);
+            const toK = sumRange(sK, rK), remK = sumRange(fmtDateISO(new Date(new Date(rK + 'T12:00:00').getTime() + 86400000)), eK);
+            if (!(toK > 0) || !(remK > 0)) continue;
+            const r1 = curToDate / toK;
+            const d60 = fmtDateISO(new Date(new Date(refStr + 'T12:00:00').getTime() - 59 * 86400000));
+            const c60 = sumRange(d60, refStr), p60 = sumRange(shiftY(d60, k), rK);
+            const r = Math.min(1.4, Math.max(0.6, p60 > 0 ? (r1 + c60 / p60) / 2 : r1));
+            out.push({ total: curToDate + r * remK, r });
+        }
+        if (!out.length) return null;
+        return { total: out.reduce((t, o) => t + o.total, 0) / out.length, r: out.reduce((t, o) => t + o.r, 0) / out.length, n: out.length };
+    };
     // ===== Proiezione Fine Mese =====
     const monthEndDate = new Date(curYear, curMonthIdx+1, 0);
     const monthEndStr = fmtDateISO(monthEndDate);
@@ -3880,9 +4003,10 @@ function renderIncassiOverview() {
         if (wkAvgM[wd] !== null) estRemainMonth += wkAvgM[wd]; else { hasBasisMonth = false; estRemainMonth += overallAvgMonth; }
         curM.setDate(curM.getDate()+1);
     }
-    const forecastMonthTotal = mtdCurrSum + estRemainMonth;
+    const pjM = projectLike(monthStartStr, todayStr, monthEndStr, mtdCurrSum);
+    const forecastMonthTotal = pjM ? pjM.total : mtdCurrSum + estRemainMonth;
     document.getElementById('ov-forecast-month-val').innerText = fmtEUR(forecastMonthTotal);
-    document.getElementById('ov-forecast-month-sub').innerText = `entro fine mese (${hasBasisMonth ? 'su trend storico' : 'su trend storico (parziale)'})`;
+    document.getElementById('ov-forecast-month-sub').innerText = pjM ? `entro fine mese (come ${pjM.n > 1 ? 'le ultime 2 stagioni' : 'la stagione scorsa'}, ritmo ${pjM.r >= 1 ? '+' : ''}${Math.round((pjM.r - 1) * 100)}%)` : `entro fine mese (${hasBasisMonth ? 'su trend storico' : 'su trend storico (parziale)'})`;
 
     // ===== Proiezione Fine Stagione =====
     const seasonEndDate = `${currSeasonStart+1}-08-31`;
@@ -3903,9 +4027,12 @@ function renderIncassiOverview() {
         if (wkAvgS[wd] !== null) estRemainSeason += wkAvgS[wd]; else { hasBasisSeason = false; estRemainSeason += overallAvgSeason; }
         curS.setDate(curS.getDate()+1);
     }
-    const forecastSeasonTotal = sumCurrSeason + estRemainSeason;
+    const pjS = projectLike(seasonStartDate, lastDate, seasonEndDate, sumCurrSeason);
+    window.__incProj = { month: forecastMonthTotal, season: null };
+    const forecastSeasonTotal = pjS ? pjS.total : sumCurrSeason + estRemainSeason;
     document.getElementById('ov-forecast-season-val').innerText = fmtEUR(forecastSeasonTotal);
-    document.getElementById('ov-forecast-season-sub').innerText = `entro il 31 agosto (${hasBasisSeason ? 'su trend storico' : 'su trend storico (parziale)'})`;
+    window.__incProj.season = forecastSeasonTotal;
+    document.getElementById('ov-forecast-season-sub').innerText = pjS ? `entro il 31 agosto (come ${pjS.n > 1 ? 'le ultime 2 stagioni' : 'la stagione scorsa'}, ritmo ${pjS.r >= 1 ? '+' : ''}${Math.round((pjS.r - 1) * 100)}%)` : `entro il 31 agosto (${hasBasisSeason ? 'su trend storico' : 'su trend storico (parziale)'})`;
 
     // ===== Confronto Mensile (selettore mese) =====
     let kpiDateObj = new Date();
@@ -4251,9 +4378,50 @@ window.renderIncassiSeasonDetail = () => {
             options: { animation: false, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v=>fmtEUR(v) } } } }
         });
     }    try { renderSeasonDetailExtra(selectedSeason); } catch (e) { console.error('renderSeasonDetailExtra', e); }
+    try { renderSeasonPerIngresso(selectedSeason); } catch (e) { console.error('renderSeasonPerIngresso', e); }
 };
 
 // ---- Statistiche di Stagione: sezioni aggiuntive (KPI a confronto, passo stagione, metodi di pagamento, distribuzione) ----
+
+// ---- Stat Stagione Incassi: incasso per ingresso (Nuoto Libero) ----
+function renderSeasonPerIngresso(selectedSeason) {
+    const kp = document.getElementById('sd-pi-kpis'), tb = document.getElementById('tbody-sd-pi'), tf = document.getElementById('tfoot-sd-pi');
+    if (!kp || !tb) return;
+    const y = parseInt(selectedSeason.split('/')[0], 10);
+    const eur2 = v => fmtEUR(v), eurP = v => '€ ' + (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
+    const MESI = ['Settembre','Ottobre','Novembre','Dicembre','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto'];
+    const monthKey = (yy, i) => { const m = ((8 + i) % 12) + 1, yr = m >= 9 ? yy : yy + 1; return `${yr}-${String(m).padStart(2, '0')}`; };
+    const agg = (yy) => {
+        const o = {};
+        for (let i = 0; i < 12; i++) o[monthKey(yy, i)] = { n: 0, single: 0, nSingle: 0, ing: 0, abb: 0 };
+        (dataIngressi || []).forEach(d => { const m = (d.date || '').slice(0, 7); if (o[m]) { o[m].n += d.totale || 0; o[m].nSingle += (d.int || 0) + (d.rid || 0); } });
+        (dataIncassi || []).forEach(d => { const m = (d.date || '').slice(0, 7); if (o[m]) { o[m].ing += d.ingressi_tot || 0; o[m].abb += d.abbonamenti_tot || 0; } });
+        return o;
+    };
+    const cur = agg(y), prv = agg(y - 1);
+    const ok = m => m.n > 0 && (m.ing + m.abb) > 0;
+    const per = m => (m.n > 0 ? (m.ing + m.abb) / m.n : null), perS = m => (m.nSingle > 0 && m.ing > 0 ? m.ing / m.nSingle : null);
+    const dlt = (a, b) => (a == null || b == null || b <= 0 ? '' : `<span style="font-weight:700; color:${a >= b ? '#16a34a' : '#dc2626'}">${a >= b ? '▲ +' : '▼ '}${((a / b - 1) * 100).toFixed(1)}%</span>`);
+    const rows = []; let T = { n: 0, ns: 0, ing: 0, abb: 0 }, P = { n: 0, ns: 0, ing: 0, abb: 0 };
+    for (let i = 0; i < 12; i++) {
+        const k = monthKey(y, i), kp0 = monthKey(y - 1, i), m = cur[k], p = prv[kp0];
+        if (!ok(m)) continue;
+        T.n += m.n; T.ns += m.nSingle; T.ing += m.ing; T.abb += m.abb;
+        // confronto stesso mese stagione precedente (stessi mesi già conclusi o in corso)
+        if (ok(p)) { P.n += p.n; P.ns += p.nSingle; P.ing += p.ing; P.abb += p.abb; }
+        rows.push(`<tr><td style="font-weight:700">${MESI[i]} ${k.slice(0, 4)}</td><td>${m.n.toLocaleString('it-IT')}</td><td style="color:#2563eb">${eur2(m.ing)}</td><td style="color:#2563eb; font-weight:700">${perS(m) != null ? eurP(perS(m)) : '–'}</td><td style="color:#7c3aed">${eur2(m.ing + m.abb)}</td><td style="font-weight:800; color:#0e7490; background:rgba(6,148,162,0.06)">${eurP(per(m))}</td><td>${ok(p) ? eurP(per(p)) + ' ' + dlt(per(m), per(p)) : '<span style="color:#94a3b8">–</span>'}</td></tr>`);
+    }
+    tb.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;padding:20px">Servono sia gli ingressi del Nuoto Libero sia gli incassi per calcolarlo.</td></tr>';
+    const tPer = T.n > 0 ? (T.ing + T.abb) / T.n : null, pPer = P.n > 0 ? (P.ing + P.abb) / P.n : null;
+    const tS = T.ns > 0 && T.ing > 0 ? T.ing / T.ns : null, pS = P.ns > 0 && P.ing > 0 ? P.ing / P.ns : null;
+    if (tf) tf.innerHTML = rows.length ? `<tr style="border-top:2px solid rgba(0,0,0,0.1)"><td style="font-weight:800">TOTALE Stagione ${selectedSeason}</td><td style="font-weight:800">${T.n.toLocaleString('it-IT')}</td><td style="font-weight:800; color:#2563eb">${eur2(T.ing)}</td><td style="font-weight:800; color:#2563eb">${tS != null ? eurP(tS) : '–'}</td><td style="font-weight:800; color:#7c3aed">${eur2(T.ing + T.abb)}</td><td style="font-weight:900; color:#0e7490; background:rgba(6,148,162,0.10)">${tPer != null ? eurP(tPer) : '–'}</td><td></td></tr>` : '';
+    const card = (c, lab, val, sub) => `<div class="ov-card" style="--c:${c}"><div class="ov-lab">${lab}</div><div class="ov-big">${val}</div><div class="ov-sub">${sub}</div></div>`;
+    const best = rows.length ? Object.keys(cur).filter(k => ok(cur[k]) && per(cur[k]) != null).sort((a, b) => per(cur[b]) - per(cur[a])) : [];
+    kp.innerHTML = rows.length ? card('6,148,162', '🎟️ € per ingresso · stagione', tPer != null ? eurP(tPer) : '–', pPer != null ? `${dlt(tPer, pPer)} vs ${getSeasonLabel(y - 1)} (stessi mesi: ${eurP(pPer)})` : 'Nessun confronto con la stagione precedente')
+        + card('37,99,235', '🎫 € per ingresso singolo', tS != null ? eurP(tS) : '–', pS != null ? `${dlt(tS, pS)} vs ${getSeasonLabel(y - 1)} (${eurP(pS)})` : 'Intero e ridotto pagati al momento')
+        + (best.length ? card('22,163,74', '🏆 Mese più redditizio', MESI[(+best[0].slice(5, 7) + 3) % 12] + ' ' + best[0].slice(0, 4), `${eurP(per(cur[best[0]]))} per ingresso · più basso: ${MESI[(+best[best.length - 1].slice(5, 7) + 3) % 12].toLowerCase()} (${eurP(per(cur[best[best.length - 1]]))})`) : '') : '';
+}
+
 function renderSeasonDetailExtra(selectedSeason) {
     if (!isChartReady() || !document.getElementById('sd-kpis')) return;
     const docs = dataIncassi.filter(d => d.date);
@@ -5287,6 +5455,46 @@ window.toggleUtenzeChartMode = () => {
 };
 
 // ---- Panoramica Utenze: nuove schede "Giorni recenti" e "Mese e stagione" ----
+
+// ---- Panoramica Utenze: consumi per ingresso ----
+function renderUtenzePerIngresso() {
+    const tb = document.getElementById('tbody-upi'), kp = document.getElementById('upi-kpis'); if (!tb || !kp) return;
+    const days = uBuildDays();
+    if (!days.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px">Nessuna lettura disponibile.</td></tr>'; kp.innerHTML = ''; return; }
+    const last = days[days.length - 1].date, sy = getSeasonStartYear(last);
+    const MESI = ['Settembre','Ottobre','Novembre','Dicembre','Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto'];
+    const monthKey = (yy, i) => { const m = ((8 + i) % 12) + 1; return `${m >= 9 ? yy : yy + 1}-${String(m).padStart(2, '0')}`; };
+    // per ogni mese: giorni con consumo misurato, somma consumi e somma ingressi (solo giorni con entrambi i dati)
+    const agg = {};
+    days.forEach(d => {
+        const k = d.date.slice(0, 7); const o = agg[k] || (agg[k] = { e: { c: 0, n: 0, i: 0, ni: 0 }, w: { c: 0, n: 0, i: 0, ni: 0 }, g: { c: 0, n: 0, i: 0, ni: 0 } });
+        ['e', 'w', 'g'].forEach(r => { const v = d[r]; if (v == null) return; o[r].c += v; o[r].n++; if (d.ingr != null && d.ingr > 0) { o[r].i += d.ingr; o[r].ni += v; } });
+    });
+    // unità: kWh -> Wh per ingresso (x1000); acqua m³ -> litri (x1000); gas m³ -> litri (x1000)
+    const perDay = (o, r) => (o && o[r].n > 0 ? o[r].c / o[r].n : null);
+    const perIn = (o, r) => (o && o[r].i > 0 ? o[r].ni / o[r].i * 1000 : null);
+    const dl = (a, b) => (a == null || b == null || b <= 0 ? '' : (() => { const v = (a / b - 1) * 100; if (Math.abs(v) < 0.5) return ' <span style="font-weight:700; font-size:0.72rem; color:#64748b">= invariato</span>'; return ` <span style="font-weight:700; font-size:0.72rem; color:${v <= 0 ? '#16a34a' : '#dc2626'}">${v <= 0 ? '▼ ' : '▲ +'}${v.toFixed(0)}%</span>`; })());
+    const rows = [], T = { e: { ni: 0, i: 0, c: 0, n: 0 }, w: { ni: 0, i: 0, c: 0, n: 0 }, g: { ni: 0, i: 0, c: 0, n: 0 } }, P = { e: { ni: 0, i: 0 }, w: { ni: 0, i: 0 }, g: { ni: 0, i: 0 } };
+    for (let i = 0; i < 12; i++) {
+        const k = monthKey(sy, i), o = agg[k], po = agg[monthKey(sy - 1, i)];
+        if (!o || !(o.e.n || o.w.n || o.g.n)) continue;
+        ['e', 'w', 'g'].forEach(r => { T[r].ni += o[r].ni; T[r].i += o[r].i; T[r].c += o[r].c; T[r].n += o[r].n; if (po && po[r].i > 0 && o[r].i > 0) { P[r].ni += po[r].ni; P[r].i += po[r].i; T[r].cmpNi = (T[r].cmpNi || 0) + o[r].ni; T[r].cmpI = (T[r].cmpI || 0) + o[r].i; } });
+        const f = (v, d) => (v == null ? '–' : uF(v, d));
+        rows.push(`<tr><td style="font-weight:700">${MESI[i]} ${k.slice(0, 4)}</td>`
+            + `<td>${f(perDay(o, 'e'), 0)}</td><td style="font-weight:700; color:#a16207">${f(perIn(o, 'e'), 0)}${dl(perIn(o, 'e'), perIn(po, 'e'))}</td>`
+            + `<td>${f(perDay(o, 'w'), 1)}</td><td style="font-weight:700; color:#2563eb">${f(perIn(o, 'w'), 0)}${dl(perIn(o, 'w'), perIn(po, 'w'))}</td>`
+            + `<td>${f(perDay(o, 'g'), 1)}</td><td style="font-weight:700; color:#dc2626">${f(perIn(o, 'g'), 0)}${dl(perIn(o, 'g'), perIn(po, 'g'))}</td></tr>`);
+    }
+    tb.innerHTML = rows.length ? rows.join('') : '<tr><td colspan="7" style="text-align:center;padding:20px">Nessun consumo misurato in questa stagione.</td></tr>';
+    const card = (c, lab, val, sub) => `<div class="ov-card" style="--c:${c}"><div class="ov-lab">${lab}</div><div class="ov-big">${val}</div><div class="ov-sub">${sub}</div></div>`;
+    const kv = (r, lab, col, unit) => {
+        const cur = T[r].i > 0 ? T[r].ni / T[r].i * 1000 : null, prv = P[r].i > 0 ? P[r].ni / P[r].i * 1000 : null;
+        const cmp = T[r].cmpI > 0 ? T[r].cmpNi / T[r].cmpI * 1000 : null;
+        return card(col, lab, cur != null ? `${uF(cur, 0)}<small>${unit} per ingresso</small>` : '–', prv != null && cmp != null ? `${dl(cmp, prv).trim()} vs ${getSeasonLabel(sy - 1)} (stessi mesi: ${uF(prv, 0)} ${unit})` : `${T[r].n} giorni misurati nella stagione ${getSeasonLabel(sy)}`);
+    };
+    kp.innerHTML = kv('e', '⚡ Elettricità · stagione', '234,179,8', 'Wh') + kv('w', '💧 Acqua · stagione', '59,130,246', 'litri') + kv('g', '🔥 Gas · stagione', '239,68,68', 'litri');
+}
+
 function renderUtenzeOverviewHighlights() {
     const boxR = document.getElementById('uov-recent'), boxM = document.getElementById('uov-month');
     if (!boxR || !boxM) return;
@@ -5757,6 +5965,7 @@ window.renderUtenze = () => {
         document.getElementById('u-ytd-gas-pct').innerHTML = calcPct(ytdSum.gas, ytdPrevSum.gas);
     }
     try { renderUtenzeOverviewHighlights(); } catch (e) { console.error('renderUtenzeOverviewHighlights', e); }
+    try { renderUtenzePerIngresso(); } catch (e) { console.error('renderUtenzePerIngresso', e); }
 
 
     // --- RENDER UTENZE ARCHIVE TABLE ---
