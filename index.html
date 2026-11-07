@@ -3964,6 +3964,22 @@ function renderIncassiOverview() {
         document.getElementById('ov-bestday-sub').innerText = `Media ${fmtEUR(bestAvg)} (${weekdayCount[bestWd]} giorni, storico)`;
     }
 
+    // Proiezione di fine mese "come gli anni scorsi": quanto si è incassato nel resto dello stesso mese nelle ultime 2 stagioni,
+    // riportato al ritmo di quest'anno (incasso del mese finora / stesso periodo dell'anno scorso, limitato tra 0,6 e 1,4)
+    const sumRange = (a, b) => dataIncassi.reduce((t, d) => (d.date >= a && d.date <= b ? t + (d.incasso_totale || 0) : t), 0);
+    const shiftY = (ds, k) => (+ds.slice(0, 4) - k) + ds.slice(4);
+    const projectLike = (startCur, refStr, endCur, curToDate) => {
+        const out = [];
+        for (let k = 1; k <= 2; k++) {
+            const sK = shiftY(startCur, k), rK = shiftY(refStr, k), eK = shiftY(endCur, k);
+            const toK = sumRange(sK, rK), remK = sumRange(fmtDateISO(new Date(new Date(rK + 'T12:00:00').getTime() + 86400000)), eK);
+            if (!(toK > 0) || !(remK > 0)) continue;
+            const r = Math.min(1.4, Math.max(0.6, curToDate / toK));
+            out.push({ total: curToDate + r * remK, r });
+        }
+        if (!out.length) return null;
+        return { total: out.reduce((t, o) => t + o.total, 0) / out.length, r: out.reduce((t, o) => t + o.r, 0) / out.length, n: out.length };
+    };
     // ===== Proiezione Fine Mese =====
     const monthEndDate = new Date(curYear, curMonthIdx+1, 0);
     const monthEndStr = fmtDateISO(monthEndDate);
@@ -3984,9 +4000,10 @@ function renderIncassiOverview() {
         if (wkAvgM[wd] !== null) estRemainMonth += wkAvgM[wd]; else { hasBasisMonth = false; estRemainMonth += overallAvgMonth; }
         curM.setDate(curM.getDate()+1);
     }
-    const forecastMonthTotal = mtdCurrSum + estRemainMonth;
+    const pjM = projectLike(monthStartStr, todayStr, monthEndStr, mtdCurrSum);
+    const forecastMonthTotal = pjM ? pjM.total : mtdCurrSum + estRemainMonth;
     document.getElementById('ov-forecast-month-val').innerText = fmtEUR(forecastMonthTotal);
-    document.getElementById('ov-forecast-month-sub').innerText = `entro fine mese (${hasBasisMonth ? 'su trend storico' : 'su trend storico (parziale)'})`;
+    document.getElementById('ov-forecast-month-sub').innerText = pjM ? `entro fine mese (come ${pjM.n > 1 ? 'le ultime 2 stagioni' : 'la stagione scorsa'}, ritmo ${pjM.r >= 1 ? '+' : ''}${Math.round((pjM.r - 1) * 100)}%)` : `entro fine mese (${hasBasisMonth ? 'su trend storico' : 'su trend storico (parziale)'})`;
 
     // ===== Proiezione Fine Stagione =====
     const seasonEndDate = `${currSeasonStart+1}-08-31`;
