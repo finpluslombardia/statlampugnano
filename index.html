@@ -2420,7 +2420,10 @@ async function renderNextDayCard(tmr, tw, rows, last) {
 function renderOverviewHighlights() {
     const box = document.getElementById('ov-highlights'), box2 = document.getElementById('ov-highlights2');
     if (!box || !box2) return;
-    const rows = (dataIngressi || []).filter(x => x.date && !x.excludeStats);
+    // Vasca esterna: i suoi ingressi contano solo nei giorni in cui, nella stagione precedente, lo stesso giorno risulta registrato anche l'esterna
+    const outPrev = new Set((dataIngressi || []).filter(x => x.date && x.fascia && OUTDOOR_FASCE.includes(x.fascia)).map(x => x.date));
+    const outOk = ds => outPrev.has((+ds.slice(0, 4) - 1) + ds.slice(4));
+    const rows = (dataIngressi || []).filter(x => x.date && !x.excludeStats && !(x.fascia && OUTDOOR_FASCE.includes(x.fascia) && !outOk(x.date)));
     if (!rows.length) { box.innerHTML = ''; box2.innerHTML = ''; return; }
     const WD = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'], WS = ['D','L','M','M','G','V','S'];
     const fmtN = v => Math.round(v).toLocaleString('it-IT');
@@ -3679,12 +3682,24 @@ function renderIncassiOverviewHighlights() {
 
     // 1. Ultimo incasso
     const ld = dayDoc[last], lt = byDay[last];
-    const sameWd = Object.keys(byDay).filter(d => d < last && dow(d) === dow(last) && getSeasonStartYear(d) === seasonY);
-    const avgWd = sameWd.length ? sameWd.reduce((a, d) => a + byDay[d], 0) / sameWd.length : null;
+    // Riferimento "tipico": stesso giorno della settimana nelle ultime 10 settimane + stesso periodo (±3 settimane) della stagione scorsa;
+    // i picchi (es. apertura iscrizioni, oltre il doppio della mediana) sono esclusi, e si usa la mediana
+    const dayN = ds => Math.round(new Date(ds + 'T12:00:00').getTime() / 86400000);
+    const refPool = (target, upTo) => {
+        const py = (+target.slice(0, 4) - 1) + target.slice(4), tn = dayN(target), pn = dayN(py);
+        let v = Object.keys(byDay).filter(d => dow(d) === dow(target) && d !== target && ((d <= upTo && tn - dayN(d) <= 70 && tn - dayN(d) > 0) || Math.abs(dayN(d) - pn) <= 21)).map(d => byDay[d]);
+        const med = a => { const b = [...a].sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+        if (v.length >= 3) { const m0 = med(v); const kept = v.filter(x => x <= m0 * 2); if (kept.length >= 2) v = kept; }
+        return v.sort((x, y) => x - y);
+    };
+    const medOf = v => { const m = v.length >> 1; return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2; };
+    const qOf = (v, q) => v[Math.min(v.length - 1, Math.max(0, Math.round((v.length - 1) * q)))];
+    const sameWd = refPool(last, last);
+    const avgWd = sameWd.length >= 2 ? medOf(sameWd) : null;
     const CAT = [['Corsi', ld.corsi_n4_tot], ['Società Sportive', ld.societa_sportive_tot], ['Ingressi', ld.ingressi_tot], ['Abbonamenti', ld.abbonamenti_tot], ['Accessori', ld.accessori_tot], ['Fatture', (ld.fatture_spazi_acqua || 0) + (ld.fatture_altro || 0)]].filter(c => (c[1] || 0) > 0).sort((a, b) => b[1] - a[1]);
     R.push(card('37,99,235', '📍 Ultimo incasso registrato',
         `<div class="ov-big">${eur0(lt)}<small>${dd(last)}</small></div>`
-        + `<div class="ov-sub">${avgWd != null ? `${pctHtml(pct(lt, avgWd))} rispetto alla media del ${WD[dow(last)].toLowerCase()} (${eur0(avgWd)}, ${sameWd.length} gg)` : 'Nessun confronto disponibile'}</div>`
+        + `<div class="ov-sub">${avgWd != null ? `${pctHtml(pct(lt, avgWd))} rispetto a un ${WD[dow(last)].toLowerCase()} tipico del periodo (${eur0(avgWd)}, ${sameWd.length} gg)` : 'Nessun confronto disponibile'}</div>`
         + (CAT.length ? `<div class="ov-sub">Voce principale: <b>${CAT[0][0]}</b> ${eur0(CAT[0][1])} (${Math.round(CAT[0][1] / lt * 100)}%)</div>` : '')));
 
     // 2. Ultimi 7 giorni
@@ -3697,13 +3712,13 @@ function renderIncassiOverviewHighlights() {
 
     // 3. Atteso prossimo giorno
     const tmr = addD(last, 1), tw = dow(tmr);
-    const hist = Object.keys(byDay).filter(d => d <= last && dow(d) === tw).sort().reverse().slice(0, 6).map(d => byDay[d]);
+    const hist = refPool(tmr, last);
     if (hist.length >= 2) {
-        const av = hist.reduce((a, b) => a + b, 0) / hist.length;
+        const av = medOf(hist);
         R.push(card('124,58,237', '🔮 Atteso prossimo giorno',
             `<div class="ov-big">~${eur0(av)}<small>${dd(tmr)}</small></div>`
-            + `<div class="ov-sub">Media degli ultimi ${hist.length} ${WD[tw].toLowerCase()} con incasso · intervallo <b>${eur0(Math.min(...hist))} – ${eur0(Math.max(...hist))}</b></div>`
-            + `<div class="ov-sub" style="font-size:0.74rem; color:#94a3b8">Stima indicativa: non considera chiusure, festività o corsi particolari.</div>`));
+            + `<div class="ov-sub">Tipico ${WD[tw].toLowerCase()} del periodo (mediana di ${hist.length} giorni) · intervallo <b>${eur0(qOf(hist, 0.25))} – ${eur0(qOf(hist, 0.75))}</b></div>`
+            + `<div class="ov-sub" style="font-size:0.74rem; color:#94a3b8">Ultime 10 settimane + stesso periodo della stagione scorsa, esclusi i picchi (es. apertura iscrizioni). Non considera chiusure, festività o corsi particolari.</div>`));
     }
 
     // 4. Obiettivo del mese: quanto del totale dello stesso mese dell'anno scorso è già stato raggiunto
