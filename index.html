@@ -162,6 +162,8 @@
     #collab-modal .cm-box { background:#f8fafc; border-radius:20px; width:min(1100px,100%); padding:22px 24px; box-shadow:0 20px 50px rgba(0,0,0,.45); }
     #collab-modal h4 { margin:18px 0 8px; font-size:.82rem; letter-spacing:.06em; text-transform:uppercase; color:#475569; }
     .cm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+    .collab-box { border:1.5px solid rgba(71,85,105,.45) !important; box-shadow:0 2px 10px rgba(30,41,59,.12) !important; }
+    .collab-box.row { flex-direction:row !important; flex-wrap:wrap; }
     .cb-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:.7rem; font-weight:800; margin:1px 3px 1px 0; color:#fff; white-space:nowrap; }
     .cb-bar { height:10px; border-radius:6px; background:rgba(79,70,229,.15); overflow:hidden; } .cb-bar i { display:block; height:100%; background:#4f46e5; }
     .ex-card { background:var(--glass-bg); backdrop-filter:var(--glass-blur); border-radius:22px; box-shadow:var(--glass-shadow); border:var(--glass-border); padding:18px 20px; min-width:0; }
@@ -1623,7 +1625,7 @@
 
 <!-- ============ MODULO: COLLABORATORI (solo cflampugnano@gmail.com) ============ -->
 <div id="module-collab" class="module-container hidden" style="display:flex; flex-direction:column; height:100%">
-    <div class="control-bar" style="padding:16px 20px">
+    <div class="control-bar collab-box" style="padding:16px 20px">
         <div class="cb-header" style="margin:0; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap">
             <span class="cb-title cb-title-lg">👥 Collaboratori</span>
             <div style="display:flex; align-items:center; gap:10px"><span style="font-size:.8rem; font-weight:700; color:#64748b">Stagione sportiva</span><select id="collab-season" class="filter-select" style="font-weight:800" onchange="collabSetSeason(this.value)"></select></div>
@@ -1638,13 +1640,13 @@
         </div>
         <div id="collab-v-ov"></div>
         <div id="collab-v-list" class="hidden">
-            <div class="glass-card" style="padding:14px 18px; margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+            <div class="glass-card collab-box row" style="padding:14px 18px; margin-bottom:14px; display:flex; flex-direction:row; gap:12px; flex-wrap:wrap; align-items:center">
                 <input type="text" id="collab-q" placeholder="🔎 Cerca per nome, codice fiscale, mansione…" oninput="collabRenderList()" style="flex:1; min-width:220px; height:42px; border-radius:12px; border:1px solid rgba(0,0,0,.1); padding:0 12px">
                 <select id="collab-fmans" class="filter-select" onchange="collabRenderList()"><option value="">Tutte le mansioni</option></select>
                 <label class="ex-chip"><input type="checkbox" id="collab-fscad" onchange="collabRenderList()">Solo con scadenze</label>
                 <span id="collab-count" style="font-weight:700; color:#64748b"></span>
             </div>
-            <div class="table-wrap glass-card"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th>Mansione</th><th>Contratto</th><th>Ore sett.</th><th>Stima stipendio</th><th>Scadenze</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
+            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th>Mansione</th><th>Contratto</th><th>Scad. CM</th><th>Scad. BLSD</th><th>Altre scadenze</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
         </div>
         <div id="collab-v-io" class="hidden">
             <div class="ex-grid">
@@ -3895,10 +3897,11 @@ window.collabRenderList = () => {
     let R = L.filter(c => (!q || collabNorm([c.cognome, c.nome, c.cf, c.mansione, c.mansione2, c.mansione3, c.tipoContratto].join(' ')).includes(q)) && (!fm.value || [c.mansione, c.mansione2, c.mansione3].includes(fm.value)) && (!onlyScad || collabAlerts([c]).length));
     R.sort((a, b) => (a.cognome || '').localeCompare(b.cognome || '', 'it') || (a.nome || '').localeCompare(b.nome || '', 'it'));
     document.getElementById('collab-count').innerText = `${R.length} di ${L.length}`;
+    const scadCell = (v) => { if (!v) return '<span style="color:#cbd5e1">—</span>'; if (!collabIsoOk(v)) return collabEsc(v); const d = Math.round((new Date(v + 'T12:00:00') - new Date(fmtDateISO(new Date()) + 'T12:00:00')) / 86400000); const col = d < 0 ? '#dc2626' : d <= 30 ? '#ea580c' : d <= 60 ? '#ca8a04' : '#334155'; return `<span style="font-weight:700; color:${col}; white-space:nowrap">${collabDM(v)}</span>`; };
     tb.innerHTML = R.map(c => {
-        const al = collabAlerts([c]).map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}" title="${a.lab}: ${collabDM(a.date)}">${a.lab.replace('Brevetto ', 'Brev. ').replace('Certificato medico', 'CM')} · ${st.t}</span>`; }).join('');
+        const al = collabAlerts([c].map(x => ({ ...x, scadCM: '', scadBlsd: '' }))).map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}" title="${a.lab}: ${collabDM(a.date)}">${a.lab.replace('Brevetto ', 'Brev. ').replace('Certificato medico', 'CM')} · ${st.t}</span>`; }).join('');
         const mans = [c.mansione, c.mansione2, c.mansione3].filter(Boolean).join(' · ');
-        return `<tr style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}</div></td><td>${collabEsc(mans)}</td><td>${collabEsc(c.tipoContratto || '')}<div style="font-size:.72rem; color:#64748b">${collabIsoOk(c.inizioContratto) ? collabDM(c.inizioContratto) : ''}${c.fineContratto ? ' → ' + collabDM(c.fineContratto) : ''}</div></td><td>${typeof c.oreSettimanali === 'number' ? c.oreSettimanali : collabEsc(c.oreSettimanali || '')}</td><td>${typeof c.stimaStipendio === 'number' ? '€ ' + Math.round(c.stimaStipendio).toLocaleString('it-IT') : collabEsc(c.stimaStipendio || '')}</td><td>${al}</td><td onclick="event.stopPropagation()"><button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
+        return `<tr style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}</div></td><td>${collabEsc(mans)}</td><td>${collabEsc(c.tipoContratto || '')}<div style="font-size:.72rem; color:#64748b">${collabIsoOk(c.inizioContratto) ? collabDM(c.inizioContratto) : ''}${c.fineContratto ? ' → ' + collabDM(c.fineContratto) : ''}</div></td><td>${scadCell(c.scadCM)}</td><td>${scadCell(c.scadBlsd)}</td><td>${al}</td><td onclick="event.stopPropagation()"><button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
     }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8">Nessun collaboratore trovato.</td></tr>';
 };
 window.collabEdit = (id) => {
