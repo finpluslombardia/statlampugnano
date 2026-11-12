@@ -1666,7 +1666,8 @@
         <div id="collab-v-scad" class="hidden">
             <div class="glass-card collab-box row" style="padding:14px 18px; margin-bottom:14px; display:flex; flex-direction:row; gap:10px; flex-wrap:wrap; align-items:center">
                 <button class="btn btn-primary" id="collab-sf-exp" onclick="collabScadF('exp')">🔴 Scaduti</button>
-                <button class="btn" style="border:1px solid rgba(0,0,0,.12)" id="collab-sf-soon" onclick="collabScadF('soon')">🟠 In scadenza (60 gg)</button>
+                <button class="btn" style="border:1px solid rgba(0,0,0,.12)" id="collab-sf-soon30" onclick="collabScadF('soon30')">🟠 In scadenza (30 gg)</button>
+                <button class="btn" style="border:1px solid rgba(0,0,0,.12)" id="collab-sf-soon" onclick="collabScadF('soon')">🟡 In scadenza (60 gg)</button>
                 <button class="btn" style="border:1px solid rgba(0,0,0,.12)" id="collab-sf-all" onclick="collabScadF('all')">Tutti</button>
                 <span id="collab-scad-count" style="font-weight:700; color:#64748b; margin-left:auto"></span>
             </div>
@@ -3949,8 +3950,8 @@ function collabContactBtns(c) {
 }
 // ---- Scadenze + messaggi pre-impostati ----
 const COLLAB_TPL_DEF = {
-    exp: "Ciao {nome}, ti scriviamo dal CF Lampugnano.\n\nDal nostro controllo risulta scaduto:\n{elenco}\n\nTi chiediamo di provvedere al rinnovo al più presto e di inviarcene copia aggiornata, così da poter proseguire regolarmente l'attività.\n\nGrazie per la collaborazione!\nCF Lampugnano",
-    soon: "Ciao {nome}, ti scriviamo dal CF Lampugnano.\n\nTi ricordiamo che sta per scadere:\n{elenco}\n\nPuoi iniziare a organizzare il rinnovo e inviarci copia aggiornata appena disponibile?\n\nGrazie!\nCF Lampugnano"
+    exp: "Ciao {nome}! Controllando i documenti ho visto che c'è qualcosa di scaduto:\n{elenco}\n\nPuoi rinnovarlo appena riesci e mandarmi una copia aggiornata? Grazie mille!",
+    soon: "Ciao {nome}! Ti avviso che sta per scadere:\n{elenco}\n\nQuando riesci rinnovalo e mandami una copia aggiornata. Grazie!"
 };
 let collabScadFilter = 'exp';
 function collabTpl() {
@@ -3971,8 +3972,8 @@ function collabMsg(id) {
     const line = (a) => `• ${a.lab}: ${a.days < 0 ? 'scaduto il' : 'scade il'} ${collabDM(a.date)}`;
     const exp = g.items.filter(a => a.days < 0), soon = g.items.filter(a => a.days >= 0), nome = (g.c.nome || '').trim();
     let body, subject;
-    if (exp.length) { body = T.exp.replace(/\{nome\}/g, nome).replace(/\{elenco\}/g, exp.map(line).join('\n') + (soon.length ? `\n\nInoltre stanno per scadere:\n${soon.map(line).join('\n')}` : '')); subject = 'CF Lampugnano – documento scaduto'; }
-    else { body = T.soon.replace(/\{nome\}/g, nome).replace(/\{elenco\}/g, soon.map(line).join('\n')); subject = 'CF Lampugnano – documento in scadenza'; }
+    if (exp.length) { body = T.exp.replace(/\{nome\}/g, nome).replace(/\{elenco\}/g, exp.map(line).join('\n') + (soon.length ? `\n\nPoi ti avviso che sono in scadenza:\n${soon.map(line).join('\n')}` : '')); subject = 'Documento scaduto'; }
+    else { body = T.soon.replace(/\{nome\}/g, nome).replace(/\{elenco\}/g, soon.map(line).join('\n')); subject = 'Documento in scadenza'; }
     return { body, subject, c: g.c };
 }
 window.collabMsgSend = (id, how) => {
@@ -3986,9 +3987,10 @@ window.collabRenderScad = () => {
     const tb = document.getElementById('collab-scad-tbody'); if (!tb) return;
     const T = collabTpl(), te = document.getElementById('collab-tpl-exp'), ts = document.getElementById('collab-tpl-soon');
     if (te && !te.dataset.init) { te.value = T.exp; ts.value = T.soon; te.dataset.init = '1'; }
-    ['exp', 'soon', 'all'].forEach(f => { const b = document.getElementById('collab-sf-' + f); b.classList.toggle('btn-primary', f === collabScadFilter); b.style.border = f === collabScadFilter ? '' : '1px solid rgba(0,0,0,.12)'; });
+    ['exp', 'soon30', 'soon', 'all'].forEach(f => { const b = document.getElementById('collab-sf-' + f); b.classList.toggle('btn-primary', f === collabScadFilter); b.style.border = f === collabScadFilter ? '' : '1px solid rgba(0,0,0,.12)'; });
     let G = collabScadGroups();
     if (collabScadFilter === 'exp') G = G.filter(g => g.items.some(a => a.days < 0));
+    else if (collabScadFilter === 'soon30') G = G.filter(g => g.items.some(a => a.days >= 0 && a.days <= 30));
     else if (collabScadFilter === 'soon') G = G.filter(g => g.items.some(a => a.days >= 0));
     document.getElementById('collab-scad-count').innerText = `${G.length} collaborator${G.length === 1 ? 'e' : 'i'}`;
     const btn = 'display:inline-flex; align-items:center; gap:4px; height:34px; padding:0 11px; border-radius:10px; margin:2px 6px 2px 0; font-weight:700; font-size:.8rem; cursor:pointer;';
