@@ -1648,7 +1648,7 @@
                 <label class="ex-chip"><input type="checkbox" id="collab-fscad" onchange="collabRenderList()">Solo con scadenze</label>
                 <span id="collab-count" style="font-weight:700; color:#64748b"></span>
             </div>
-            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th>Mansione</th><th>Contratto</th><th>Scad. CM</th><th>Scad. BLSD</th><th>Altre scadenze</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
+            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th>Mansione</th><th>Scad. brevetto AB</th><th>Scad. brevetto SIT</th><th>Scad. CM</th><th>Scad. BLSD</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
         </div>
         <div id="collab-v-io" class="hidden">
             <div class="ex-grid">
@@ -3899,12 +3899,12 @@ window.collabRenderList = () => {
     let R = L.filter(c => (!q || collabNorm([c.cognome, c.nome, c.cf, c.mansione, c.mansione2, c.mansione3, c.tipoContratto].join(' ')).includes(q)) && (!fm.value || [c.mansione, c.mansione2, c.mansione3].includes(fm.value)) && (!onlyScad || collabAlerts([c]).length));
     R.sort((a, b) => (a.cognome || '').localeCompare(b.cognome || '', 'it') || (a.nome || '').localeCompare(b.nome || '', 'it'));
     document.getElementById('collab-count').innerText = `${R.length} di ${L.length}`;
-    const mansCell = (c) => [c.mansione, c.mansione2, c.mansione3].filter(Boolean).map(m => { const n = collabNorm(m); const k = n.includes('assistente') ? ['Brev. AB', c.scadBrevSalv] : n.includes('istruttore') ? ['Brev. SIT', c.scadBrevSit] : null; return `<div style="margin:2px 0"><b>${collabEsc(m)}</b>${k ? `<div style="font-size:.74rem; color:#64748b">${k[0]} · scad. ${scadCell(k[1])}</div>` : ''}</div>`; }).join('');
+    const mansCell = (c) => [c.mansione, c.mansione2, c.mansione3].filter(Boolean).map(m => `<div style="margin:2px 0; font-weight:700">${collabEsc(m)}</div>`).join('');
     const scadCell = (v) => { if (!v) return '<span style="color:#cbd5e1">—</span>'; if (!collabIsoOk(v)) return collabEsc(v); const d = Math.round((new Date(v + 'T12:00:00') - new Date(fmtDateISO(new Date()) + 'T12:00:00')) / 86400000); const col = d < 0 ? '#dc2626' : d <= 30 ? '#ea580c' : d <= 60 ? '#ca8a04' : '#334155'; return `<span style="font-weight:700; color:${col}; white-space:nowrap">${collabDM(v)}</span>`; };
     tb.innerHTML = R.map(c => {
         const al = collabAlerts([c].map(x => ({ ...x, scadCM: '', scadBlsd: '' }))).map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}" title="${a.lab}: ${collabDM(a.date)}">${a.lab.replace('Brevetto ', 'Brev. ').replace('Certificato medico', 'CM')} · ${st.t}</span>`; }).join('');
         const mans = [c.mansione, c.mansione2, c.mansione3].filter(Boolean).join(' · ');
-        return `<tr style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}</div></td><td>${mansCell(c)}</td><td>${collabEsc(c.tipoContratto || '')}</td><td>${scadCell(c.scadCM)}</td><td>${scadCell(c.scadBlsd)}</td><td>${al}</td><td onclick="event.stopPropagation()"><button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
+        return `<tr style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}</div></td><td>${mansCell(c)}</td><td>${scadCell(c.scadBrevSalv)}</td><td>${scadCell(c.scadBrevSit)}</td><td>${scadCell(c.scadCM)}</td><td>${scadCell(c.scadBlsd)}</td><td onclick="event.stopPropagation()"><button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
     }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8">Nessun collaboratore trovato.</td></tr>';
 };
 window.collabEdit = (id) => {
