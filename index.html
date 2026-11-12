@@ -164,10 +164,15 @@
     .cm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
     #collab-modal .inp-field input, #collab-modal .inp-field select { border:1.5px solid #94a3b8 !important; background:#fff !important; box-shadow:0 1px 3px rgba(30,41,59,.10); }
     #collab-modal .inp-field input:focus, #collab-modal .inp-field select:focus { border-color:#4f46e5 !important; outline:none; box-shadow:0 0 0 3px rgba(79,70,229,.18); }
-    #collab-v-list th.cc-ab, #collab-v-list td.cc-ab { background:rgba(14,165,233,.13); } #collab-v-list th.cc-ab { background:rgba(14,165,233,.28); color:#075985; }
-    #collab-v-list th.cc-sit, #collab-v-list td.cc-sit { background:rgba(22,163,74,.12); } #collab-v-list th.cc-sit { background:rgba(22,163,74,.27); color:#166534; }
-    #collab-v-list th.cc-cm, #collab-v-list td.cc-cm { background:rgba(234,88,12,.12); } #collab-v-list th.cc-cm { background:rgba(234,88,12,.27); color:#9a3412; }
+    #collab-v-list th.cc-ab, #collab-v-list td.cc-ab { background:rgba(220,38,38,.11); } #collab-v-list th.cc-ab { background:rgba(220,38,38,.26); color:#991b1b; }
+    #collab-v-list th.cc-sit, #collab-v-list td.cc-sit { background:rgba(37,99,235,.11); } #collab-v-list th.cc-sit { background:rgba(37,99,235,.26); color:#1e40af; }
+    #collab-v-list th.cc-cm, #collab-v-list td.cc-cm { background:rgba(234,179,8,.16); } #collab-v-list th.cc-cm { background:rgba(234,179,8,.34); color:#854d0e; }
     #collab-v-list th.cc-bl, #collab-v-list td.cc-bl { background:rgba(147,51,234,.12); } #collab-v-list th.cc-bl { background:rgba(147,51,234,.27); color:#6b21a8; }
+    .cm-sec { background:rgba(var(--sc),.09); border:2px solid rgba(var(--sc),.45); border-radius:16px; padding:6px 16px 16px; margin-top:14px; }
+    #collab-modal .cm-sec h4 { margin:10px 0 10px; color:rgb(var(--sc)); filter:brightness(.8); font-size:.85rem; }
+    .cm-grid3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; flex:1; }
+    .cm-brev { display:flex; align-items:flex-end; gap:12px; margin-bottom:10px; } .cm-brev-t { width:90px; flex:none; font-weight:800; font-size:.8rem; padding-bottom:14px; color:#166534; }
+    @media (max-width:700px) { .cm-brev { flex-direction:column; align-items:stretch; } .cm-grid3 { grid-template-columns:1fr; } .cm-brev-t { padding:0; } }
     .collab-box { border:1.5px solid rgba(71,85,105,.45) !important; box-shadow:0 2px 10px rgba(30,41,59,.12) !important; }
     .collab-box.row { flex-direction:row !important; flex-wrap:wrap; }
     .cb-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:.7rem; font-weight:800; margin:1px 3px 1px 0; color:#fff; white-space:nowrap; }
@@ -3916,6 +3921,7 @@ window.collabRenderList = () => {
 };
 window.collabEdit = (id) => {
     const c = id ? dataCollab.find(x => x.id === id) : null; collabEditId = id || null;
+    const GCOL = { 'Anagrafica': '79,70,229', 'Mansioni': '14,165,233', 'Brevetti e abilitazioni': '22,163,74', 'Documenti': '234,88,12', 'Residenza e contatti': '219,39,119', 'Formazione': '147,51,234', 'Contratto': '202,138,4' };
     const groups = []; COLLAB_FIELDS.forEach(f => { let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
     const inp = (f) => { let v = c ? (c[f[0]] == null ? '' : c[f[0]]) : ''; const t = f[2]; if (/^[-–—]$/.test(String(v).trim())) v = (t === 'selSalv' || t === 'selSit') ? 'Nessun brevetto' : '';
         if (t === 'selSalv' || t === 'selSit') { const opts = t === 'selSalv' ? ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'] : ['Istruttore', 'Aiuto Allenatore', 'Allenatore', 'Nessun brevetto']; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
@@ -3925,7 +3931,10 @@ window.collabEdit = (id) => {
         return `<input type="${t === 'email' ? 'email' : t === 'tel' ? 'tel' : 'text'}" id="cf-${f[0]}" value="${collabEsc(v)}">`; };
     const m = document.createElement('div'); m.id = 'collab-modal'; m.onclick = (e) => { if (e.target === m) m.remove(); };
     m.innerHTML = `<div class="cm-box"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px"><h3 style="margin:0; font-size:1.2rem">${c ? '✏️ ' + collabEsc((c.cognome || '') + ' ' + (c.nome || '')) : '➕ Nuovo collaboratore'} <span style="font-size:.8rem; color:#64748b; font-weight:600">· stagione ${collabSeason}</span></h3><button class="btn" onclick="document.getElementById('collab-modal').remove()">✕</button></div>
-        ${groups.map(([g, fs]) => `<h4>${g}</h4><div class="cm-grid">${fs.map(f => `<div class="inp-field"><label>${f[1]}</label>${inp(f)}</div>`).join('')}</div>`).join('')}
+        ${groups.map(([g, fs]) => { const col = GCOL[g] || '100,116,139'; const fld = (f) => `<div class="inp-field"><label>${f[1]}</label>${inp(f)}</div>`;
+            let body; if (g === 'Brevetti e abilitazioni') { const rows = [['Salvamento', ['brevSalv', 'nBrevSalv', 'scadBrevSalv']], ['SIT', ['brevSit', 'nBrevSit', 'scadBrevSit']], ['BLSD', ['brevBlsd', 'scadBlsd']]]; body = rows.map(([t, ks]) => `<div class="cm-brev"><div class="cm-brev-t">${t}</div><div class="cm-grid3">${ks.map(k => fld(fs.find(f => f[0] === k))).join('')}</div></div>`).join(''); }
+            else body = `<div class="cm-grid">${fs.map(fld).join('')}</div>`;
+            return `<div class="cm-sec" style="--sc:${col}"><h4>${g}</h4>${body}</div>`; }).join('')}
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px">${c ? `<button class="btn" style="color:#dc2626; border:1px solid #fecaca" onclick="collabDelete('${c.id}'); document.getElementById('collab-modal').remove()">🗑️ Elimina</button>` : ''}<button class="btn btn-primary" onclick="collabSave()">💾 Salva</button></div></div>`;
     const old = document.getElementById('collab-modal'); if (old) old.remove(); document.body.appendChild(m);
 };
