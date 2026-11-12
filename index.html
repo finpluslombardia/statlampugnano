@@ -164,6 +164,10 @@
     .cm-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
     #collab-modal .inp-field input, #collab-modal .inp-field select { border:1.5px solid #94a3b8 !important; background:#fff !important; box-shadow:0 1px 3px rgba(30,41,59,.10); }
     #collab-modal .inp-field input:focus, #collab-modal .inp-field select:focus { border-color:#4f46e5 !important; outline:none; box-shadow:0 0 0 3px rgba(79,70,229,.18); }
+    #collab-v-list th.cc-ab, #collab-v-list td.cc-ab { background:rgba(14,165,233,.13); } #collab-v-list th.cc-ab { background:rgba(14,165,233,.28); color:#075985; }
+    #collab-v-list th.cc-sit, #collab-v-list td.cc-sit { background:rgba(22,163,74,.12); } #collab-v-list th.cc-sit { background:rgba(22,163,74,.27); color:#166534; }
+    #collab-v-list th.cc-cm, #collab-v-list td.cc-cm { background:rgba(234,88,12,.12); } #collab-v-list th.cc-cm { background:rgba(234,88,12,.27); color:#9a3412; }
+    #collab-v-list th.cc-bl, #collab-v-list td.cc-bl { background:rgba(147,51,234,.12); } #collab-v-list th.cc-bl { background:rgba(147,51,234,.27); color:#6b21a8; }
     .collab-box { border:1.5px solid rgba(71,85,105,.45) !important; box-shadow:0 2px 10px rgba(30,41,59,.12) !important; }
     .collab-box.row { flex-direction:row !important; flex-wrap:wrap; }
     .cb-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:.7rem; font-weight:800; margin:1px 3px 1px 0; color:#fff; white-space:nowrap; }
@@ -1648,7 +1652,7 @@
                 <label class="ex-chip"><input type="checkbox" id="collab-fscad" onchange="collabRenderList()">Solo con scadenze</label>
                 <span id="collab-count" style="font-weight:700; color:#64748b"></span>
             </div>
-            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th>Mansione</th><th>Scad. brevetto AB</th><th>Scad. brevetto SIT</th><th>Scad. CM</th><th>Scad. BLSD</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
+            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th class="cc-ab">Assistente bagnanti</th><th class="cc-sit">Istruttore</th><th class="cc-cm">Scad. CM</th><th class="cc-bl">Scad. BLSD</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
         </div>
         <div id="collab-v-io" class="hidden">
             <div class="ex-grid">
@@ -3822,6 +3826,7 @@ function collabNormVal(type, v) {
     if (type === 'num') return collabNormNum(v);
     if (v instanceof Date) return collabIso(v);
     let t = String(v == null ? '' : v).trim();
+    if (/^[-–—]$/.test(t)) return (type === 'selSalv' || type === 'selSit') ? 'Nessun brevetto' : '';
     if (type === 'cf') t = t.toUpperCase().replace(/\s/g, '');
     else if (type === 'iban') t = t.toUpperCase().replace(/\s/g, '');
     else if (type === 'email') t = t.toLowerCase();
@@ -3899,19 +3904,21 @@ window.collabRenderList = () => {
     let R = L.filter(c => (!q || collabNorm([c.cognome, c.nome, c.cf, c.mansione, c.mansione2, c.mansione3, c.tipoContratto].join(' ')).includes(q)) && (!fm.value || [c.mansione, c.mansione2, c.mansione3].includes(fm.value)) && (!onlyScad || collabAlerts([c]).length));
     R.sort((a, b) => (a.cognome || '').localeCompare(b.cognome || '', 'it') || (a.nome || '').localeCompare(b.nome || '', 'it'));
     document.getElementById('collab-count').innerText = `${R.length} di ${L.length}`;
-    const mansCell = (c) => [c.mansione, c.mansione2, c.mansione3].filter(Boolean).map(m => `<div style="margin:2px 0; font-weight:700">${collabEsc(m)}</div>`).join('');
-    const scadCell = (v) => { if (!v) return '<span style="color:#cbd5e1">—</span>'; if (!collabIsoOk(v)) return collabEsc(v); const d = Math.round((new Date(v + 'T12:00:00') - new Date(fmtDateISO(new Date()) + 'T12:00:00')) / 86400000); const col = d < 0 ? '#dc2626' : d <= 30 ? '#ea580c' : d <= 60 ? '#ca8a04' : '#334155'; return `<span style="font-weight:700; color:${col}; white-space:nowrap">${collabDM(v)}</span>`; };
+    const noBrev = (v) => !v || /^[-–—]$/.test(String(v).trim()) || /^nessun/i.test(String(v));
+    const mansCell = (c, rx, bk, sk) => { const has = [c.mansione, c.mansione2, c.mansione3].some(m => rx.test(collabNorm(m))); if (!has) return '<span style="color:#cbd5e1">—</span>'; const b = noBrev(c[bk]) ? '<span style="color:#64748b; font-weight:700">Nessun Brevetto</span>' : `<b>${collabEsc(c[bk])}</b>`; return `<div>${b}</div><div style="margin-top:3px">${scadCell(c[sk])}</div>`; };
+    const sexIc = (c) => c.sesso === 'M' ? '<span title="Maschio" style="color:#2563eb; font-weight:900; font-size:1.15rem"> ♂</span>' : c.sesso === 'F' ? '<span title="Femmina" style="color:#db2777; font-weight:900; font-size:1.15rem"> ♀</span>' : '';
+    const scadCell = (v) => { if (!v || /^[-–—]$/.test(String(v).trim())) return '<span style="color:#cbd5e1">—</span>'; if (!collabIsoOk(v)) return collabEsc(v); const d = Math.round((new Date(v + 'T12:00:00') - new Date(fmtDateISO(new Date()) + 'T12:00:00')) / 86400000); const col = d < 0 ? '#dc2626' : d <= 30 ? '#ea580c' : d <= 60 ? '#ca8a04' : '#334155'; return `<span style="font-weight:700; color:${col}; white-space:nowrap">${collabDM(v)}</span>`; };
     tb.innerHTML = R.map(c => {
         const al = collabAlerts([c].map(x => ({ ...x, scadCM: '', scadBlsd: '' }))).map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}" title="${a.lab}: ${collabDM(a.date)}">${a.lab.replace('Brevetto ', 'Brev. ').replace('Certificato medico', 'CM')} · ${st.t}</span>`; }).join('');
-        const mans = [c.mansione, c.mansione2, c.mansione3].filter(Boolean).join(' · ');
-        return `<tr style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}</div></td><td>${mansCell(c)}</td><td>${scadCell(c.scadBrevSalv)}</td><td>${scadCell(c.scadBrevSit)}</td><td>${scadCell(c.scadCM)}</td><td>${scadCell(c.scadBlsd)}</td><td onclick="event.stopPropagation()"><button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
-    }).join('') || '<tr><td colspan="7" style="text-align:center; padding:24px; color:#94a3b8">Nessun collaboratore trovato.</td></tr>';
+        const altre = [c.mansione, c.mansione2, c.mansione3].filter(m => m && !/assistente|istruttore/.test(collabNorm(m))).join(' · ');
+        return `<tr style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sexIc(c)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}${altre ? ' · ' + collabEsc(altre) : ''}</div></td><td class="cc-ab">${mansCell(c, /assistente/, 'brevSalv', 'scadBrevSalv')}</td><td class="cc-sit">${mansCell(c, /istruttore/, 'brevSit', 'scadBrevSit')}</td><td class="cc-cm">${scadCell(c.scadCM)}</td><td class="cc-bl">${scadCell(c.scadBlsd)}</td><td onclick="event.stopPropagation()"><button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
+    }).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px; color:#94a3b8">Nessun collaboratore trovato.</td></tr>';
 };
 window.collabEdit = (id) => {
     const c = id ? dataCollab.find(x => x.id === id) : null; collabEditId = id || null;
     const groups = []; COLLAB_FIELDS.forEach(f => { let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
-    const inp = (f) => { const v = c ? (c[f[0]] == null ? '' : c[f[0]]) : ''; const t = f[2];
-        if (t === 'selSalv' || t === 'selSit') { const opts = t === 'selSalv' ? ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'] : ['Istruttore', 'Aiuto Allenatore', 'Allenatore']; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
+    const inp = (f) => { let v = c ? (c[f[0]] == null ? '' : c[f[0]]) : ''; const t = f[2]; if (/^[-–—]$/.test(String(v).trim())) v = (t === 'selSalv' || t === 'selSit') ? 'Nessun brevetto' : '';
+        if (t === 'selSalv' || t === 'selSit') { const opts = t === 'selSalv' ? ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'] : ['Istruttore', 'Aiuto Allenatore', 'Allenatore', 'Nessun brevetto']; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
         if (t === 'sex') return `<select id="cf-${f[0]}"><option value=""></option><option value="M" ${v === 'M' ? 'selected' : ''}>M</option><option value="F" ${v === 'F' ? 'selected' : ''}>F</option></select>`;
         if (t === 'date') return collabIsoOk(v) || v === '' ? `<input type="date" id="cf-${f[0]}" value="${v}">` : `<input type="text" id="cf-${f[0]}" value="${collabEsc(v)}" title="Testo non riconosciuto come data">`;
         if (t === 'num') return `<input type="text" inputmode="decimal" id="cf-${f[0]}" value="${collabEsc(v)}">`;
