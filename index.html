@@ -170,6 +170,8 @@
     #collab-v-list th.cc-bl, #collab-v-list td.cc-bl { background:rgba(147,51,234,.12); } #collab-v-list th.cc-bl { background:rgba(147,51,234,.27); color:#6b21a8; }
     .cm-sec { background:rgba(var(--sc),.09); border:2px solid rgba(var(--sc),.45); border-radius:16px; padding:6px 16px 16px; margin-top:14px; }
     #collab-modal .cm-sec h4 { margin:10px 0 10px; color:rgb(var(--sc)); filter:brightness(.8); font-size:.85rem; }
+    .cm-addr { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:20; background:#fff; border:1.5px solid #94a3b8; border-radius:12px; box-shadow:0 10px 28px rgba(15,23,42,.25); max-height:270px; overflow-y:auto; min-width:280px; }
+    .cm-addr:empty { display:none; } .cm-addr div { padding:9px 13px; cursor:pointer; font-size:.88rem; border-bottom:1px solid #e2e8f0; } .cm-addr div:last-child { border-bottom:0; } .cm-addr div:hover { background:#eef2ff; } .cm-addr small { display:block; color:#64748b; font-size:.74rem; }
     .cm-grid3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; flex:1; }
     .cm-brev { display:flex; align-items:flex-end; gap:12px; margin-bottom:10px; } .cm-brev-t { width:90px; flex:none; font-weight:800; font-size:.8rem; padding-bottom:14px; color:#166534; }
     @media (max-width:700px) { .cm-brev { flex-direction:column; align-items:stretch; } .cm-grid3 { grid-template-columns:1fr; } .cm-brev-t { padding:0; } }
@@ -2004,7 +2006,7 @@ function startListening() {
         }, errHandler);
 
         if (exportAllowed) onSnapshot(collection(db, "collaboratori"), (snap) => {
-            dataCollab = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            dataCollab = snap.docs.map(d => { const o = { id: d.id, ...d.data() }; ['mansione', 'mansione2', 'mansione3'].forEach(k => { if (o[k]) o[k] = collabMansCanon(o[k]); }); return o; });
             try { collabBadge(); if (!document.getElementById('module-collab').classList.contains('hidden')) collabRender(); } catch (e) { console.warn('collab', e); }
         }, (e) => { console.warn('collaboratori non leggibili (regole Firestore da aggiornare?)', e); showToast('Collaboratori: pubblica le regole Firestore aggiornate', 'error'); });
 
@@ -3793,15 +3795,17 @@ let dataCollab = [], collabSeason = null, collabPending = null, collabEditId = n
 const COLLAB_FIELDS = [
     // [chiave, etichetta, tipo, gruppo]
     ['cognome','Cognome','text','Anagrafica'],['nome','Nome','text','Anagrafica'],['sesso','Sesso','sex','Anagrafica'],['cf','Codice Fiscale','cf','Anagrafica'],['natoA','Nato a','text','Anagrafica'],['dataNascita','Data di nascita','date','Anagrafica'],
-    ['mansione','Mansione','text','Mansioni'],['mansione2','Mansione 2','text','Mansioni'],['mansione3','Mansione 3','text','Mansioni'],
+    ['mansione','Mansione','selMans','Mansioni'],['mansione2','Mansione 2','selMans','Mansioni'],['mansione3','Mansione 3','selMans','Mansioni'],
     ['brevSalv','Brevetto Salvamento','selSalv','Brevetti e abilitazioni'],['nBrevSalv','N. Brevetto Salv.','text','Brevetti e abilitazioni'],['scadBrevSalv','Scadenza brevetto Salv.','date','Brevetti e abilitazioni'],
     ['brevSit','Brevetto SIT','selSit','Brevetti e abilitazioni'],['nBrevSit','N. Brevetto SIT','text','Brevetti e abilitazioni'],['scadBrevSit','Scadenza brevetto SIT','date','Brevetti e abilitazioni'],
     ['brevBlsd','Brevetto BLSD','text','Brevetti e abilitazioni'],['scadBlsd','Scadenza BLSD','date','Brevetti e abilitazioni'],
     ['certMedico','Certificato medico','text','Documenti'],['scadCM','Scadenza CM','date','Documenti'],['casellario','Casellario giudiziario','text','Documenti'],['cartaIdentita',"Carta d'identità",'text','Documenti'],
     ['via','Via Residenza','text','Residenza e contatti'],['cap','CAP','text','Residenza e contatti'],['comune','Comune Residenza','text','Residenza e contatti'],['provincia','Provincia','text','Residenza e contatti'],['cellulare','Cellulare','tel','Residenza e contatti'],['mail','Mail','email','Residenza e contatti'],['iban','IBAN','iban','Residenza e contatti'],
-    ['altriCorsiFin','Altri corsi FIN','text','Formazione'],['istruzione','Livello di Istruzione','text','Formazione'],['formGenerale','Formazione generale','text','Formazione'],['formSpecifica','Formazione specifica','text','Formazione'],['formAntincendio','Formazione antincendio','text','Formazione'],['formPrimoSoccorso','Formazione Primo Soccorso','text','Formazione'],
+    ['altriCorsiFin','Altri corsi FIN','text','Formazione'],['istruzione','Livello di Istruzione','selIstr','Formazione'],['formGenerale','Formazione generale','text','Formazione'],['formSpecifica','Formazione specifica','text','Formazione'],['formAntincendio','Formazione antincendio','text','Formazione'],['formPrimoSoccorso','Formazione Primo Soccorso','text','Formazione'],
     ['tipoContratto','Tipo di contratto','text','Contratto'],['inizioContratto','Inizio contratto','date','Contratto'],['fineContratto','Fine contratto','date','Contratto'],['altriContratti','Altri contratti in essere','text','Contratto'],['oreSettimanali','Ore settimanali','num','Contratto'],['stimaStipendio','Stima stipendio','num','Contratto']
 ];
+const COLLAB_MANS = ['Assistente bagnanti', 'Istruttore', 'Segretario/a', 'Manutentore', 'Direttore'];
+const collabMansCanon = (v) => { const n = String(v == null ? '' : v).toLowerCase(); if (!n.trim()) return ''; if (n.includes('assistente')) return 'Assistente bagnanti'; if (n.includes('istruttore')) return 'Istruttore'; if (n.includes('segret')) return 'Segretario/a'; if (n.includes('manutent')) return 'Manutentore'; if (n.includes('direttor')) return 'Direttore'; return String(v).trim(); };
 const collabNorm = (t) => String(t == null ? '' : t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 const COLLAB_HEAD = (() => { const m = {}; COLLAB_FIELDS.forEach(f => { m[collabNorm(f[1])] = f[0]; }); m['cartadidentita'] = 'cartaIdentita'; m['cartadidenita'] = 'cartaIdentita'; m['cartadiidentita'] = 'cartaIdentita'; m['cartadiidenita'] = 'cartaIdentita'; m['stimastipendio'] = 'stimaStipendio'; return m; })();
 const COLLAB_SCAD = [['scadBrevSalv', 'Brevetto salvamento'], ['scadBrevSit', 'Brevetto SIT'], ['scadBlsd', 'BLSD'], ['scadCM', 'Certificato medico']];
@@ -3817,6 +3821,8 @@ function collabNormDate(v) {
     if (collabIsoOk(t)) return t;
     const m = t.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
     if (m) { let y = +m[3]; if (y < 100) y += y < 70 ? 2000 : 1900; return `${y}-${String(+m[2]).padStart(2, '0')}-${String(+m[1]).padStart(2, '0')}`; }
+    const e = t.match(/(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})/);
+    if (e) return `${e[3]}-${String(+e[2]).padStart(2, '0')}-${String(+e[1]).padStart(2, '0')}`;
     return t;
 }
 function collabNormNum(v) {
@@ -3832,6 +3838,7 @@ function collabNormVal(type, v) {
     if (v instanceof Date) return collabIso(v);
     let t = String(v == null ? '' : v).trim();
     if (/^[-–—]$/.test(t)) return (type === 'selSalv' || type === 'selSit') ? 'Nessun brevetto' : '';
+    if (type === 'selMans') return collabMansCanon(t);
     if (type === 'cf') t = t.toUpperCase().replace(/\s/g, '');
     else if (type === 'iban') t = t.toUpperCase().replace(/\s/g, '');
     else if (type === 'email') t = t.toLowerCase();
@@ -3922,24 +3929,58 @@ window.collabRenderList = () => {
 window.collabEdit = (id) => {
     const c = id ? dataCollab.find(x => x.id === id) : null; collabEditId = id || null;
     const GCOL = { 'Anagrafica': '79,70,229', 'Mansioni': '14,165,233', 'Brevetti e abilitazioni': '22,163,74', 'Documenti': '234,88,12', 'Residenza e contatti': '219,39,119', 'Formazione': '147,51,234', 'Contratto': '202,138,4' };
-    const groups = []; COLLAB_FIELDS.forEach(f => { let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
+    const groups = []; COLLAB_FIELDS.forEach(f => { if (f[0] === 'certMedico') return; let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
     const inp = (f) => { let v = c ? (c[f[0]] == null ? '' : c[f[0]]) : ''; const t = f[2]; if (/^[-–—]$/.test(String(v).trim())) v = (t === 'selSalv' || t === 'selSit') ? 'Nessun brevetto' : '';
-        if (t === 'selSalv' || t === 'selSit') { const opts = t === 'selSalv' ? ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'] : ['Istruttore', 'Aiuto Allenatore', 'Allenatore', 'Nessun brevetto']; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
+        if (t === 'selSalv' || t === 'selSit' || t === 'selIstr' || t === 'selMans') { const opts = { selMans: COLLAB_MANS, selSalv: ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'], selSit: ['Istruttore', 'Aiuto Allenatore', 'Allenatore', 'Nessun brevetto'], selIstr: ['Licenza elementare', 'Licenza media', 'Qualifica professionale', 'Diploma di scuola secondaria di II grado', 'Laurea triennale', 'Laurea magistrale / ciclo unico', 'Master / Dottorato'] }[t]; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
+        if (f[0] === 'via') return `<div style="position:relative"><input type="text" id="cf-via" value="${collabEsc(v)}" autocomplete="off" placeholder="Inizia a scrivere l'indirizzo…" oninput="collabAddr(this)"><div id="collab-addr-list" class="cm-addr"></div></div>`;
         if (t === 'sex') return `<select id="cf-${f[0]}"><option value=""></option><option value="M" ${v === 'M' ? 'selected' : ''}>M</option><option value="F" ${v === 'F' ? 'selected' : ''}>F</option></select>`;
-        if (t === 'date') return collabIsoOk(v) || v === '' ? `<input type="date" id="cf-${f[0]}" value="${v}">` : `<input type="text" id="cf-${f[0]}" value="${collabEsc(v)}" title="Testo non riconosciuto come data">`;
+        if (t === 'date') { const dv = collabNormDate(v); return `<input type="date" id="cf-${f[0]}" value="${collabIsoOk(dv) ? dv : ''}">`; }
         if (t === 'num') return `<input type="text" inputmode="decimal" id="cf-${f[0]}" value="${collabEsc(v)}">`;
         return `<input type="${t === 'email' ? 'email' : t === 'tel' ? 'tel' : 'text'}" id="cf-${f[0]}" value="${collabEsc(v)}">`; };
     const m = document.createElement('div'); m.id = 'collab-modal'; m.onclick = (e) => { if (e.target === m) m.remove(); };
     m.innerHTML = `<div class="cm-box"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px"><h3 style="margin:0; font-size:1.2rem">${c ? '✏️ ' + collabEsc((c.cognome || '') + ' ' + (c.nome || '')) : '➕ Nuovo collaboratore'} <span style="font-size:.8rem; color:#64748b; font-weight:600">· stagione ${collabSeason}</span></h3><button class="btn" onclick="document.getElementById('collab-modal').remove()">✕</button></div>
         ${groups.map(([g, fs]) => { const col = GCOL[g] || '100,116,139'; const fld = (f) => `<div class="inp-field"><label>${f[1]}</label>${inp(f)}</div>`;
             let body; if (g === 'Brevetti e abilitazioni') { const rows = [['Salvamento', ['brevSalv', 'nBrevSalv', 'scadBrevSalv']], ['SIT', ['brevSit', 'nBrevSit', 'scadBrevSit']], ['BLSD', ['brevBlsd', 'scadBlsd']]]; body = rows.map(([t, ks]) => `<div class="cm-brev"><div class="cm-brev-t">${t}</div><div class="cm-grid3">${ks.map(k => fld(fs.find(f => f[0] === k))).join('')}</div></div>`).join(''); }
+            else if (g === 'Formazione') { const rows = [['altriCorsiFin', 'istruzione'], ['formGenerale', 'formSpecifica', 'formAntincendio', 'formPrimoSoccorso']]; body = rows.map(ks => `<div class="cm-grid" style="grid-template-columns:repeat(4,minmax(0,1fr)); margin-bottom:10px">${ks.map(k => fld(fs.find(f => f[0] === k))).join('')}</div>`).join(''); }
             else body = `<div class="cm-grid">${fs.map(fld).join('')}</div>`;
             return `<div class="cm-sec" style="--sc:${col}"><h4>${g}</h4>${body}</div>`; }).join('')}
         <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px">${c ? `<button class="btn" style="color:#dc2626; border:1px solid #fecaca" onclick="collabDelete('${c.id}'); document.getElementById('collab-modal').remove()">🗑️ Elimina</button>` : ''}<button class="btn btn-primary" onclick="collabSave()">💾 Salva</button></div></div>`;
     const old = document.getElementById('collab-modal'); if (old) old.remove(); document.body.appendChild(m);
 };
+// Autocompletamento indirizzo (Photon/OpenStreetMap) per "Via Residenza"
+let collabAddrT = null, collabAddrRes = [], collabAddrSeq = 0;
+window.collabAddr = (inp) => {
+    clearTimeout(collabAddrT); const box = document.getElementById('collab-addr-list'), q = inp.value.trim();
+    if (q.length < 4) { box.innerHTML = ''; return; }
+    const my = ++collabAddrSeq;
+    collabAddrT = setTimeout(async () => {
+        try {
+            const r = await fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&lang=it&limit=10&lat=45.46&lon=9.19'); const j = await r.json();
+            if (my !== collabAddrSeq) return;
+            const seen = new Set(); collabAddrRes = [];
+            (j.features || []).forEach(ft => { const p = ft.properties || {}; if (p.countrycode && p.countrycode !== 'IT') return; const street = p.street || p.name; if (!street) return;
+                const city = p.city || p.town || p.village || p.locality || p.county || '', num = p.housenumber || '', label = street + (num ? ' ' + num : ''), sub = [p.postcode, city, p.county && p.county !== city ? p.county : ''].filter(Boolean).join(' · '), key = label + '|' + sub; if (seen.has(key)) return; seen.add(key);
+                collabAddrRes.push({ label, street, num, city, postcode: p.postcode || '', sub, lon: ft.geometry?.coordinates?.[0], lat: ft.geometry?.coordinates?.[1] }); });
+            box.innerHTML = collabAddrRes.slice(0, 6).map((a, i) => `<div onmousedown="collabAddrPick(${i}); event.preventDefault()">${collabEsc(a.label)}<small>${collabEsc(a.sub)}</small></div>`).join('');
+        } catch (e) { box.innerHTML = ''; }
+    }, 350);
+};
+window.collabAddrPick = async (i) => {
+    const a = collabAddrRes[i]; if (!a) return; const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+    const typed = (document.getElementById('cf-via').value.match(/\b(\d+\s?[a-zA-Z]?(?:\/\w+)?)\b/) || [])[1] || '';
+    set('cf-via', a.street + (a.num || typed ? ' ' + (a.num || typed) : '')); set('cf-comune', a.city); set('cf-cap', a.postcode);
+    document.getElementById('collab-addr-list').innerHTML = ''; collabAddrSeq++;
+    if (a.lat == null) return;
+    try {
+        const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&zoom=18&accept-language=it&lat=${a.lat}&lon=${a.lon}`), j = await r.json(), ad = j.address || {};
+        const sig = (ad['ISO3166-2-lvl6'] || '').replace(/^IT-/, ''); if (sig) set('cf-provincia', sig);
+        const cap = document.getElementById('cf-cap'); if (cap && !cap.value && ad.postcode) cap.value = ad.postcode.split(';')[0];
+        const com = document.getElementById('cf-comune'); if (com && !com.value) com.value = ad.city || ad.town || ad.village || ad.municipality || '';
+    } catch (e) { /* provincia/CAP restano da completare a mano */ }
+};
+document.addEventListener('click', (e) => { const b = document.getElementById('collab-addr-list'); if (b && e.target.id !== 'cf-via') b.innerHTML = ''; });
 window.collabSave = async () => {
-    const r = {}; COLLAB_FIELDS.forEach(f => { r[f[0]] = collabNormVal(f[2], document.getElementById('cf-' + f[0]).value); });
+    const r = {}; COLLAB_FIELDS.forEach(f => { const el = document.getElementById('cf-' + f[0]); if (!el) return; if (f[2] === 'date' && el.value === '') { const old = collabEditId && (dataCollab.find(x => x.id === collabEditId) || {})[f[0]]; if (old && !collabIsoOk(old) && !/^[-–—]$/.test(String(old).trim())) return; } r[f[0]] = collabNormVal(f[2], el.value); });
     if (!r.cognome || !r.nome) return showToast('Cognome e nome sono obbligatori', 'error');
     const id = collabEditId || collabDocId(collabSeason, r);
     if (!collabEditId && dataCollab.some(d => d.id === id) && !confirm('Esiste già un collaboratore con questo codice fiscale / nome in questa stagione. Sovrascriverlo?')) return;
