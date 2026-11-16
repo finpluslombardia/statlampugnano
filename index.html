@@ -1146,7 +1146,8 @@
             <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>🎯 Obiettivi</h3><span>Imposta un obiettivo di incasso per il mese o la stagione e segui l&apos;avanzamento</span></div>
                 <div class="ov-hl-grid" id="iov-goals" style="margin-bottom:0"></div>
             </div>
-            <div class="stat-section" style="--sc:37,99,235"><div class="stat-section-head"><h3>📅 Confronto Mensile</h3><span>Scegli il mese da confrontare con lo stesso mese dell'anno scorso</span><input type="month" id="inc-kpi-month-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8); margin-left:auto" onchange="renderIncassi()"></div>
+            <div class="stat-section" style="--sc:37,99,235"><div class="stat-section-head"><h3>📅 Confronto Mensile</h3><span>Scegli il mese da confrontare con lo stesso mese dell'anno scorso</span><select id="inc-kpi-mode" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8); margin-left:auto" onchange="renderIncassi()" title="Periodo da confrontare con lo stesso mese dell'anno scorso"><option value="full">📅 Mese intero</option><option value="today">📆 Fino a oggi</option><option value="last">📍 Fino all'ultimo giorno registrato</option></select>
+            <input type="month" id="inc-kpi-month-selector" class="filter-select" style="font-weight:700; background:rgba(255,255,255,0.8)" onchange="renderIncassi()"></div>
             <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 25px;">
                 <div class="kpi-card glass-card">
                     <div class="kpi-head">💰 Incasso Totale</div>
@@ -4467,8 +4468,17 @@ function renderIncassiOverview() {
     const thisMonth = kpiDateObj.getMonth(), thisYear = kpiDateObj.getFullYear(), prevYearM = thisYear - 1;
     const monthName = kpiDateObj.toLocaleString('it-IT', { month: 'long' });
 
+    // Periodo di confronto: mese intero / fino a oggi / fino all'ultimo giorno registrato (stessi giorni anche per l'anno scorso)
+    const cmpMode = (document.getElementById('inc-kpi-mode') || {}).value || 'full';
+    const ymOf = (d) => [+d.date.slice(0, 4), +d.date.slice(5, 7) - 1, +d.date.slice(8, 10)];
+    const nowSD = new Date(), isNowMonth = nowSD.getFullYear() === thisYear && nowSD.getMonth() === thisMonth;
+    let cutDay = 31;
+    if (cmpMode === 'today' && isNowMonth) cutDay = nowSD.getDate();
+    else if (cmpMode === 'last') { const ds = dataIncassi.map(ymOf).filter(x => x[0] === thisYear && x[1] === thisMonth).map(x => x[2]); if (ds.length) cutDay = Math.max(...ds); }
+    const monthLenSD = new Date(thisYear, thisMonth + 1, 0).getDate();
+    const partial = cutDay < monthLenSD;
     const sumMonth = (year, month) => {
-        const rows = dataIncassi.filter(d => { const dt = new Date(d.date); return dt.getFullYear() === year && dt.getMonth() === month; });
+        const rows = dataIncassi.filter(d => { const [y, m, dd] = ymOf(d); return y === year && m === month && dd <= cutDay; });
         const s = { tot: 0, n4: 0, ss: 0, ingressi: 0, abbonamenti: 0, accessori: 0, fatture: 0 };
         rows.forEach(d => {
             s.tot += d.incasso_totale || 0; s.n4 += d.corsi_n4_tot || 0; s.ss += d.societa_sportive_tot || 0;
@@ -4483,7 +4493,7 @@ function renderIncassiOverview() {
     const yoyFull = (c, p) => { if (!p) return ''; const delta = ((c-p)/p)*100; const sign = delta>=0?'+':''; const col = delta>=0?'#16a34a':'#dc2626'; const arr = delta>=0?'\u25b2':'\u25bc'; return `<span style="color:${col}">${arr} ${sign}${delta.toFixed(1)}% vs ${prevYearM}</span>`; };
 
     document.getElementById('inc-kpi-tot-val').innerText = fmtEUR(curr.tot);
-    document.getElementById('inc-kpi-tot-sub').innerText = monthName.charAt(0).toUpperCase()+monthName.slice(1) + ' ' + thisYear;
+    document.getElementById('inc-kpi-tot-sub').innerText = partial ? `${monthName.charAt(0).toUpperCase()+monthName.slice(1)} ${thisYear} · dal 1 al ${cutDay} (stessi giorni ${prevYearM})` : monthName.charAt(0).toUpperCase()+monthName.slice(1) + ' ' + thisYear;
     document.getElementById('inc-kpi-tot-context').innerHTML = yoyFull(curr.tot, prev.tot);
     document.getElementById('inc-kpi-n4-val').innerText = fmtEUR(curr.n4);
     document.getElementById('inc-kpi-n4-sub').innerHTML = yoyFull(curr.n4, prev.n4);
