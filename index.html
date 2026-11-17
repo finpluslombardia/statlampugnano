@@ -3943,13 +3943,14 @@ function collabPhone(v) {
     if (d.length >= 9 && d.length <= 10 && d.startsWith('3')) return '39' + d;
     return d.length >= 9 ? d : '';
 }
-function collabContactBtns(c) {
+function collabContactBtns(c, mode) {
     const ph = collabPhone(c.cellulare), mail = /^\S+@\S+\.\S+$/.test(c.mail || '') ? c.mail : '';
     const st = 'display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; margin-right:6px; text-decoration:none; font-size:1.05rem;';
     const wa = ph ? `<a href="https://wa.me/${ph}" target="_blank" rel="noopener" title="Scrivi su WhatsApp a ${collabEsc(c.nome || '')} (${collabEsc(c.cellulare)})" style="${st} background:#dcfce7; border:1.5px solid #22c55e; color:#15803d">💬</a>` : `<span title="Cellulare mancante" style="${st} background:#f1f5f9; border:1.5px dashed #cbd5e1; opacity:.5">💬</span>`;
     const ml = mail ? `<a href="mailto:${collabEsc(mail)}" title="Scrivi una mail a ${collabEsc(mail)}" style="${st} background:#dbeafe; border:1.5px solid #3b82f6; color:#1d4ed8">✉️</a>` : `<span title="Mail mancante" style="${st} background:#f1f5f9; border:1.5px dashed #cbd5e1; opacity:.5">✉️</span>`;
     const pdf = `<button onclick="collabPdf('${c.id}')" title="Scarica la scheda in PDF (A4)" style="${st} background:#fee2e2; border:1.5px solid #ef4444; color:#b91c1c; cursor:pointer; font-size:.7rem; font-weight:800">PDF</button>`;
-    return wa + ml + pdf;
+    const ed = `<button onclick="collabEdit('${c.id}')" title="Modifica" style="${st} background:#e0e7ff; border:1.5px solid #6366f1; color:#4338ca; cursor:pointer">✏️</button>`;
+    return wa + ml + (mode === 'row' ? ed : pdf);
 }
 // ---- Scadenze + messaggi pre-impostati ----
 const COLLAB_TPL_DEF = {
@@ -4017,8 +4018,8 @@ window.collabView = (id) => {
     const sex = c.sesso === 'M' ? '<span style="color:#2563eb"> ♂</span>' : c.sesso === 'F' ? '<span style="color:#db2777"> ♀</span>' : '';
     const today = new Date(fmtDateISO(new Date()) + 'T12:00:00');
     const val = (f) => { const t = collabFmt(f, c); if (!t) return '<span style="color:#cbd5e1">—</span>';
-        let badge = ''; if (COLLAB_SCAD_KEYS.includes(f[0]) && collabIsoOk(c[f[0]])) { const st = collabStatus(Math.round((new Date(c[f[0]] + 'T12:00:00') - today) / 86400000)); if (st.col !== '#ca8a04' || true) badge = ` <span class="cb-badge" style="background:${st.col}">${st.t}</span>`; }
-        return `<b>${collabEsc(t)}</b>${badge}`; };
+        let col = ''; if (COLLAB_SCAD_KEYS.includes(f[0]) && collabIsoOk(c[f[0]])) { const d = Math.round((new Date(c[f[0]] + 'T12:00:00') - today) / 86400000); col = d < 0 ? '#dc2626' : d <= 30 ? '#ea580c' : d <= 60 ? '#ca8a04' : ''; }
+        return `<b${col ? ` style="color:${col}"` : ''}>${collabEsc(t)}</b>`; };
     const m = document.createElement('div'); m.id = 'collab-modal'; m.onclick = (e) => { if (e.target === m) m.remove(); };
     m.innerHTML = `<div class="cm-box"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
         <div><h3 style="margin:0; font-size:1.35rem">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sex}</h3><div style="font-size:.8rem; color:#64748b; font-weight:600">Stagione ${collabEsc(c.stagione || collabSeason)}${c.cf ? ' · ' + collabEsc(c.cf) : ''}</div></div>
@@ -4089,7 +4090,7 @@ window.collabRenderList = () => {
     tb.innerHTML = R.map(c => {
         const al = collabAlerts([c].map(x => ({ ...x, scadCM: '', scadBlsd: '' }))).map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}" title="${a.lab}: ${collabDM(a.date)}">${a.lab.replace('Brevetto ', 'Brev. ').replace('Certificato medico', 'CM')} · ${st.t}</span>`; }).join('');
         const altre = [c.mansione, c.mansione2, c.mansione3].filter(m => m && !/assistente|istruttore/.test(collabNorm(m))).join(' · ');
-        return `<tr class="${isWater(c) ? '' : 'cr-other'}" style="cursor:pointer" onclick="collabView('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sexIc(c)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}${altre ? ' · ' + collabEsc(altre) : ''}</div></td><td class="cc-ab">${mansCell(c, 'brevSalv', 'scadBrevSalv')}</td><td class="cc-sit">${mansCell(c, 'brevSit', 'scadBrevSit')}</td><td class="cc-cm">${(!c.scadCM || /^[-–—]$/.test(String(c.scadCM).trim())) && !isWater(c) ? '' : scadCell(c.scadCM)}</td><td class="cc-bl">${blsdCell(c)}</td><td onclick="event.stopPropagation()" style="white-space:nowrap">${collabContactBtns(c)}<button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
+        return `<tr class="${isWater(c) ? '' : 'cr-other'}" style="cursor:pointer" onclick="collabView('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sexIc(c)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}${altre ? ' · ' + collabEsc(altre) : ''}</div></td><td class="cc-ab">${mansCell(c, 'brevSalv', 'scadBrevSalv')}</td><td class="cc-sit">${mansCell(c, 'brevSit', 'scadBrevSit')}</td><td class="cc-cm">${(!c.scadCM || /^[-–—]$/.test(String(c.scadCM).trim())) && !isWater(c) ? '' : scadCell(c.scadCM)}</td><td class="cc-bl">${blsdCell(c)}</td><td onclick="event.stopPropagation()" style="white-space:nowrap">${collabContactBtns(c, 'row')}<button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
     }).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px; color:#94a3b8">Nessun collaboratore trovato.</td></tr>';
 };
 window.collabEdit = (id) => {
