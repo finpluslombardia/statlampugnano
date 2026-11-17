@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Aggiunta libreria per Export Excel Reale (.xlsx) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
     :root {
@@ -3928,7 +3929,7 @@ function collabRenderOv() {
         </div></div>
         <div class="stat-section" style="--sc:220,38,38"><div class="stat-section-head"><h3>⏰ Scadenze da controllare</h3><span>Scadute o in scadenza entro 60 giorni</span></div>
         <div class="table-wrap glass-card" style="margin-bottom:0"><div style="overflow-x:auto"><table style="min-width:0"><thead><tr><th>Collaboratore</th><th>Documento</th><th>Scadenza</th><th>Stato</th></tr></thead><tbody>
-        ${al.length ? al.map(a => { const st = collabStatus(a.days); return `<tr style="cursor:pointer" onclick="collabEdit('${a.c.id}')"><td style="font-weight:700">${collabEsc(a.c.cognome)} ${collabEsc(a.c.nome)}</td><td>${a.lab}</td><td>${collabDM(a.date)}</td><td><span class="cb-badge" style="background:${st.col}">${st.t}</span></td></tr>`; }).join('') : '<tr><td colspan="4" style="text-align:center; padding:18px; color:#16a34a; font-weight:700">✅ Nessuna scadenza in arrivo</td></tr>'}
+        ${al.length ? al.map(a => { const st = collabStatus(a.days); return `<tr style="cursor:pointer" onclick="collabView('${a.c.id}')"><td style="font-weight:700">${collabEsc(a.c.cognome)} ${collabEsc(a.c.nome)}</td><td>${a.lab}</td><td>${collabDM(a.date)}</td><td><span class="cb-badge" style="background:${st.col}">${st.t}</span></td></tr>`; }).join('') : '<tr><td colspan="4" style="text-align:center; padding:18px; color:#16a34a; font-weight:700">✅ Nessuna scadenza in arrivo</td></tr>'}
         </tbody></table></div></div></div>
         <div class="stat-section" style="--sc:37,99,235"><div class="stat-section-head"><h3>🧭 Composizione</h3><span>Mansioni e contratti</span></div>
         <div class="ex-grid"><div class="ex-card"><h4 style="margin:0 0 8px">Per mansione</h4>${bars(cnt(c => [c.mansione, c.mansione2, c.mansione3]), 'Nessuna mansione inserita')}</div>
@@ -3947,7 +3948,8 @@ function collabContactBtns(c) {
     const st = 'display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:10px; margin-right:6px; text-decoration:none; font-size:1.05rem;';
     const wa = ph ? `<a href="https://wa.me/${ph}" target="_blank" rel="noopener" title="Scrivi su WhatsApp a ${collabEsc(c.nome || '')} (${collabEsc(c.cellulare)})" style="${st} background:#dcfce7; border:1.5px solid #22c55e; color:#15803d">💬</a>` : `<span title="Cellulare mancante" style="${st} background:#f1f5f9; border:1.5px dashed #cbd5e1; opacity:.5">💬</span>`;
     const ml = mail ? `<a href="mailto:${collabEsc(mail)}" title="Scrivi una mail a ${collabEsc(mail)}" style="${st} background:#dbeafe; border:1.5px solid #3b82f6; color:#1d4ed8">✉️</a>` : `<span title="Mail mancante" style="${st} background:#f1f5f9; border:1.5px dashed #cbd5e1; opacity:.5">✉️</span>`;
-    return wa + ml;
+    const pdf = `<button onclick="collabPdf('${c.id}')" title="Scarica la scheda in PDF (A4)" style="${st} background:#fee2e2; border:1.5px solid #ef4444; color:#b91c1c; cursor:pointer; font-size:.7rem; font-weight:800">PDF</button>`;
+    return wa + ml + pdf;
 }
 // ---- Scadenze + messaggi pre-impostati ----
 const COLLAB_TPL_DEF = {
@@ -3996,9 +3998,78 @@ window.collabRenderScad = () => {
     document.getElementById('collab-scad-count').innerText = `${G.length} collaborator${G.length === 1 ? 'e' : 'i'}`;
     const btn = 'display:inline-flex; align-items:center; gap:4px; height:34px; padding:0 11px; border-radius:10px; margin:2px 6px 2px 0; font-weight:700; font-size:.8rem; cursor:pointer;';
     tb.innerHTML = G.map(g => { const c = g.c, okPh = !!collabPhone(c.cellulare), okMl = /^\S+@\S+\.\S+$/.test(c.mail || '');
-        return `<tr><td style="font-weight:800; cursor:pointer" onclick="collabEdit('${c.id}')">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${c.sesso === 'M' ? '<span style="color:#2563eb"> ♂</span>' : c.sesso === 'F' ? '<span style="color:#db2777"> ♀</span>' : ''}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc([c.mansione, c.mansione2, c.mansione3].filter(Boolean).join(' · '))}</div></td>
+        return `<tr><td style="font-weight:800; cursor:pointer" onclick="collabView('${c.id}')">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${c.sesso === 'M' ? '<span style="color:#2563eb"> ♂</span>' : c.sesso === 'F' ? '<span style="color:#db2777"> ♀</span>' : ''}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc([c.mansione, c.mansione2, c.mansione3].filter(Boolean).join(' · '))}</div></td>
         <td>${g.items.map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}; margin-bottom:3px">${a.lab} · ${collabDM(a.date)} · ${st.t}</span>`; }).join('<br>')}</td>
         <td style="white-space:nowrap"><button style="${btn} background:${okPh ? '#dcfce7' : '#f1f5f9'}; border:1.5px solid ${okPh ? '#22c55e' : '#cbd5e1'}; ${okPh ? '' : 'opacity:.5'}" onclick="collabMsgSend('${c.id}','wa')">💬 WhatsApp</button><button style="${btn} background:${okMl ? '#dbeafe' : '#f1f5f9'}; border:1.5px solid ${okMl ? '#3b82f6' : '#cbd5e1'}; ${okMl ? '' : 'opacity:.5'}" onclick="collabMsgSend('${c.id}','mail')">✉️ Mail</button><button style="${btn} background:#fff; border:1.5px solid #94a3b8" onclick="collabMsgSend('${c.id}','copy')" title="Copia il testo">📋</button><button style="${btn} background:#fff; border:1.5px solid #94a3b8" onclick="collabMsgPreview('${c.id}')" title="Anteprima del messaggio">👁️</button></td></tr>`; }).join('') || '<tr><td colspan="3" style="text-align:center; padding:24px; color:#16a34a; font-weight:700">✅ Nessuna scadenza in questa categoria</td></tr>';
+};
+// ---- Scheda in sola lettura + PDF A4 ----
+const COLLAB_GCOL = { 'Anagrafica': '79,70,229', 'Mansioni': '14,165,233', 'Brevetti e abilitazioni': '22,163,74', 'Documenti': '234,88,12', 'Residenza e contatti': '219,39,119', 'Formazione': '147,51,234', 'Contratto': '202,138,4' };
+const COLLAB_SCAD_KEYS = ['scadBrevSalv', 'scadBrevSit', 'scadBlsd', 'scadCM'];
+function collabGroups() { const g = []; COLLAB_FIELDS.forEach(f => { let x = g.find(y => y[0] === f[3]); if (!x) g.push(x = [f[3], []]); x[1].push(f); }); return g; }
+function collabFmt(f, c) {
+    const v = c[f[0]]; if (v == null || v === '' || /^[-–—]$/.test(String(v).trim())) return '';
+    if (f[2] === 'date') return collabIsoOk(v) ? collabDM(v) : String(v);
+    if (f[2] === 'num') return typeof v === 'number' ? (f[0] === 'stimaStipendio' ? '€ ' + v.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : v.toLocaleString('it-IT')) : String(v);
+    return String(v);
+}
+window.collabView = (id) => {
+    const c = dataCollab.find(x => x.id === id); if (!c) return;
+    const sex = c.sesso === 'M' ? '<span style="color:#2563eb"> ♂</span>' : c.sesso === 'F' ? '<span style="color:#db2777"> ♀</span>' : '';
+    const today = new Date(fmtDateISO(new Date()) + 'T12:00:00');
+    const val = (f) => { const t = collabFmt(f, c); if (!t) return '<span style="color:#cbd5e1">—</span>';
+        let badge = ''; if (COLLAB_SCAD_KEYS.includes(f[0]) && collabIsoOk(c[f[0]])) { const st = collabStatus(Math.round((new Date(c[f[0]] + 'T12:00:00') - today) / 86400000)); if (st.col !== '#ca8a04' || true) badge = ` <span class="cb-badge" style="background:${st.col}">${st.t}</span>`; }
+        return `<b>${collabEsc(t)}</b>${badge}`; };
+    const m = document.createElement('div'); m.id = 'collab-modal'; m.onclick = (e) => { if (e.target === m) m.remove(); };
+    m.innerHTML = `<div class="cm-box"><div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap">
+        <div><h3 style="margin:0; font-size:1.35rem">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sex}</h3><div style="font-size:.8rem; color:#64748b; font-weight:600">Stagione ${collabEsc(c.stagione || collabSeason)}${c.cf ? ' · ' + collabEsc(c.cf) : ''}</div></div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">${collabContactBtns(c).replace(/margin-right:6px;/g, '')}<button class="btn btn-primary" onclick="collabEdit('${c.id}')">✏️ Modifica</button><button class="btn" onclick="document.getElementById('collab-modal').remove()">✕</button></div></div>
+        ${collabGroups().map(([g, fs]) => `<div class="cm-sec" style="--sc:${COLLAB_GCOL[g] || '100,116,139'}"><h4>${g}</h4><div class="cm-grid">${fs.map(f => `<div><div style="font-size:.7rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.03em">${f[1]}</div><div style="margin-top:2px; min-height:22px">${val(f)}</div></div>`).join('')}</div></div>`).join('')}</div>`;
+    const old = document.getElementById('collab-modal'); if (old) old.remove(); document.body.appendChild(m);
+};
+window.collabPdf = (id) => {
+    const c = dataCollab.find(x => x.id === id); if (!c) return;
+    const J = window.jspdf && window.jspdf.jsPDF; if (!J) return showToast('Libreria PDF non caricata: controlla la connessione e ricarica la pagina', 'error');
+    const doc = new J({ unit: 'mm', format: 'a4' }), W = 210, M = 12, CW = W - 2 * M, COLS = 3, CELL = CW / COLS;
+    const rgb = (k) => k.split(',').map(Number), clean = (t) => String(t == null ? '' : t).replace(/€/g, 'EUR').replace(/[–—]/g, '-').replace(/[^\x20-\x7E\xA0-\xFF]/g, '');
+    const today = new Date(fmtDateISO(new Date()) + 'T12:00:00');
+    // intestazione
+    doc.setFillColor(30, 41, 59); doc.rect(0, 0, W, 26, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.text(clean(`${c.cognome || ''} ${c.nome || ''}`.trim()), M, 12);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(203, 213, 225);
+    doc.text(clean(`Scheda collaboratore - Stagione sportiva ${c.stagione || collabSeason}${c.cf ? '  |  CF ' + c.cf : ''}`), M, 19);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(255, 255, 255); doc.text('CF Lampugnano', W - M, 12, { align: 'right' });
+    let y = 31;
+    const groups = collabGroups();
+    // calcolo altezze per adattare alla pagina
+    const layout = groups.map(([g, fs]) => { const rows = []; for (let i = 0; i < fs.length; i += COLS) rows.push(fs.slice(i, i + COLS)); return { g, rows }; });
+    doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+    const cellLines = (f) => doc.splitTextToSize(clean(collabFmt(f, c)) || '-', CELL - 5);
+    const rowH = (r) => 5.4 + Math.max(...r.map(f => cellLines(f).length)) * 3.9 + 1.6;
+    const total = layout.reduce((t, L) => t + 7.5 + L.rows.reduce((a, r) => a + rowH(r), 0) + 3, 0);
+    const avail = 297 - y - 14; const k = Math.min(1, avail / total);
+    layout.forEach(L => {
+        const col = rgb(COLLAB_GCOL[L.g] || '100,116,139'), h = L.rows.reduce((a, r) => a + rowH(r) * k, 0) + 7.5 * k;
+        doc.setFillColor(Math.round(col[0] * .09 + 255 * .91), Math.round(col[1] * .09 + 255 * .91), Math.round(col[2] * .09 + 255 * .91)); doc.setDrawColor(col[0], col[1], col[2]); doc.setLineWidth(.35);
+        doc.roundedRect(M, y, CW, h, 2, 2, 'FD');
+        doc.setFillColor(col[0], col[1], col[2]); doc.rect(M, y + 1.2, 1.6, 4.6 * k, 'F');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(col[0], col[1], col[2]); doc.text(clean(L.g).toUpperCase(), M + 4, y + 5.2 * k);
+        let yy = y + 7.5 * k;
+        L.rows.forEach(r => {
+            const rh = rowH(r) * k;
+            r.forEach((f, ci) => {
+                const x = M + ci * CELL + 4; doc.setFont('helvetica', 'normal'); doc.setFontSize(6.6); doc.setTextColor(100, 116, 139); doc.text(clean(f[1]).toUpperCase(), x, yy + 3.2 * k);
+                const t = collabFmt(f, c); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+                let tc = t ? [15, 23, 42] : [148, 163, 184];
+                if (t && COLLAB_SCAD_KEYS.includes(f[0]) && collabIsoOk(c[f[0]])) { const d = Math.round((new Date(c[f[0]] + 'T12:00:00') - today) / 86400000); tc = d < 0 ? [220, 38, 38] : d <= 30 ? [234, 88, 12] : d <= 60 ? [161, 98, 7] : tc; }
+                doc.setTextColor(tc[0], tc[1], tc[2]); doc.text(cellLines(f), x, yy + 7.6 * k);
+            });
+            yy += rh;
+        });
+        y += h + 3 * k;
+    });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(148, 163, 184);
+    doc.text(`Generato il ${collabDM(fmtDateISO(new Date()))} - Documento riservato: contiene dati personali`, M, 291);
+    doc.save(`Scheda_${clean(c.cognome).replace(/\W+/g, '')}_${clean(c.nome).replace(/\W+/g, '')}_${(c.stagione || collabSeason).replace('/', '-')}.pdf`);
 };
 window.collabRenderList = () => {
     const tb = document.getElementById('collab-tbody'); if (!tb) return;
@@ -4018,7 +4089,7 @@ window.collabRenderList = () => {
     tb.innerHTML = R.map(c => {
         const al = collabAlerts([c].map(x => ({ ...x, scadCM: '', scadBlsd: '' }))).map(a => { const st = collabStatus(a.days); return `<span class="cb-badge" style="background:${st.col}" title="${a.lab}: ${collabDM(a.date)}">${a.lab.replace('Brevetto ', 'Brev. ').replace('Certificato medico', 'CM')} · ${st.t}</span>`; }).join('');
         const altre = [c.mansione, c.mansione2, c.mansione3].filter(m => m && !/assistente|istruttore/.test(collabNorm(m))).join(' · ');
-        return `<tr class="${isWater(c) ? '' : 'cr-other'}" style="cursor:pointer" onclick="collabEdit('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sexIc(c)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}${altre ? ' · ' + collabEsc(altre) : ''}</div></td><td class="cc-ab">${mansCell(c, 'brevSalv', 'scadBrevSalv')}</td><td class="cc-sit">${mansCell(c, 'brevSit', 'scadBrevSit')}</td><td class="cc-cm">${(!c.scadCM || /^[-–—]$/.test(String(c.scadCM).trim())) && !isWater(c) ? '' : scadCell(c.scadCM)}</td><td class="cc-bl">${blsdCell(c)}</td><td onclick="event.stopPropagation()" style="white-space:nowrap">${collabContactBtns(c)}<button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
+        return `<tr class="${isWater(c) ? '' : 'cr-other'}" style="cursor:pointer" onclick="collabView('${c.id}')"><td style="font-weight:800">${collabEsc(c.cognome)} ${collabEsc(c.nome)}${sexIc(c)}<div style="font-weight:500; font-size:.72rem; color:#64748b">${collabEsc(c.cf || '')}${altre ? ' · ' + collabEsc(altre) : ''}</div></td><td class="cc-ab">${mansCell(c, 'brevSalv', 'scadBrevSalv')}</td><td class="cc-sit">${mansCell(c, 'brevSit', 'scadBrevSit')}</td><td class="cc-cm">${(!c.scadCM || /^[-–—]$/.test(String(c.scadCM).trim())) && !isWater(c) ? '' : scadCell(c.scadCM)}</td><td class="cc-bl">${blsdCell(c)}</td><td onclick="event.stopPropagation()" style="white-space:nowrap">${collabContactBtns(c)}<button class="btn btn-icon" style="color:#ef4444; background:#fef2f2" onclick="collabDelete('${c.id}')">🗑️</button></td></tr>`;
     }).join('') || '<tr><td colspan="6" style="text-align:center; padding:24px; color:#94a3b8">Nessun collaboratore trovato.</td></tr>';
 };
 window.collabEdit = (id) => {
