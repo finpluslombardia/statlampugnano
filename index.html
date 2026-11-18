@@ -4397,9 +4397,13 @@ function renderIncassiOverview() {
     // ===== Incasso Mese Corrente (MTD) vs stesso periodo mese anno precedente =====
     const realToday = new Date();
     const todayStr = fmtDateISO(realToday);
-    const curYear = realToday.getFullYear(), curMonthIdx = realToday.getMonth(), curDay = realToday.getDate();
+    const curYear = realToday.getFullYear(), curMonthIdx = realToday.getMonth();
+    // Il confronto arriva fino all'ultimo giorno con una registrazione nel mese (non fino a oggi)
+    const monthPrefix = `${curYear}-${String(curMonthIdx+1).padStart(2,'0')}`;
+    const lastInMonth = dataIncassi.map(d => d.date).filter(dt => dt.startsWith(monthPrefix) && dt <= todayStr).sort().pop();
+    const curDay = lastInMonth ? +lastInMonth.slice(8,10) : realToday.getDate();
     const monthStartStr = `${curYear}-${String(curMonthIdx+1).padStart(2,'0')}-01`;
-    const mtdCurrSum = dataIncassi.filter(d => d.date >= monthStartStr && d.date <= todayStr).reduce((s,d)=>s+(d.incasso_totale||0),0);
+    const mtdCurrSum = dataIncassi.filter(d => d.date >= monthStartStr && d.date <= `${monthPrefix}-${String(curDay).padStart(2,'0')}`).reduce((s,d)=>s+(d.incasso_totale||0),0);
 
     const prevY = curYear - 1;
     const prevMonthStartStr = `${prevY}-${String(curMonthIdx+1).padStart(2,'0')}-01`;
@@ -4423,8 +4427,8 @@ function renderIncassiOverview() {
     const daysElapsedInSeason = Math.floor((new Date(lastDate) - new Date(seasonStartDate)) / 86400000) + 1;
 
     const currSeasonDays = dataIncassi.filter(d => getSeasonLabel(getSeasonStartYear(d.date)) === currSeasonLabel);
-    // Riferimento: oggi (se rientra nella stagione corrente), altrimenti l'ultimo giorno con dati
-    const refDateStr = (getSeasonStartYear(todayStr) === currSeasonStart) ? todayStr : lastDate;
+    // Riferimento: l'ultimo giorno con una registrazione
+    const refDateStr = lastDate;
     const refD = new Date(refDateStr + 'T00:00:00');
     const prevRefStr = fmtDateISO(new Date(refD.getFullYear() - 1, refD.getMonth(), refD.getDate()));
     let sumCurrSeason = 0, sumPrevSeasonToDate = 0;
