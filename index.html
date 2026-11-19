@@ -5860,8 +5860,7 @@ function incDupWarn() {
 }
 
 window.onIncDateChange = () => {
-    if (editIdIncassi) { incDupWarn(); toggleSeasonalFields(); return; } // in modifica: cambio solo la data, i dati restano
-    loadIncassiDayIntoForm();
+    loadIncassiDayIntoForm(); // la data decide sempre cosa mostrare: giorno esistente -> suoi dati (modifica), giorno nuovo -> modulo vuoto
 };
 
 window.incUnlockLegacy = () => { incLegacy = null; incSetLegacyNotice(null); updateIncassiLiveTotal(); showToast('Dettaglio sbloccato: completa i campi di ingressi e abbonamenti'); };
