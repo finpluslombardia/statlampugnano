@@ -287,6 +287,79 @@
     
     .meteo-tag { font-size: 0.75rem; font-weight: 600; color: #64748b; display: flex; align-items: center; gap:4px; margin-top: 5px; }
     
+
+    /* ===== LIQUID GLASS (tema leggero) ===== */
+    :root {
+        --primary: #3b82f6;
+        --bg-body: radial-gradient(1100px 700px at 8% 0%, rgba(147,197,253,.55), transparent 60%), radial-gradient(900px 700px at 100% 10%, rgba(216,180,254,.45), transparent 60%), radial-gradient(900px 700px at 50% 100%, rgba(165,243,252,.40), transparent 60%), #eef2fb;
+        --text-main: #1f2937; --text-muted: #64748b;
+        --glass-bg: rgba(255,255,255,.34);
+        --glass-border: 1px solid rgba(255,255,255,.62);
+        --glass-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 10px 36px rgba(60,80,140,.07);
+        --glass-blur: blur(26px) saturate(170%);
+        --sidebar-glass: rgba(255,255,255,.30);
+    }
+    body { background: var(--bg-body); background-attachment: fixed; font-weight: 400; -webkit-font-smoothing: antialiased; }
+    /* pesi: tutto leggero, enfasi solo dove serve */
+    :where(body *:not(svg):not(path)) { font-weight: 400 !important; }
+    b, strong, th, h1, h2, h3, h4, .page-title, .ov-title, .stat-section-head h3, .ex-card h4, .cb-title, .kpi-head, .ov-lab, .nav-item.active, .btn-primary, .u-big-num, .col-total, .st-kpi b, .ex-group-title, .nav-section-title { font-weight: 600 !important; }
+    .btn, .nav-item, .cb-badge, .badge, .ex-chip, .inp-field label, td:first-child { font-weight: 500 !important; }
+    .kpi-val, .ov-big, .st-kpi b, .t-box input { font-weight: 300 !important; }
+    .kpi-val, .ov-big { letter-spacing: -.02em; }
+    .kpi-head, .ov-lab, .nav-section-title, .ex-group-title, th, .cb-title { letter-spacing: .06em; }
+    th { font-size: .68rem !important; color: #64748b !important; }
+
+    /* sidebar chiara */
+    .sidebar { background: var(--sidebar-glass); backdrop-filter: blur(30px) saturate(180%); -webkit-backdrop-filter: blur(30px) saturate(180%); border-right: 1px solid rgba(255,255,255,.6); box-shadow: inset -1px 0 0 rgba(255,255,255,.4); color: #1f2937; }
+    .sidebar-header { color: #1f2937; text-shadow: none; border-bottom: 1px solid rgba(100,116,139,.15); font-weight: 600 !important; }
+    .nav-section-title { color: #94a3b8; }
+    .nav-item { color: #475569; border-radius: 14px; }
+    .nav-item:hover { background: rgba(255,255,255,.55); color: #1f2937; }
+    .nav-item.active { background: rgba(255,255,255,.75); color: #2563eb; border: 1px solid rgba(255,255,255,.9); box-shadow: 0 4px 16px rgba(59,130,246,.15); }
+    .nav-badge { font-weight: 600 !important; }
+    .sidebar-footer { border-top: 1px solid rgba(100,116,139,.15); color: #475569; }
+    .sidebar-footer, .sidebar-footer div, .sidebar-footer span { color: #64748b !important; }
+    .sidebar-footer button { background: rgba(255,255,255,.55) !important; border: 1px solid rgba(255,255,255,.8) !important; color: #475569 !important; }
+
+    /* superfici */
+    .control-bar { background: rgba(255,255,255,.38); border-bottom: 1px solid rgba(255,255,255,.6); box-shadow: none; }
+    .glass-card, .kpi-card, .chart-card, .table-wrap, .ex-card, #login-box, .ov-card, .u-reg-card { border-radius: 26px; border: var(--glass-border); box-shadow: var(--glass-shadow); }
+    .stat-section { background: rgba(var(--sc),.05); border: 1px solid rgba(var(--sc),.16); border-left: 1px solid rgba(var(--sc),.16); border-radius: 30px; box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+    .stat-section-head h3 { filter: none; font-size: 1.1rem; }
+    .st-kpi { background: rgba(255,255,255,.5); border: 1px solid rgba(255,255,255,.7); }
+    .ov-card { background: linear-gradient(135deg, rgba(var(--c),.10), rgba(var(--c),.02) 65%), var(--glass-bg); }
+    th { background: rgba(255,255,255,.35); border-bottom: 1px solid rgba(100,116,139,.12); }
+    td { border-bottom: 1px solid rgba(100,116,139,.09); }
+    tr:hover td { background: rgba(255,255,255,.4); }
+    tr.day-end td { border-bottom: 1px solid rgba(100,116,139,.22) !important; }
+
+    /* bottoni e campi */
+    .btn { background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.85); color: #334155; box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 2px 8px rgba(60,80,140,.06); border-radius: 14px; }
+    .btn:hover { background: rgba(255,255,255,.8); }
+    .btn-primary { background: linear-gradient(180deg, rgba(96,165,250,.95), rgba(59,130,246,.95)); color: #fff; border: 1px solid rgba(255,255,255,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 18px rgba(59,130,246,.25); }
+    .btn-primary:hover { background: linear-gradient(180deg, rgba(96,165,250,1), rgba(59,130,246,1)); }
+    .btn-danger { background: rgba(254,202,202,.35); color: #dc2626; }
+    .inp-field input, .inp-field select, .filter-select, .arch-input, .arch-select, .ms-btn { border: 1px solid rgba(255,255,255,.85); background: rgba(255,255,255,.55); box-shadow: inset 0 1px 2px rgba(60,80,140,.06); border-radius: 14px; }
+    .inp-field input:focus, .inp-field select:focus { background: rgba(255,255,255,.9); border-color: rgba(59,130,246,.55); box-shadow: 0 0 0 4px rgba(59,130,246,.12); }
+    .ex-chip { background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.85); }
+    .ex-chip:has(input:checked) { background: rgba(59,130,246,.12); border-color: rgba(59,130,246,.45); }
+    .badge, .cb-badge { backdrop-filter: none; }
+    .group-tickets, .group-chem { background: rgba(255,255,255,.28); border: 1px solid rgba(255,255,255,.6); }
+
+    /* collaboratori */
+    .collab-box { border: 1px solid rgba(255,255,255,.62) !important; box-shadow: var(--glass-shadow) !important; }
+    #collab-modal { background: rgba(30,41,59,.28); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    #collab-modal .cm-box { background: rgba(250,251,255,.80); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); border: 1px solid rgba(255,255,255,.8); border-radius: 30px; box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 30px 80px rgba(30,41,59,.25); }
+    .cm-sec { background: rgba(var(--sc),.06); border: 1px solid rgba(var(--sc),.22); border-radius: 22px; }
+    #collab-modal .cm-sec h4 { filter: none; }
+    #collab-modal .inp-field input, #collab-modal .inp-field select { border: 1px solid rgba(100,116,139,.28) !important; background: rgba(255,255,255,.8) !important; box-shadow: none; }
+    #collab-v-list th.cc-ab, #collab-v-list td.cc-ab { background: rgba(220,38,38,.05); } #collab-v-list th.cc-ab { background: rgba(220,38,38,.12); color: #b91c1c !important; }
+    #collab-v-list th.cc-sit, #collab-v-list td.cc-sit { background: rgba(37,99,235,.05); } #collab-v-list th.cc-sit { background: rgba(37,99,235,.12); color: #1d4ed8 !important; }
+    #collab-v-list th.cc-cm, #collab-v-list td.cc-cm { background: rgba(234,179,8,.07); } #collab-v-list th.cc-cm { background: rgba(234,179,8,.16); color: #a16207 !important; }
+    #collab-v-list th.cc-bl, #collab-v-list td.cc-bl { background: rgba(147,51,234,.05); } #collab-v-list th.cc-bl { background: rgba(147,51,234,.12); color: #7e22ce !important; }
+    #collab-v-list tr.cr-other td:first-child { box-shadow: inset 3px 0 0 #3b82f6; }
+    .cm-addr { border: 1px solid rgba(100,116,139,.25); box-shadow: 0 14px 40px rgba(30,41,59,.16); }
+    .toast { border-radius: 18px; }
 </style>
 </head>
 <body>
