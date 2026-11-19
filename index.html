@@ -421,6 +421,23 @@
     .seg .btn { color: #1e293b !important; }
     #lg-tip { color: #1e293b; } #lg-tip .t-row { color: #0f172a; } #lg-tip .t-title { color: #0f172a; } #lg-tip .t-extra { color: #334155; }
     .cb-title { opacity: .9; }
+
+    /* ===== MENU IN ALTO ===== */
+    body { flex-direction: column; }
+    .sidebar { width: auto; height: auto; flex-direction: row; align-items: center; gap: 4px; padding: 8px 18px; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.7); box-shadow: 0 6px 24px rgba(60,80,140,.06); background: rgba(255,255,255,.42); overflow-x: auto; overflow-y: hidden; z-index: 30; scrollbar-width: none; }
+    .sidebar::-webkit-scrollbar { display: none; }
+    .sidebar-header { padding: 0 18px 0 4px; border-bottom: 0; white-space: nowrap; font-size: 1.05rem; }
+    .nav-section-title { display: none !important; }
+    .nav-links:not(.hidden) { display: flex; padding: 0; gap: 2px; flex: none; }
+    .nav-item { margin: 0; padding: 0 16px; height: 38px; border-radius: 999px; white-space: nowrap; gap: 8px; border: 1px solid transparent; }
+    #nav-module-note { flex-direction: row !important; align-items: center !important; gap: 8px !important; }
+    #nav-module-note > div:first-child { gap: 8px !important; }
+    #note-expiring-today { color: #b45309 !important; font-size: .68rem !important; padding: 0 !important; }
+    .nav-badge { margin-left: 2px; }
+    .sidebar-footer { margin: 0 0 0 auto; padding: 0 0 0 16px; border-top: 0; display: flex; align-items: center; gap: 12px; flex: none; }
+    .sidebar-footer #user-display { margin: 0 !important; font-size: .82rem !important; }
+    .sidebar-footer .btn { width: auto !important; padding: 0 16px; height: 34px !important; }
+    .main-content { flex: 1; min-height: 0; height: auto; }
 </style>
 </head>
 <body>
