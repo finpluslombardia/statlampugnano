@@ -399,6 +399,15 @@
     #note-modal { background: rgba(30,41,59,.28); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     #note-modal .postit-big { --bg: #fef08a; border-radius: 32px; background: color-mix(in srgb, var(--bg) 60%, rgba(255,255,255,.55)); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); border: 1px solid rgba(255,255,255,.8); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 30px 80px rgba(30,41,59,.25); }
     #note-modal .pb-foot { border-top: 1px solid rgba(100,116,139,.2); }
+
+    /* tooltip in vetro chiaro */
+    #lg-tip { position: fixed; z-index: 10001; left: 0; top: 0; pointer-events: none; opacity: 0; min-width: 120px; max-width: 380px; padding: 11px 14px 12px; border-radius: 18px; background: rgba(255,255,255,.60); backdrop-filter: blur(24px) saturate(190%); -webkit-backdrop-filter: blur(24px) saturate(190%); border: 1px solid rgba(255,255,255,.9); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 14px 44px rgba(40,60,120,.18); color: #475569; font-size: .8rem; line-height: 1.45; transition: opacity .16s ease; }
+    #lg-tip .t-title { color: #1f2937; font-weight: 600 !important; margin-bottom: 6px; }
+    #lg-tip .t-row { display: flex; align-items: center; gap: 8px; padding: 1px 0; color: #334155; }
+    #lg-tip .t-key { width: 9px; height: 9px; border-radius: 50%; flex: none; box-shadow: 0 0 0 2px rgba(255,255,255,.7); }
+    #lg-tip .t-extra { padding: 1px 0; color: #64748b; }
+    #lg-tip .t-foot { margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(100,116,139,.18); color: #475569; }
+    #lg-tip .t-gap { height: 5px; }
 </style>
 </head>
 <body>
@@ -2079,6 +2088,44 @@
             if (window.ResizeObserver) new ResizeObserver(place).observe(p); window.addEventListener('resize', place); place();
         });
     }
+
+    /* tooltip grafici + tooltip [title] in vetro */
+    var tipEl = null;
+    function getTip() { if (!tipEl) { tipEl = document.createElement('div'); tipEl.id = 'lg-tip'; document.body.appendChild(tipEl); } return tipEl; }
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }); }
+    function placeTip(x, y) {
+        var el = getTip(), w = el.offsetWidth, h = el.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+        var L = x + 16, T = y - h - 14; if (L + w > vw - 8) L = x - w - 16; if (L < 8) L = 8; if (T < 8) T = y + 18; if (T + h > vh - 8) T = vh - h - 8;
+        el.style.transform = 'translate(' + Math.round(L) + 'px,' + Math.round(T) + 'px)';
+    }
+    function chartTip(ctx) {
+        var tt = ctx.tooltip, el = getTip();
+        if (!tt || tt.opacity === 0) { el.style.opacity = 0; return; }
+        var h = '';
+        (tt.title || []).forEach(function (t, i) { h += '<div class="t-title">' + esc(t) + '</div>'; });
+        (tt.body || []).forEach(function (b, i) {
+            (b.before || []).forEach(function (l) { h += '<div class="t-extra">' + esc(l) + '</div>'; });
+            var col = tt.labelColors && tt.labelColors[i]; var c = ''; if (col) { var op = function (x) { if (typeof x !== 'string' || !x) return false; var m = /rgba\(.*,\s*([\d.]+)\)\s*$/.exec(x); return !(m && parseFloat(m[1]) < 0.35); }; c = op(col.backgroundColor) ? col.backgroundColor : op(col.borderColor) ? col.borderColor : ''; }
+            (b.lines || []).forEach(function (l) { h += '<div class="t-row">' + (typeof c === 'string' && c ? '<span class="t-key" style="background:' + c + '"></span>' : '') + '<span>' + esc(l) + '</span></div>'; });
+            (b.after || []).forEach(function (l) { h += '<div class="t-extra">' + esc(l) + '</div>'; });
+        });
+        var ab = tt.afterBody || []; if (ab.length) { h += '<div class="t-gap"></div>'; ab.forEach(function (l) { h += l === '' ? '<div class="t-gap"></div>' : '<div class="t-extra">' + esc(l) + '</div>'; }); }
+        if (tt.footer && tt.footer.length) h += '<div class="t-foot">' + tt.footer.map(esc).join('<br>') + '</div>';
+        el.innerHTML = h; walk(el);
+        var r = ctx.chart.canvas.getBoundingClientRect(); el.style.opacity = 1; placeTip(r.left + tt.caretX, r.top + tt.caretY);
+    }
+    if (window.Chart && Chart.defaults && Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
+        var D = Chart.defaults; D.plugins.tooltip.enabled = false; D.plugins.tooltip.external = chartTip;
+        D.color = '#64748b'; D.borderColor = 'rgba(100,116,139,.12)'; if (D.font) { D.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; }
+    }
+    document.addEventListener('mouseover', function (e) {
+        var t = e.target && e.target.closest ? e.target.closest('[title],[data-lgt]') : null; if (!t || t.nodeName === 'CANVAS') return;
+        if (t.hasAttribute('title')) { t.setAttribute('data-lgt', t.getAttribute('title')); t.removeAttribute('title'); }
+        var txt = t.getAttribute('data-lgt'); if (!txt) return;
+        var el = getTip(); el.innerHTML = '<div class="t-row">' + esc(txt) + '</div>'; walk(el); el.style.opacity = 1; placeTip(e.clientX, e.clientY);
+    });
+    document.addEventListener('mousemove', function (e) { if (tipEl && tipEl.style.opacity === '1' && e.target.closest && e.target.closest('[data-lgt]')) placeTip(e.clientX, e.clientY); });
+    document.addEventListener('mouseout', function (e) { var t = e.target.closest ? e.target.closest('[data-lgt]') : null; if (t && tipEl) tipEl.style.opacity = 0; });
     function start() {
         walk(document.body); initSeg();
         new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === 'characterData') { if (m.target.parentNode) walk(m.target); } else m.addedNodes.forEach(walk); }); }).observe(document.body, { childList: true, subtree: true, characterData: true });
