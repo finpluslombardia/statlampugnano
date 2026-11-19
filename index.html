@@ -292,7 +292,7 @@
     :root {
         --primary: #3b82f6;
         --bg-body: radial-gradient(1100px 700px at 8% 0%, rgba(147,197,253,.55), transparent 60%), radial-gradient(900px 700px at 100% 10%, rgba(216,180,254,.45), transparent 60%), radial-gradient(900px 700px at 50% 100%, rgba(165,243,252,.40), transparent 60%), #eef2fb;
-        --text-main: #1f2937; --text-muted: #64748b;
+        --text-main: #0f172a; --text-muted: #475569;
         --glass-bg: rgba(255,255,255,.34);
         --glass-border: 1px solid rgba(255,255,255,.62);
         --glass-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 10px 36px rgba(60,80,140,.07);
@@ -408,6 +408,19 @@
     #lg-tip .t-extra { padding: 1px 0; color: #64748b; }
     #lg-tip .t-foot { margin-top: 7px; padding-top: 7px; border-top: 1px solid rgba(100,116,139,.18); color: #475569; }
     #lg-tip .t-gap { height: 5px; }
+
+    /* testo piu' scuro (grigio quasi nero) */
+    body, input, select, textarea { color: #0f172a; }
+    [style*="color:#64748b"], [style*="color: #64748b"] { color: #475569 !important; }
+    [style*="color:#94a3b8"], [style*="color: #94a3b8"] { color: #64748b !important; }
+    [style*="color:#475569"], [style*="color: #475569"], [style*="color:#334155"], [style*="color: #334155"] { color: #1e293b !important; }
+    th { color: #475569 !important; }
+    .nav-item { color: #1e293b; } .nav-section-title { color: #64748b; }
+    .sidebar-header { color: #0f172a; }
+    .sidebar-footer, .sidebar-footer div, .sidebar-footer span, .sidebar-footer button { color: #334155 !important; }
+    .seg .btn { color: #1e293b !important; }
+    #lg-tip { color: #1e293b; } #lg-tip .t-row { color: #0f172a; } #lg-tip .t-title { color: #0f172a; } #lg-tip .t-extra { color: #334155; }
+    .cb-title { opacity: .9; }
 </style>
 </head>
 <body>
