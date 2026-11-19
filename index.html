@@ -438,6 +438,11 @@
     .sidebar-footer #user-display { margin: 0 !important; font-size: .82rem !important; }
     .sidebar-footer .btn { width: auto !important; padding: 0 16px; height: 34px !important; }
     .main-content { flex: 1; min-height: 0; height: auto; }
+
+    /* tutta la pagina scorre: i titoli di sezione se ne vanno con il contenuto */
+    .main-content { overflow-y: auto; overflow-x: hidden; }
+    .module-container { height: auto !important; min-height: 100%; }
+    .scroll-area { flex: none; overflow: visible; }
 </style>
 </head>
 <body>
@@ -2156,6 +2161,7 @@
     });
     document.addEventListener('mousemove', function (e) { if (tipEl && tipEl.style.opacity === '1' && e.target.closest && e.target.closest('[data-lgt]')) placeTip(e.clientX, e.clientY); });
     document.addEventListener('mouseout', function (e) { var t = e.target.closest ? e.target.closest('[data-lgt]') : null; if (t && tipEl) tipEl.style.opacity = 0; });
+    document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('.nav-item')) { var mc = document.querySelector('.main-content'); if (mc) mc.scrollTop = 0; } });
     function start() {
         walk(document.body); initSeg();
         new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === 'characterData') { if (m.target.parentNode) walk(m.target); } else m.addedNodes.forEach(walk); }); }).observe(document.body, { childList: true, subtree: true, characterData: true });
