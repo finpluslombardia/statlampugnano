@@ -3833,7 +3833,7 @@ const collabContrCanon = (v) => { const n = String(v == null ? '' : v).toLowerCa
 const collabNorm = (t) => String(t == null ? '' : t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 const COLLAB_HEAD = (() => { const m = {}; COLLAB_FIELDS.forEach(f => { m[collabNorm(f[1])] = f[0]; }); m['cartadidentita'] = 'cartaIdentita'; m['cartadidenita'] = 'cartaIdentita'; m['cartadiidentita'] = 'cartaIdentita'; m['cartadiidenita'] = 'cartaIdentita'; m['stimastipendio'] = 'stimaStipendio'; return m; })();
 const COLLAB_SCAD = [['scadBrevSalv', 'Brevetto salvamento'], ['scadBrevSit', 'Brevetto SIT'], ['scadBlsd', 'BLSD'], ['scadCM', 'Certificato medico'], ['formGenerale', 'Formazione generale'], ['formSpecifica', 'Formazione specifica'], ['formAntincendio', 'Formazione antincendio'], ['formPrimoSoccorso', 'Formazione primo soccorso']];
-const COLLAB_FORM_KEYS = ['formGenerale', 'formSpecifica', 'formAntincendio', 'formPrimoSoccorso'], COLLAB_FORM_REQ = ['formGenerale', 'formSpecifica'];
+const COLLAB_FORM_KEYS = ['formGenerale', 'formSpecifica', 'formAntincendio', 'formPrimoSoccorso'], COLLAB_FORM_REQ = ['formGenerale', 'formSpecifica', 'scadBlsd', 'scadCM'];
 const collabEsc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const collabIsoOk = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
 const collabDM = (v) => collabIsoOk(v) ? v.split('-').reverse().join('/') : (v || '');
