@@ -444,9 +444,13 @@
     .module-container { height: auto !important; min-height: 100%; }
     .scroll-area { flex: none; overflow: visible; }
 
-    /* registrazione incassi: bordi definiti ma in vetro */
-    #sub-inc-register div[style*="background:rgba(255,255,255,0.6)"] { border: 1px solid rgba(255,255,255,.85); background: rgba(255,255,255,.52) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 4px 16px rgba(60,80,140,.07), 0 0 0 1px rgba(100,116,139,.10); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
-    #sub-inc-register .inp-field input { border: 1px solid rgba(100,116,139,.20); background: rgba(255,255,255,.72); box-shadow: inset 0 1px 2px rgba(60,80,140,.07); }
+    /* registrazione incassi: stesso liquid glass della panoramica */
+    #sub-inc-register > .glass-card { padding: 26px !important; }
+    #sub-inc-register div[style*="margin-top:16px; padding:16px"] { padding: 22px !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+    #sub-inc-register div[style*="font-weight:900; font-size:0.95rem"] { font-size: 1.1rem !important; font-weight: 600 !important; margin-bottom: 16px !important; }
+    #sub-inc-register div[style*="background:rgba(255,255,255,0.6)"] { border-radius: 26px !important; padding: 18px 22px !important; border: 1px solid rgba(255,255,255,.8); background: linear-gradient(135deg, rgba(255,255,255,.66), rgba(255,255,255,.36)) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 30px rgba(60,80,140,.08); backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); }
+    #sub-inc-register div[style*="font-weight:800; font-size:0.85rem"] { font-size: .92rem !important; font-weight: 600 !important; margin-bottom: 12px !important; }
+    #sub-inc-register .inp-field input { border: 1px solid rgba(100,116,139,.16); background: rgba(255,255,255,.62); border-radius: 16px; box-shadow: inset 0 1px 2px rgba(60,80,140,.06); }
     #sub-inc-register .inp-field input:focus { border-color: rgba(59,130,246,.55); background: rgba(255,255,255,.95); box-shadow: 0 0 0 4px rgba(59,130,246,.12); }
 
     /* registrazione utenze: stesso trattamento in vetro */
@@ -1690,21 +1694,24 @@
                 </div>
 
                 <!-- ============ MACRO-BOX: ESENTE IVA ============ -->
-                <div style="margin-top:16px; padding:16px; border-radius:14px; background:rgba(180,83,9,0.06); border:1.5px solid rgba(180,83,9,0.34)">
+                <div style="margin-top:16px; padding:16px; border-radius:30px; background:rgba(180,83,9,0.05); border:1px solid rgba(180,83,9,0.16)">
                     <div style="font-weight:900; font-size:0.95rem; color:#ef4444; margin-bottom:12px">🧾 ESENTE IVA</div>
 
-                    <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6); margin-bottom:10px">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px">
+                    <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6); margin-bottom:0; flex:1 1 280px; min-width:0">
                         <div style="font-weight:800; font-size:0.85rem; color:#ef4444; margin-bottom:8px">📚 Corsi</div>
                         <div class="cb-row">
                             <div class="inp-field" style="flex:1"><label>Totale (€)</label><input type="number" step="any" id="inc-n4-tot" oninput="updateIncassiLiveTotal()" placeholder="0"></div>
                         </div>
                     </div>
 
-                    <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6); margin-bottom:10px">
+                    <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6); margin-bottom:0; flex:1 1 280px; min-width:0">
                         <div style="font-weight:800; font-size:0.85rem; color:#b45309; margin-bottom:8px">🏅 Società Sportive</div>
                         <div class="cb-row">
                             <div class="inp-field" style="flex:1"><label>Totale (€)</label><input type="number" step="any" id="inc-ss-tot" oninput="updateIncassiLiveTotal()" placeholder="0"></div>
                         </div>
+                    </div>
+
                     </div>
 
                     <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6)">
@@ -1721,7 +1728,7 @@
                 </div>
 
                 <!-- ============ MACRO-BOX: CON IVA ============ -->
-                <div style="margin-top:16px; padding:16px; border-radius:14px; background:rgba(37,99,235,0.06); border:1.5px solid rgba(37,99,235,0.34)">
+                <div style="margin-top:16px; padding:16px; border-radius:30px; background:rgba(37,99,235,0.06); border:1px solid rgba(37,99,235,0.16)">
                     <div style="font-weight:900; font-size:0.95rem; color:#1e40af; margin-bottom:12px">🧾 CON IVA</div>
 
                     <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6); margin-bottom:10px">
@@ -1790,7 +1797,7 @@
                 </div>
 
                 <!-- ============ MACRO-BOX: SCONTI E CORREZIONI ============ -->
-                <div style="margin-top:16px; padding:16px; border-radius:14px; background:rgba(220,38,38,0.06); border:1.5px solid rgba(220,38,38,0.34)">
+                <div style="margin-top:16px; padding:16px; border-radius:30px; background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.16)">
                     <div style="font-weight:900; font-size:0.95rem; color:#991b1b; margin-bottom:12px">➖ SCONTI E CORREZIONI</div>
                     <div style="padding:12px; border-radius:10px; background:rgba(255,255,255,0.6)">
                         <div style="font-weight:800; font-size:0.85rem; color:#dc2626; margin-bottom:4px">Borsellini e Correzioni</div>
