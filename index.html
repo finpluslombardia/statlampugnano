@@ -6,7 +6,8 @@
 <title>CF Lampugnano</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <!-- Aggiunta libreria per Export Excel Reale (.xlsx) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script>if(!window.XLSX)document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"><\/script>');</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -4482,15 +4483,19 @@ window.collabCopy = async () => {
     try { await Promise.all(todo.map(c => { const { id, ...r } = c; return setDoc(doc(db, 'collaboratori', collabDocId(collabSeason, r)), { ...r, stagione: collabSeason, updatedAt: new Date().toISOString() }); })); showToast(`Copiati ${todo.length} collaboratori`); collabTab('list'); }
     catch (e) { showToast('Errore: ' + e.message, 'error'); }
 };
+const COLLAB_HDR_COL = (k) => /^(brevSalv|nBrevSalv|scadBrevSalv)$/.test(k) ? 'A61C1C' : /^(brevSit|nBrevSit|scadBrevSit)$/.test(k) ? '1F4E9C' : /^(brevBlsd|scadBlsd)$/.test(k) ? '7A1F4A' : /^(certMedico|scadCM)$/.test(k) ? 'BF9000' : /^(casellario|cartaIdentita)$/.test(k) ? '7F5A1F' : /^mansione/.test(k) ? '4FB3C8' : '355E3B';
+function collabStyleHeader(ws) {
+    COLLAB_FIELDS.forEach((f, i) => { const c = ws[XLSX.utils.encode_cell({ r: 0, c: i })]; if (c) c.s = { fill: { patternType: 'solid', fgColor: { rgb: COLLAB_HDR_COL(f[0]) } }, font: { bold: true, color: { rgb: 'FFFFFF' } }, alignment: { vertical: 'center', horizontal: 'left' } }; });
+}
 function collabSheetRow(c) { const o = {}; COLLAB_FIELDS.forEach(f => { const v = c[f[0]]; o[f[1]] = f[2] === 'date' ? collabDM(v) : (v == null ? '' : v); }); return o; }
 window.collabExport = () => {
     if (!exportAllowed) return; const L = collabOfSeason().sort((a, b) => (a.cognome || '').localeCompare(b.cognome || '', 'it'));
     if (!L.length) return showToast('Nessun collaboratore in questa stagione', 'error');
-    const ws = XLSX.utils.json_to_sheet(L.map(collabSheetRow)); ws['!cols'] = COLLAB_FIELDS.map(f => ({ wch: Math.max(12, f[1].length + 2) }));
+    const ws = XLSX.utils.json_to_sheet(L.map(collabSheetRow)); ws['!cols'] = COLLAB_FIELDS.map(f => ({ wch: Math.max(12, f[1].length + 2) })); collabStyleHeader(ws);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Collaboratori ' + collabSeason.replace('/', '-')); XLSX.writeFile(wb, `collaboratori_${collabSeason.replace('/', '-')}.xlsx`);
 };
 window.collabTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([COLLAB_FIELDS.map(f => f[1])]); ws['!cols'] = COLLAB_FIELDS.map(f => ({ wch: Math.max(12, f[1].length + 2) }));
+    const ws = XLSX.utils.aoa_to_sheet([COLLAB_FIELDS.map(f => f[1])]); ws['!cols'] = COLLAB_FIELDS.map(f => ({ wch: Math.max(12, f[1].length + 2) })); collabStyleHeader(ws);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Collaboratori'); XLSX.writeFile(wb, 'modello_collaboratori.xlsx');
 };
 
