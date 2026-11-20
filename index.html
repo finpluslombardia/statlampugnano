@@ -2296,7 +2296,7 @@ function startListening() {
         }, errHandler);
 
         if (exportAllowed) onSnapshot(collection(db, "collaboratori"), (snap) => {
-            dataCollab = snap.docs.map(d => { const o = { id: d.id, ...d.data() }; ['mansione', 'mansione2', 'mansione3'].forEach(k => { if (o[k]) o[k] = collabMansCanon(o[k]); }); if (o.tipoContratto) o.tipoContratto = collabContrCanon(o.tipoContratto); COLLAB_FORM_KEYS.concat(['inizioContratto','fineContratto']).forEach(k => { if (o[k] && !collabIsoOk(o[k])) { const n = collabNormDate(o[k]); if (collabIsoOk(n)) o[k] = n; } }); return o; });
+            dataCollab = snap.docs.map(d => { const o = { id: d.id, ...d.data() }; ['mansione', 'mansione2', 'mansione3'].forEach(k => { if (o[k]) o[k] = collabMansCanon(o[k]); }); if (o.tipoContratto) o.tipoContratto = collabContrCanon(o.tipoContratto); o.certMedico = collabCMState(o.certMedico, collabNormDate(o.scadCM)); if (o.brevBlsd || o.scadBlsd) o.brevBlsd = collabBlsdState(o.brevBlsd, collabNormDate(o.scadBlsd)); COLLAB_FORM_KEYS.concat(['inizioContratto','fineContratto']).forEach(k => { if (o[k] && !collabIsoOk(o[k])) { const n = collabNormDate(o[k]); if (collabIsoOk(n)) o[k] = n; } }); return o; });
             try { collabBadge(); if (!document.getElementById('module-collab').classList.contains('hidden')) collabRender(); } catch (e) { console.warn('collab', e); }
         }, (e) => { console.warn('collaboratori non leggibili (regole Firestore da aggiornare?)', e); showToast('Collaboratori: pubblica le regole Firestore aggiornate', 'error'); });
 
@@ -4089,7 +4089,7 @@ const COLLAB_FIELDS = [
     ['brevSalv','Brevetto Salvamento','selSalv','Brevetti e abilitazioni'],['nBrevSalv','N. Brevetto Salv.','text','Brevetti e abilitazioni'],['scadBrevSalv','Scadenza brevetto Salv.','date','Brevetti e abilitazioni'],
     ['brevSit','Brevetto SIT','selSit','Brevetti e abilitazioni'],['nBrevSit','N. Brevetto SIT','text','Brevetti e abilitazioni'],['scadBrevSit','Scadenza brevetto SIT','date','Brevetti e abilitazioni'],
     ['brevBlsd','Brevetto BLSD','selBlsd','Brevetti e abilitazioni'],['scadBlsd','Scadenza BLSD','date','Brevetti e abilitazioni'],
-    ['certMedico','Certificato medico','text','Documenti'],['scadCM','Scadenza CM','date','Documenti'],['casellario','Casellario giudiziario','text','Documenti'],['cartaIdentita',"Carta d'identità",'text','Documenti'],
+    ['certMedico','Certificato medico','selCM','Documenti'],['scadCM','Scadenza CM','date','Documenti'],['casellario','Casellario giudiziario','text','Documenti'],['cartaIdentita',"Carta d'identità",'text','Documenti'],
     ['via','Via Residenza','text','Residenza e contatti'],['cap','CAP','text','Residenza e contatti'],['comune','Comune Residenza','text','Residenza e contatti'],['provincia','Provincia','text','Residenza e contatti'],['cellulare','Cellulare','tel','Residenza e contatti'],['mail','Mail','email','Residenza e contatti'],['iban','IBAN','iban','Residenza e contatti'],
     ['altriCorsiFin','Altri corsi FIN','text','Formazione'],['istruzione','Livello di Istruzione','selIstr','Formazione'],['formGenerale','Formazione generale','date','Formazione'],['formSpecifica','Formazione specifica','date','Formazione'],['formAntincendio','Formazione antincendio','date','Formazione'],['formPrimoSoccorso','Formazione Primo Soccorso','date','Formazione'],
     ['tipoContratto','Tipo di contratto','selContr','Contratto'],['inizioContratto','Inizio contratto','date','Contratto'],['fineContratto','Fine contratto','date','Contratto'],['altriContratti','Altri contratti in essere','text','Contratto'],['oreSettimanali','Ore settimanali','num','Contratto'],['stimaStipendio','Stima stipendio','num','Contratto']
@@ -4101,6 +4101,23 @@ const collabContrCanon = (v) => { const n = String(v == null ? '' : v).toLowerCa
 const collabNorm = (t) => String(t == null ? '' : t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 const COLLAB_HEAD = (() => { const m = {}; COLLAB_FIELDS.forEach(f => { m[collabNorm(f[1])] = f[0]; }); m['cartadidentita'] = 'cartaIdentita'; m['cartadidenita'] = 'cartaIdentita'; m['cartadiidentita'] = 'cartaIdentita'; m['cartadiidenita'] = 'cartaIdentita'; m['stimastipendio'] = 'stimaStipendio'; return m; })();
 const COLLAB_SCAD = [['scadBrevSalv', 'Brevetto salvamento'], ['scadBrevSit', 'Brevetto SIT'], ['scadBlsd', 'BLSD'], ['scadCM', 'Certificato medico'], ['formGenerale', 'Formazione generale'], ['formSpecifica', 'Formazione specifica'], ['formAntincendio', 'Formazione antincendio'], ['formPrimoSoccorso', 'Formazione primo soccorso']];
+const COLLAB_CM_OPTS = ['Non presente', 'Valido', 'Scaduto', 'Agg. in programma'];
+function collabCMState(cur, scad) {
+    const t = String(cur == null ? '' : cur).trim(), n = collabNorm(t);
+    if (n === 'nonpresente' || n.startsWith('aggi')) return n === 'nonpresente' ? 'Non presente' : 'Agg. in programma';
+    if (collabIsoOk(scad)) { const d = new Date(); d.setHours(0, 0, 0, 0); return new Date(scad + 'T00:00:00') < d ? 'Scaduto' : 'Valido'; }
+    return n === 'valido' ? 'Valido' : n === 'scaduto' ? 'Scaduto' : t;
+}
+function collabBlsdState(cur, scad) {
+    const t = String(cur == null ? '' : cur).trim(), n = collabNorm(t);
+    if (n.startsWith('aggin') || n === 'agginprogramma') return 'Agg. in programma';
+    if (n === 'nessunbrevetto' || /^[-–—]$/.test(t)) return 'Nessun brevetto';
+    if (collabIsoOk(scad)) { const d = new Date(); d.setHours(0, 0, 0, 0); return new Date(scad + 'T00:00:00') < d ? 'Non aggiornato' : 'Aggiornato'; }
+    return n === 'aggiornato' ? 'Aggiornato' : n === 'nonaggiornato' ? 'Non aggiornato' : t;
+}
+window.collabBlsdAuto = () => { const sel = document.getElementById('cf-brevBlsd'), dt = document.getElementById('cf-scadBlsd'); if (!sel || !dt) return; if (!sel.value || sel.value === 'Aggiornato' || sel.value === 'Non aggiornato') { const r = collabBlsdState('', dt.value); if (r) sel.value = r; } };
+window.collabCMState = collabCMState; window.collabBlsdState = collabBlsdState;
+window.collabCMAuto = () => { const sel = document.getElementById('cf-certMedico'), dt = document.getElementById('cf-scadCM'); if (!sel || !dt) return; if (!sel.value || sel.value === 'Valido' || sel.value === 'Scaduto') { const r = collabCMState('', dt.value); if (r) sel.value = r; } };
 const COLLAB_FORM_KEYS = ['formGenerale', 'formSpecifica', 'formAntincendio', 'formPrimoSoccorso'], COLLAB_FORM_REQ = ['formGenerale', 'formSpecifica', 'scadBlsd', 'scadCM'];
 const collabEsc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const collabIsoOk = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
@@ -4382,12 +4399,12 @@ window.collabRenderList = () => {
 window.collabEdit = (id) => {
     const c = id ? dataCollab.find(x => x.id === id) : null; collabEditId = id || null;
     const GCOL = { 'Anagrafica': '79,70,229', 'Mansioni': '14,165,233', 'Brevetti e abilitazioni': '22,163,74', 'Documenti': '234,88,12', 'Residenza e contatti': '219,39,119', 'Formazione': '147,51,234', 'Contratto': '202,138,4' };
-    const groups = []; COLLAB_FIELDS.forEach(f => { if (f[0] === 'certMedico') return; let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
+    const groups = []; COLLAB_FIELDS.forEach(f => { let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
     const inp = (f) => { let v = c ? (c[f[0]] == null ? '' : c[f[0]]) : ''; const t = f[2]; if (/^[-–—]$/.test(String(v).trim())) v = (t === 'selSalv' || t === 'selSit' || t === 'selBlsd') ? 'Nessun brevetto' : '';
-        if (t === 'selSalv' || t === 'selSit' || t === 'selIstr' || t === 'selMans' || t === 'selBlsd' || t === 'selContr') { const opts = { selContr: COLLAB_CONTR, selBlsd: ['Aggiornato', 'Nessun brevetto'], selMans: COLLAB_MANS, selSalv: ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'], selSit: ['Istruttore', 'Aiuto Allenatore', 'Allenatore', 'Nessun brevetto'], selIstr: ['Licenza elementare', 'Licenza media', 'Qualifica professionale', 'Diploma di scuola secondaria di II grado', 'Laurea triennale', 'Laurea magistrale / ciclo unico', 'Master / Dottorato'] }[t]; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
+        if (t === 'selSalv' || t === 'selSit' || t === 'selIstr' || t === 'selMans' || t === 'selBlsd' || t === 'selContr' || t === 'selCM') { const opts = { selCM: COLLAB_CM_OPTS, selContr: COLLAB_CONTR, selBlsd: ['Aggiornato', 'Non aggiornato', 'Agg. in programma', 'Nessun brevetto'], selMans: COLLAB_MANS, selSalv: ['AB - Piscina (P)', 'AB - Acque Interne (IP)', 'AB - Acque Libere (MIP)', 'Nessun brevetto'], selSit: ['Istruttore', 'Aiuto Allenatore', 'Allenatore', 'Nessun brevetto'], selIstr: ['Licenza elementare', 'Licenza media', 'Qualifica professionale', 'Diploma di scuola secondaria di II grado', 'Laurea triennale', 'Laurea magistrale / ciclo unico', 'Master / Dottorato'] }[t]; const all = (v && !opts.includes(v)) ? [...opts, v] : opts; return `<select id="cf-${f[0]}"><option value=""></option>${all.map(o => `<option value="${collabEsc(o)}" ${o === v ? 'selected' : ''}>${collabEsc(o)}</option>`).join('')}</select>`; }
         if (f[0] === 'via') return `<div style="position:relative"><input type="text" id="cf-via" value="${collabEsc(v)}" autocomplete="off" placeholder="Inizia a scrivere l'indirizzo…" oninput="collabAddr(this)"><div id="collab-addr-list" class="cm-addr"></div></div>`;
         if (t === 'sex') return `<select id="cf-${f[0]}"><option value=""></option><option value="M" ${v === 'M' ? 'selected' : ''}>M</option><option value="F" ${v === 'F' ? 'selected' : ''}>F</option></select>`;
-        if (t === 'date') { const dv = collabNormDate(v); return `<input type="date" id="cf-${f[0]}" value="${collabIsoOk(dv) ? dv : ''}">`; }
+        if (t === 'date') { const dv = collabNormDate(v); return `<input type="date" id="cf-${f[0]}" value="${collabIsoOk(dv) ? dv : ''}"${f[0] === 'scadCM' ? ' onchange="collabCMAuto()"' : f[0] === 'scadBlsd' ? ' onchange="collabBlsdAuto()"' : ''}>`; }
         if (t === 'num') return `<input type="text" inputmode="decimal" id="cf-${f[0]}" value="${collabEsc(v)}">`;
         return `<input type="${t === 'email' ? 'email' : t === 'tel' ? 'tel' : 'text'}" id="cf-${f[0]}" value="${collabEsc(v)}">`; };
     const m = document.createElement('div'); m.id = 'collab-modal'; m.onclick = (e) => { if (e.target === m) m.remove(); };
@@ -4483,9 +4500,9 @@ window.collabCopy = async () => {
     try { await Promise.all(todo.map(c => { const { id, ...r } = c; return setDoc(doc(db, 'collaboratori', collabDocId(collabSeason, r)), { ...r, stagione: collabSeason, updatedAt: new Date().toISOString() }); })); showToast(`Copiati ${todo.length} collaboratori`); collabTab('list'); }
     catch (e) { showToast('Errore: ' + e.message, 'error'); }
 };
-const COLLAB_HDR_COL = (k) => /^(brevSalv|nBrevSalv|scadBrevSalv)$/.test(k) ? 'A61C1C' : /^(brevSit|nBrevSit|scadBrevSit)$/.test(k) ? '1F4E9C' : /^(brevBlsd|scadBlsd)$/.test(k) ? '7A1F4A' : /^(certMedico|scadCM)$/.test(k) ? 'BF9000' : /^(casellario|cartaIdentita)$/.test(k) ? '7F5A1F' : /^mansione/.test(k) ? '4FB3C8' : '355E3B';
+const COLLAB_HDR_COL = (k, g) => g === 'Formazione' ? '6B7280' : /^(brevSalv|nBrevSalv|scadBrevSalv)$/.test(k) ? 'A61C1C' : /^(brevSit|nBrevSit|scadBrevSit)$/.test(k) ? '1F4E9C' : /^(brevBlsd|scadBlsd)$/.test(k) ? '7A1F4A' : /^(certMedico|scadCM)$/.test(k) ? 'BF9000' : /^(casellario|cartaIdentita)$/.test(k) ? '7F5A1F' : /^mansione/.test(k) ? '4FB3C8' : '355E3B';
 function collabStyleHeader(ws) {
-    COLLAB_FIELDS.forEach((f, i) => { const c = ws[XLSX.utils.encode_cell({ r: 0, c: i })]; if (c) c.s = { fill: { patternType: 'solid', fgColor: { rgb: COLLAB_HDR_COL(f[0]) } }, font: { bold: true, color: { rgb: 'FFFFFF' } }, alignment: { vertical: 'center', horizontal: 'left' } }; });
+    COLLAB_FIELDS.forEach((f, i) => { const c = ws[XLSX.utils.encode_cell({ r: 0, c: i })]; if (c) c.s = { fill: { patternType: 'solid', fgColor: { rgb: COLLAB_HDR_COL(f[0], f[3]) } }, font: { bold: true, color: { rgb: 'FFFFFF' } }, alignment: { vertical: 'center', horizontal: 'left' } }; });
 }
 function collabSheetRow(c) { const o = {}; COLLAB_FIELDS.forEach(f => { const v = c[f[0]]; o[f[1]] = f[2] === 'date' ? collabDM(v) : (v == null ? '' : v); }); return o; }
 window.collabExport = () => {
