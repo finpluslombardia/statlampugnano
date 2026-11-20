@@ -2295,7 +2295,7 @@ function startListening() {
         }, errHandler);
 
         if (exportAllowed) onSnapshot(collection(db, "collaboratori"), (snap) => {
-            dataCollab = snap.docs.map(d => { const o = { id: d.id, ...d.data() }; ['mansione', 'mansione2', 'mansione3'].forEach(k => { if (o[k]) o[k] = collabMansCanon(o[k]); }); if (o.tipoContratto) o.tipoContratto = collabContrCanon(o.tipoContratto); COLLAB_FORM_KEYS.forEach(k => { if (o[k] && !collabIsoOk(o[k])) { const n = collabNormDate(o[k]); if (collabIsoOk(n)) o[k] = n; } }); return o; });
+            dataCollab = snap.docs.map(d => { const o = { id: d.id, ...d.data() }; ['mansione', 'mansione2', 'mansione3'].forEach(k => { if (o[k]) o[k] = collabMansCanon(o[k]); }); if (o.tipoContratto) o.tipoContratto = collabContrCanon(o.tipoContratto); COLLAB_FORM_KEYS.concat(['inizioContratto','fineContratto']).forEach(k => { if (o[k] && !collabIsoOk(o[k])) { const n = collabNormDate(o[k]); if (collabIsoOk(n)) o[k] = n; } }); return o; });
             try { collabBadge(); if (!document.getElementById('module-collab').classList.contains('hidden')) collabRender(); } catch (e) { console.warn('collab', e); }
         }, (e) => { console.warn('collaboratori non leggibili (regole Firestore da aggiornare?)', e); showToast('Collaboratori: pubblica le regole Firestore aggiornate', 'error'); });
 
@@ -4103,7 +4103,7 @@ const COLLAB_SCAD = [['scadBrevSalv', 'Brevetto salvamento'], ['scadBrevSit', 'B
 const COLLAB_FORM_KEYS = ['formGenerale', 'formSpecifica', 'formAntincendio', 'formPrimoSoccorso'], COLLAB_FORM_REQ = ['formGenerale', 'formSpecifica', 'scadBlsd', 'scadCM'];
 const collabEsc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const collabIsoOk = (v) => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
-const collabDM = (v) => collabIsoOk(v) ? v.split('-').reverse().join('/') : (v || '');
+const collabDM = (v) => { if (collabIsoOk(v)) return v.split('-').reverse().join('/'); const n = v ? collabNormDate(v) : ''; return collabIsoOk(n) ? n.split('-').reverse().join('/') : (v || ''); };
 const collabIso = (d) => fmtDateISO(new Date(d.getTime() + 12 * 3600e3));
 function collabNormDate(v) {
     if (v == null || v === '') return '';
