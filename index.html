@@ -470,6 +470,26 @@
     #sub-register .group-tickets { border-radius: 26px !important; padding: 14px 22px !important; border: 1px solid rgba(255,255,255,.8) !important; background: linear-gradient(135deg, rgba(255,255,255,.7), rgba(255,255,255,.36)) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 30px rgba(60,80,140,.08) !important; backdrop-filter: blur(18px) saturate(160%); -webkit-backdrop-filter: blur(18px) saturate(160%); }
     #sub-register .inp-field input, #sub-register .inp-field select { border: 1px solid rgba(100,116,139,.16); background: rgba(255,255,255,.62); border-radius: 16px; box-shadow: inset 0 1px 2px rgba(60,80,140,.06); }
     #sub-register .inp-field input:focus, #sub-register .inp-field select:focus { border-color: rgba(59,130,246,.55); background: rgba(255,255,255,.95); box-shadow: 0 0 0 4px rgba(59,130,246,.12); }
+    /* esportazione collaboratori: scelta dati */
+    .exp-sel { margin-top: 10px; }
+    .exp-sel .exp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .exp-sel .exp-chip { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px; font-size: .85rem; cursor: pointer; user-select: none; border: 1px solid rgba(255,255,255,.85); background: linear-gradient(135deg, rgba(255,255,255,.7), rgba(255,255,255,.4)); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 4px 14px rgba(60,80,140,.07); transition: background .15s, box-shadow .15s; }
+    .exp-sel .exp-chip input { accent-color: #2563eb; margin: 0; }
+    .exp-sel .exp-chip.on { background: rgba(37,99,235,.12); border-color: rgba(37,99,235,.35); color: #1d4ed8; }
+    .exp-sel .exp-quick { margin: 10px 2px 0; font-size: .8rem; color: #475569; display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .exp-sel .exp-quick a { color: #2563eb; cursor: pointer; }
+    .exp-sel details { margin-top: 10px; border-radius: 18px; padding: 8px 14px; border: 1px solid rgba(255,255,255,.8); background: rgba(255,255,255,.4); }
+    .exp-sel summary { cursor: pointer; font-size: .85rem; color: #334155; }
+    .exp-sel .exp-grp { margin-top: 10px; }
+    .exp-sel .exp-grp b { display: block; font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+    .exp-sel .exp-fl { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+    .exp-sel .exp-fl label { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; cursor: pointer; }
+    .exp-sel .exp-fl input { accent-color: #2563eb; margin: 0; }
+    /* elenco collaboratori: colonne dati di pari larghezza */
+    #collab-v-list table { table-layout: fixed; width: 100%; min-width: 900px; }
+    #collab-v-list th:first-child { width: 28%; }
+    #collab-v-list th.cc-ab, #collab-v-list th.cc-sit, #collab-v-list th.cc-cm, #collab-v-list th.cc-bl { width: 15%; }
+    #collab-v-list th:last-child { width: 190px; }
 </style>
 </head>
 <body>
@@ -1845,7 +1865,7 @@
                 <input type="text" id="collab-q" placeholder="🔎 Cerca per nome, codice fiscale, mansione…" oninput="collabRenderList()" style="flex:1; min-width:220px; height:42px; border-radius:12px; border:1px solid rgba(0,0,0,.1); padding:0 12px">
                 <span id="collab-count" style="font-weight:700; color:#64748b"></span>
             </div>
-            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table style="min-width:900px"><thead><tr><th>Collaboratore</th><th class="cc-ab">Assistente bagnanti</th><th class="cc-sit">Istruttore</th><th class="cc-cm">Scad. CM</th><th class="cc-bl">Scad. BLSD</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
+            <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table><thead><tr><th>Collaboratore</th><th class="cc-ab">Assistente bagnanti</th><th class="cc-sit">Istruttore</th><th class="cc-cm">Scad. CM</th><th class="cc-bl">Scad. BLSD</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
         </div>
         <div id="collab-v-scad" class="hidden">
             <div class="glass-card collab-box row" style="padding:14px 18px; margin-bottom:14px; display:flex; flex-direction:row; gap:10px; flex-wrap:wrap; align-items:center">
@@ -1877,8 +1897,9 @@
                 </div>
                 <div class="ex-card">
                     <h4 style="margin:0 0 6px">📤 Esporta la stagione</h4>
-                    <div class="ex-hint">Scarica in Excel tutti i collaboratori della stagione selezionata, con le stesse colonne del modello (puoi modificarlo e ricaricarlo).</div>
-                    <button class="btn btn-primary" style="margin-top:8px" onclick="collabExport()">⬇️ Scarica Excel</button>
+                    <div class="ex-hint">Scarica in Excel tutti i collaboratori della stagione selezionata, scegliendo quali dati includere (puoi modificarlo e ricaricarlo).</div>
+                    <div id="collab-exp-sel" class="exp-sel"></div>
+                    <button class="btn btn-primary" style="margin-top:10px" onclick="collabExport()">⬇️ Scarica Excel</button>
                     <h4 style="margin:22px 0 6px">📝 Raccogli i dati dai collaboratori</h4>
                     <div class="ex-hint">Un modulo A4 vuoto da stampare e far compilare, oppure l'elenco dei dati richiesti da mandare per messaggio. Il modulo non include i dati del contratto, che compili tu.</div>
                     <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px"><button class="btn btn-primary" onclick="collabBlankPdf()">⬇️ Modulo A4 vuoto (PDF)</button><button class="btn" style="border:1px solid rgba(0,0,0,.15)" onclick="collabListCopy()">📋 Copia elenco dati</button><button class="btn" style="border:1px solid rgba(0,0,0,.15)" onclick="collabListWa()">💬 Condividi su WhatsApp</button></div>
@@ -4387,7 +4408,7 @@ window.collabRenderList = () => {
     const rowCls = (c) => hasM(c, /direttore/) || !isWater(c) ? 'cr-other' : '';
     const isWater = (c) => [c.mansione, c.mansione2, c.mansione3].some(m => /assistente|istruttore/.test(collabNorm(m)));
     const mansCell = (c, bk, sk) => { const hasB = !noBrev(c[bk]), hasS = c[sk] && !/^[-–—]$/.test(String(c[sk]).trim()); if (!hasB && !hasS) return isWater(c) ? '<span style="color:#64748b; font-weight:700">Nessun Brevetto</span>' : ''; return `<div>${hasB ? `<b>${collabEsc(c[bk])}</b>` : '<span style="color:#64748b; font-weight:700">Nessun Brevetto</span>'}</div>${hasS ? `<div style="margin-top:3px">${scadCell(c[sk])}</div>` : ''}`; };
-    const blsdCell = (c) => { const d = c.scadBlsd; if (d && !/^[-–—]$/.test(String(d).trim())) return scadCell(d); return noBrev(c.brevBlsd) ? (isWater(c) ? NB : '') : `<b>${collabEsc(c.brevBlsd)}</b>`; };
+    const blsdCell = (c) => { const d = c.scadBlsd; if (d && !/^[-–—]$/.test(String(d).trim())) return scadCell(d); return noBrev(c.brevBlsd) ? (isWater(c) ? NB : '') : `<span style="font-weight:700; color:#334155; white-space:nowrap">${collabEsc(c.brevBlsd)}</span>`; };
     const sexIc = (c) => c.sesso === 'M' ? '<span title="Maschio" style="color:#2563eb; font-weight:900; font-size:1.15rem"> ♂</span>' : c.sesso === 'F' ? '<span title="Femmina" style="color:#db2777; font-weight:900; font-size:1.15rem"> ♀</span>' : '';
     const scadCell = (v) => { if (!v || /^[-–—]$/.test(String(v).trim())) return '<span style="color:#cbd5e1">—</span>'; if (!collabIsoOk(v)) return collabEsc(v); const d = Math.round((new Date(v + 'T12:00:00') - new Date(fmtDateISO(new Date()) + 'T12:00:00')) / 86400000); const col = d < 0 ? '#dc2626' : d <= 30 ? '#ea580c' : d <= 60 ? '#ca8a04' : '#334155'; return `<span style="font-weight:700; color:${col}; white-space:nowrap">${collabDM(v)}</span>`; };
     tb.innerHTML = R.map(c => {
@@ -4501,16 +4522,42 @@ window.collabCopy = async () => {
     catch (e) { showToast('Errore: ' + e.message, 'error'); }
 };
 const COLLAB_HDR_COL = (k, g) => g === 'Formazione' ? '6B7280' : /^(brevSalv|nBrevSalv|scadBrevSalv)$/.test(k) ? 'A61C1C' : /^(brevSit|nBrevSit|scadBrevSit)$/.test(k) ? '1F4E9C' : /^(brevBlsd|scadBlsd)$/.test(k) ? '7A1F4A' : /^(certMedico|scadCM)$/.test(k) ? 'BF9000' : /^(casellario|cartaIdentita)$/.test(k) ? '7F5A1F' : /^mansione/.test(k) ? '4FB3C8' : '355E3B';
-function collabStyleHeader(ws) {
-    COLLAB_FIELDS.forEach((f, i) => { const c = ws[XLSX.utils.encode_cell({ r: 0, c: i })]; if (c) c.s = { fill: { patternType: 'solid', fgColor: { rgb: COLLAB_HDR_COL(f[0], f[3]) } }, font: { bold: true, color: { rgb: 'FFFFFF' } }, alignment: { vertical: 'center', horizontal: 'left' } }; });
+function collabStyleHeader(ws, fields) {
+    (fields || COLLAB_FIELDS).forEach((f, i) => { const c = ws[XLSX.utils.encode_cell({ r: 0, c: i })]; if (c) c.s = { fill: { patternType: 'solid', fgColor: { rgb: COLLAB_HDR_COL(f[0], f[3]) } }, font: { bold: true, color: { rgb: 'FFFFFF' } }, alignment: { vertical: 'center', horizontal: 'left' } }; });
 }
-function collabSheetRow(c) { const o = {}; COLLAB_FIELDS.forEach(f => { const v = c[f[0]]; o[f[1]] = f[2] === 'date' ? collabDM(v) : (v == null ? '' : v); }); return o; }
+const COLLAB_EXP_LOCK = ['cognome', 'nome'];
+let collabExpSel = null;
+function collabExpLoad() {
+    if (collabExpSel) return collabExpSel;
+    let saved = null; try { saved = JSON.parse(localStorage.getItem('collabExpSel') || 'null'); } catch (e) {}
+    const all = COLLAB_FIELDS.map(f => f[0]);
+    collabExpSel = new Set(Array.isArray(saved) ? saved.filter(k => all.includes(k)) : all);
+    COLLAB_EXP_LOCK.forEach(k => collabExpSel.add(k));
+    return collabExpSel;
+}
+function collabExpSave() { try { localStorage.setItem('collabExpSel', JSON.stringify([...collabExpSel])); } catch (e) {} }
+function collabExpRender() {
+    const box = document.getElementById('collab-exp-sel'); if (!box) return;
+    const sel = collabExpLoad(), groups = [];
+    COLLAB_FIELDS.forEach(f => { let g = groups.find(x => x[0] === f[3]); if (!g) groups.push(g = [f[3], []]); g[1].push(f); });
+    const n = sel.size;
+    box.innerHTML = `<div class="exp-chips">${groups.map(([g, fs], i) => { const k = fs.filter(f => sel.has(f[0])).length; return `<label class="exp-chip ${k ? 'on' : ''}"><input type="checkbox" data-g="${i}" ${k === fs.length ? 'checked' : ''} onchange="collabExpGroup(${i}, this.checked)">${collabEsc(g)}${k && k < fs.length ? ` <span style="opacity:.6">${k}/${fs.length}</span>` : ''}</label>`; }).join('')}</div>
+        <div class="exp-quick"><span>${n} colonne selezionate</span><a onclick="collabExpAll(true)">Tutte</a><a onclick="collabExpAll(false)">Solo cognome e nome</a></div>
+        <details ${box.dataset.open ? 'open' : ''} ontoggle="this.parentNode.dataset.open = this.open ? '1' : ''"><summary>Scegli le singole colonne</summary>${groups.map(([g, fs]) => `<div class="exp-grp"><b>${collabEsc(g)}</b><div class="exp-fl">${fs.map(f => `<label><input type="checkbox" ${sel.has(f[0]) ? 'checked' : ''} ${COLLAB_EXP_LOCK.includes(f[0]) ? 'disabled' : ''} onchange="collabExpField('${f[0]}', this.checked)">${collabEsc(f[1])}</label>`).join('')}</div></div>`).join('')}</details>`;
+    box.querySelectorAll('input[data-g]').forEach(el => { const fs = groups[+el.dataset.g][1], k = fs.filter(f => sel.has(f[0])).length; el.indeterminate = k > 0 && k < fs.length; });
+}
+window.collabExpGroup = (i, on) => { const g = [...new Set(COLLAB_FIELDS.map(f => f[3]))][i]; COLLAB_FIELDS.filter(f => f[3] === g).forEach(f => { if (on) collabExpSel.add(f[0]); else if (!COLLAB_EXP_LOCK.includes(f[0])) collabExpSel.delete(f[0]); }); collabExpSave(); collabExpRender(); };
+window.collabExpField = (k, on) => { if (on) collabExpSel.add(k); else collabExpSel.delete(k); collabExpSave(); collabExpRender(); };
+window.collabExpAll = (on) => { collabExpSel = new Set(on ? COLLAB_FIELDS.map(f => f[0]) : COLLAB_EXP_LOCK); collabExpSave(); collabExpRender(); };
+function collabSheetRow(c, fields) { const o = {}; (fields || COLLAB_FIELDS).forEach(f => { const v = c[f[0]]; o[f[1]] = f[2] === 'date' ? collabDM(v) : (v == null ? '' : v); }); return o; }
 window.collabExport = () => {
     if (!exportAllowed) return; const L = collabOfSeason().sort((a, b) => (a.cognome || '').localeCompare(b.cognome || '', 'it'));
     if (!L.length) return showToast('Nessun collaboratore in questa stagione', 'error');
-    const ws = XLSX.utils.json_to_sheet(L.map(collabSheetRow)); ws['!cols'] = COLLAB_FIELDS.map(f => ({ wch: Math.max(12, f[1].length + 2) })); collabStyleHeader(ws);
+    const sel = collabExpLoad(), fields = COLLAB_FIELDS.filter(f => sel.has(f[0]));
+    const ws = XLSX.utils.json_to_sheet(L.map(c => collabSheetRow(c, fields)), { header: fields.map(f => f[1]) }); ws['!cols'] = fields.map(f => ({ wch: Math.max(12, f[1].length + 2) })); collabStyleHeader(ws, fields);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Collaboratori ' + collabSeason.replace('/', '-')); XLSX.writeFile(wb, `collaboratori_${collabSeason.replace('/', '-')}.xlsx`);
 };
+collabExpRender();
 window.collabTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([COLLAB_FIELDS.map(f => f[1])]); ws['!cols'] = COLLAB_FIELDS.map(f => ({ wch: Math.max(12, f[1].length + 2) })); collabStyleHeader(ws);
     const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Collaboratori'); XLSX.writeFile(wb, 'modello_collaboratori.xlsx');
