@@ -490,6 +490,28 @@
     #collab-v-list th:first-child { width: 28%; }
     #collab-v-list th.cc-ab, #collab-v-list th.cc-sit, #collab-v-list th.cc-cm, #collab-v-list th.cc-bl { width: 15%; }
     #collab-v-list th:last-child { width: 190px; }
+    /* ricerca globale */
+    .gs-btn { display: inline-flex !important; align-items: center; gap: 7px; height: 34px !important; padding: 0 12px !important; border-radius: 999px !important; cursor: pointer; font-size: .82rem; }
+    .gs-btn kbd, #gs-overlay kbd { font: 500 .68rem/1 inherit; font-family: inherit; padding: 3px 6px; border-radius: 7px; background: rgba(100,116,139,.12); color: #64748b !important; border: 0; }
+    #gs-overlay { position: fixed; inset: 0; z-index: 9999; display: flex; justify-content: center; align-items: flex-start; padding-top: 11vh; background: rgba(30,41,80,.22); backdrop-filter: blur(8px) saturate(140%); -webkit-backdrop-filter: blur(8px) saturate(140%); }
+    #gs-overlay.hidden { display: none; }
+    .gs-panel { width: min(680px, 92vw); max-height: 72vh; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; border: 1px solid rgba(255,255,255,.85); background: linear-gradient(135deg, rgba(255,255,255,.86), rgba(255,255,255,.68)); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 30px 80px rgba(40,60,120,.28); color: #0f172a; }
+    .gs-input-row { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid rgba(100,116,139,.14); color: #64748b; }
+    .gs-input-row input { flex: 1; border: 0; outline: 0; background: transparent; font-size: 1.05rem; color: #0f172a; font-family: inherit; }
+    #gs-results { overflow-y: auto; padding: 8px 10px 10px; }
+    .gs-group { margin: 10px 8px 4px; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: #64748b; font-weight: 600; }
+    .gs-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 16px; cursor: pointer; }
+    .gs-item.sel { background: rgba(37,99,235,.11); }
+    .gs-item .gs-ic { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; background: rgba(255,255,255,.8); box-shadow: inset 0 1px 0 #fff, 0 2px 8px rgba(60,80,140,.1); }
+    .gs-item .gs-t { font-size: .92rem; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gs-item .gs-s { font-size: .76rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .gs-item .gs-m { min-width: 0; flex: 1; }
+    .gs-item mark { background: rgba(250,204,21,.45); color: inherit; border-radius: 4px; padding: 0 1px; }
+    .gs-item .gs-go { font-size: .72rem; color: #94a3b8; }
+    .gs-empty { padding: 30px 10px; text-align: center; color: #64748b; font-size: .9rem; }
+    .gs-foot { display: flex; gap: 16px; flex-wrap: wrap; padding: 9px 20px; border-top: 1px solid rgba(100,116,139,.14); font-size: .72rem; color: #94a3b8; }
+    @media (max-width: 1600px) { .gs-btn span, .gs-btn kbd { display: none; } .gs-btn { width: 34px; padding: 0 !important; justify-content: center; } }
+    @media (max-width: 700px) { #gs-overlay { padding-top: 6vh; } .gs-foot { display: none; } }
 </style>
 </head>
 <body>
@@ -506,6 +528,13 @@
     </div>
 </div>
 
+<div id="gs-overlay" class="hidden" onmousedown="if(event.target===this)gsClose()">
+    <div class="gs-panel" role="dialog" aria-label="Ricerca globale">
+        <div class="gs-input-row"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="gs-input" type="text" autocomplete="off" spellcheck="false" placeholder="Cerca collaboratori, note, incassi, ingressi, utenze, date…" oninput="gsRender()"><kbd onclick="gsClose()">Esc</kbd></div>
+        <div id="gs-results"></div>
+        <div class="gs-foot"><span>↑↓ per scegliere</span><span>Invio per aprire</span><span>prova: “12/11”, “novembre 2026”, un cognome, “pioggia”</span></div>
+    </div>
+</div>
 <div class="sidebar">
     <div class="sidebar-header">🏊‍♂️ CF Lampugnano</div>
     <div class="nav-section-title">Ingressi</div>
@@ -535,6 +564,7 @@
         <li class="nav-item" id="nav-module-esporta" onclick="switchModule('esporta')">📤 Esporta Dati</li>
     </ul>
     <div class="sidebar-footer">
+        <button id="gs-btn" class="gs-btn" onclick="gsOpen()" title="Cerca ovunque (Ctrl/Cmd + K)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>Cerca</span><kbd>⌘K</kbd></button>
         <div style="font-size:0.85rem; margin-bottom:15px; color:#cbd5e1; font-weight:600" id="user-display">User</div>
         <button class="btn" style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:#fff; font-size:0.8rem; height:38px" onclick="doLogout()">Disconnetti</button>
     </div>
@@ -2809,6 +2839,143 @@ window.backfillTemps = async (auto) => {
 let autoTempBackfillDone = false;
 function renderMultiBar(id,l,ds,ax='x') { if(!isChartReady()) return; if(ch[id])ch[id].destroy(); ch[id]=new Chart(document.getElementById(id),{type:'bar',data:{labels:l,datasets:ds},options:{animation:false, responsive:true,maintainAspectRatio:false,indexAxis:ax,plugins:{legend:{display:true}}}}); }
 
+// ---- Ricerca globale ----
+const GS_MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const GS_GIORNI = ['domenica','lunedi','martedi','mercoledi','giovedi','venerdi','sabato'];
+const gsNorm = (v) => String(v == null ? '' : v).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const gsEsc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const gsDateHay = (ds) => { if (!ds || !/^\d{4}-\d{2}-\d{2}$/.test(ds)) return ''; const [y, m, d] = ds.split('-'), wd = new Date(ds + 'T12:00:00').getDay(); return `${d}/${m}/${y} ${d}/${m} ${ds} ${GS_GIORNI[wd]} ${GS_GIORNI[wd].slice(0, 3)} ${GS_MESI[+m - 1]} ${y}`; };
+const gsDM = (ds) => { const wd = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'][new Date(ds + 'T12:00:00').getDay()]; return wd + ' ' + ds.split('-').reverse().join('/'); };
+const gsNavOk = (m) => { const el = document.getElementById('nav-module-' + m); return !!el && !el.classList.contains('hidden') && !el.closest('.hidden'); };
+let gsItems = [], gsSel = 0;
+const gsSetDates = (a, b, d) => { const x = document.getElementById(a), y = document.getElementById(b); if (x) x.value = d; if (y) y.value = d; };
+function gsBuildIndex() {
+    const R = [];
+    const MODS = [['ingressi', '🎫', 'Nuoto Libero', [['overview', 'Panoramica'], ['stats', 'Statistiche'], ['riepilogo', 'Riepilogo'], ['archive', 'Archivio'], ['register', 'Registra Ingressi']], () => switchSubView], ['dae', '⚡', 'Controllo DAE', [], null], ['utenze', '📊', 'Utenze', [['overview', 'Panoramica'], ['charts', 'Statistiche'], ['riepilogo', 'Riepilogo'], ['archive', 'Archivio'], ['register', 'Registra Utenze']], () => switchSubViewUtenze], ['incassi', '💰', 'Incassi', [['overview', 'Panoramica'], ['stats', 'Statistiche'], ['riepilogo', 'Riepilogo'], ['archive', 'Archivio'], ['register', 'Registra Incasso']], () => switchSubViewIncassi], ['note', '📝', 'Note', [], null], ['collab', '👥', 'Collaboratori', [['list', 'Elenco'], ['scad', 'Scadenze'], ['io', 'Importa / Esporta']], () => collabTab], ['esporta', '📤', 'Esporta Dati', [], null]];
+    MODS.forEach(([m, ic, lab, subs, fn]) => {
+        if (!gsNavOk(m)) return;
+        R.push({ g: 'Vai a', ic, t: lab, s: 'Apri la sezione', hay: gsNorm(lab), go: () => switchModule(m) });
+        subs.forEach(([k, l]) => R.push({ g: 'Vai a', ic, t: lab + ' · ' + l, s: 'Apri la schermata', hay: gsNorm(lab + ' ' + l), go: () => { switchModule(m); if (m === 'collab') collabTab(k); else fn()(k); } }));
+    });
+    if (typeof exportAllowed !== 'undefined' && exportAllowed && gsNavOk('collab')) (dataCollab || []).forEach(c => {
+        const mans = [c.mansione, c.mansione2, c.mansione3].filter(Boolean).join(' · ');
+        R.push({ g: 'Collaboratori', ic: '👥', t: `${c.cognome || ''} ${c.nome || ''}`.trim(), s: [mans, c.stagione ? 'stagione ' + c.stagione : ''].filter(Boolean).join(' · '), hay: gsNorm([c.cognome, c.nome, c.nome + ' ' + c.cognome, c.cf, mans, c.mail, c.cellulare, c.comune, c.via].join(' ')), go: () => { switchModule('collab'); collabTab('list'); collabView(c.id); } });
+    });
+    if (gsNavOk('note')) (dataNote || []).forEach(n => R.push({ g: 'Note', ic: '📝', t: String(n.testo || '').replace(/\s+/g, ' ').slice(0, 90), s: [n.destinatario, n.operatore, n.date].filter(Boolean).join(' · '), hay: gsNorm([n.testo, n.destinatario, n.operatore, gsDateHay((n.date || '').split('-').reverse().join('-').length === 10 && /^\d{4}/.test(n.date) ? n.date : (n.date || '').split('-').reverse().join('-'))].join(' ')), go: () => { switchModule('note'); openNotaGrande(null, n.id); } }));
+    if (gsNavOk('incassi')) (dataIncassi || []).forEach(d => { if (!d.date) return; R.push({ g: 'Incassi', ic: '💰', t: gsDM(d.date) + (d.incasso_totale != null ? ' · ' + fmtEUR(d.incasso_totale) : ''), s: d.note || 'Giornata di incasso', hay: gsNorm(gsDateHay(d.date) + ' ' + (d.note || '') + ' incasso incassi'), date: d.date, go: () => { switchModule('incassi'); switchSubViewIncassi('archive'); gsSetDates('inc-arch-date-start', 'inc-arch-date-end', d.date); renderIncassiArchive(true); } }); });
+    if (gsNavOk('ingressi')) { const by = {}; (dataIngressi || []).forEach(x => { if (!x.date) return; const o = by[x.date] || (by[x.date] = { tot: 0, hay: [], meteo: {} }); o.tot += x.totale || 0; o.hay.push(x.fascia, x.type, x.meteo, x.note); if (x.meteo) o.meteo[x.meteo] = 1; }); Object.keys(by).forEach(ds => { const o = by[ds]; R.push({ g: 'Nuoto Libero', ic: '🎫', t: gsDM(ds) + ' · ' + o.tot + ' ingressi', s: Object.keys(o.meteo).join(' · ') || 'Giornata registrata', hay: gsNorm(gsDateHay(ds) + ' ' + o.hay.filter(Boolean).join(' ') + ' ingressi nuoto libero'), date: ds, go: () => { switchModule('ingressi'); switchSubView('archive'); gsSetDates('arch-date-start', 'arch-date-end', ds); renderIngressiArchive(true); } }); }); }
+    if (gsNavOk('utenze')) (dataUtenze || []).forEach(d => { if (!d.date) return; R.push({ g: 'Utenze', ic: '📊', t: gsDM(d.date), s: [d.meteo, d.note].filter(Boolean).join(' · ') || 'Lettura contatori', hay: gsNorm(gsDateHay(d.date) + ' ' + (d.meteo || '') + ' ' + (d.note || '') + ' utenze letture contatori'), date: d.date, go: () => { switchModule('utenze'); switchSubViewUtenze('archive'); gsSetDates('u-hist-start', 'u-hist-end', d.date); renderUtenze(); } }); });
+    if (gsNavOk('dae')) (dataDae || []).forEach(d => { if (!d.date) return; R.push({ g: 'Controllo DAE', ic: '⚡', t: `${gsDM(d.date)}${d.time ? ' ' + d.time : ''} · ${d.ass || ''}`, s: [d.op, d.status].filter(Boolean).join(' · '), hay: gsNorm(gsDateHay(d.date) + ' ' + [d.ass, d.op, d.status].join(' ') + ' dae'), date: d.date, go: () => { switchModule('dae'); const e = document.getElementById('d-search-date'); if (e) { e.value = d.date; renderDae(); } } }); });
+    return R;
+}
+function gsHi(text, toks) {
+    let out = gsEsc(text); toks.forEach(t => { if (t.length < 2) return; const re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig'); out = out.replace(re, '<mark>$1</mark>'); }); return out;
+}
+window.gsRender = () => {
+    const q = document.getElementById('gs-input').value.trim(), box = document.getElementById('gs-results');
+    const toks = gsNorm(q).split(/\s+/).filter(Boolean);
+    const idx = gsBuildIndex(); const groups = {}; let total = 0;
+    if (!toks.length) { ['Vai a'].forEach(g => { groups[g] = idx.filter(x => x.g === g).slice(0, 8); }); }
+    else idx.forEach(it => { if (toks.every(t => it.hay.includes(t))) (groups[it.g] = groups[it.g] || []).push(it); });
+    const order = ['Collaboratori', 'Note', 'Vai a', 'Incassi', 'Nuoto Libero', 'Utenze', 'Controllo DAE'];
+    gsItems = []; let html = '';
+    order.forEach(g => {
+        let L = groups[g]; if (!L || !L.length) return;
+        total += L.length; if (L[0].date) L = L.slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+        const shown = L.slice(0, toks.length ? 6 : 8);
+        html += `<div class="gs-group">${g}${L.length > shown.length ? ` · ${shown.length} di ${L.length}` : ''}</div>`;
+        shown.forEach(it => { gsItems.push(it); html += `<div class="gs-item" data-i="${gsItems.length - 1}" onmousemove="gsHover(${gsItems.length - 1})" onclick="gsGo(${gsItems.length - 1})"><span class="gs-ic">${it.ic}</span><div class="gs-m"><div class="gs-t">${gsHi(it.t, toks)}</div>${it.s ? `<div class="gs-s">${gsHi(it.s, toks)}</div>` : ''}</div><span class="gs-go">↵</span></div>`; });
+    });
+    box.innerHTML = html || `<div class="gs-empty">Nessun risultato per “${gsEsc(q)}”.<br><span style="font-size:.8rem">Prova con un cognome, una data (12/11) o una parola delle note.</span></div>`;
+    gsSel = 0; gsMark();
+};
+function gsMark() { document.querySelectorAll('#gs-results .gs-item').forEach((e, i) => e.classList.toggle('sel', i === gsSel)); const e = document.querySelector('#gs-results .gs-item.sel'); if (e) e.scrollIntoView({ block: 'nearest' }); }
+window.gsHover = (i) => { if (gsSel !== i) { gsSel = i; document.querySelectorAll('#gs-results .gs-item').forEach((e, k) => e.classList.toggle('sel', k === i)); } };
+window.gsOpen = () => { const o = document.getElementById('gs-overlay'); if (!o || !document.getElementById('login-screen').classList.contains('hidden')) return; o.classList.remove('hidden'); const i = document.getElementById('gs-input'); i.value = ''; gsRender(); setTimeout(() => i.focus(), 20); };
+window.gsClose = () => { const o = document.getElementById('gs-overlay'); if (o) o.classList.add('hidden'); };
+window.gsGo = (i) => { const it = gsItems[i]; if (!it) return; gsClose(); try { it.go(); } catch (e) { console.warn('ricerca', e); } };
+document.addEventListener('keydown', (e) => {
+    const o = document.getElementById('gs-overlay'); if (!o) return;
+    const open = !o.classList.contains('hidden');
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open ? gsClose() : gsOpen(); return; }
+    if (!open) { if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || '')) && !e.target.isContentEditable) { e.preventDefault(); gsOpen(); } return; }
+    if (e.key === 'Escape') { e.preventDefault(); gsClose(); }
+    else if (e.key === 'ArrowDown') { e.preventDefault(); if (gsItems.length) { gsSel = (gsSel + 1) % gsItems.length; gsMark(); } }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); if (gsItems.length) { gsSel = (gsSel - 1 + gsItems.length) % gsItems.length; gsMark(); } }
+    else if (e.key === 'Enter') { e.preventDefault(); gsGo(gsSel); }
+});
+
+// ---- Previsione ingressi: giorno della settimana (trend recente) + festività italiane + meteo previsto ----
+const __itHolCache = {};
+function itHolidays(y) {
+    if (__itHolCache[y]) return __itHolCache[y];
+    const p2 = n => String(n).padStart(2, '0'), s = new Set();
+    [[1, 1], [1, 6], [4, 25], [5, 1], [6, 2], [8, 15], [11, 1], [12, 7], [12, 8], [12, 25], [12, 26]].forEach(([m, d]) => s.add(`${y}-${p2(m)}-${p2(d)}`));
+    const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25), g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), mo = Math.floor((h + l - 7 * m + 114) / 31), da = ((h + l - 7 * m + 114) % 31) + 1;
+    [0, 1].forEach(o => { const dt = new Date(y, mo - 1, da + o); s.add(`${y}-${p2(dt.getMonth() + 1)}-${p2(dt.getDate())}`); });
+    return (__itHolCache[y] = s);
+}
+const isItHoliday = ds => itHolidays(+ds.slice(0, 4)).has(ds);
+const __ingDailyCache = {};
+async function ingFetchDaily(dates) {
+    const todayStr = fmtDateISO(new Date()), maxD = new Date(); maxD.setDate(maxD.getDate() + 14);
+    const lim = fmtDateISO(maxD), ok = dates.filter(d => d <= lim && Math.round((new Date(todayStr + 'T00:00:00') - new Date(d + 'T00:00:00')) / 86400000) <= 60);
+    if (!ok.length) return {};
+    const a = ok[0], b = ok[ok.length - 1], key = a + '|' + b + '|' + todayStr;
+    if (__ingDailyCache[key]) return __ingDailyCache[key];
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&start_date=${a}&end_date=${b}`);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = (await r.json()).daily || {}, out = {};
+    (j.time || []).forEach((t, i) => { if (j.weather_code && j.weather_code[i] != null) out[t] = { code: j.weather_code[i], t: (j.temperature_2m_max[i] + j.temperature_2m_min[i]) / 2 }; });
+    return (__ingDailyCache[key] = out);
+}
+function ingWeatherModel(list) {
+    const byF = {}; list.filter(x => x.fam).forEach(x => { const q = byF[x.fam] || (byF[x.fam] = { s: 0, n: 0 }); q.s += x.ratio; q.n++; });
+    const famF = f => (f && byF[f] ? (byF[f].s + 3) / (byF[f].n + 3) : 1);
+    const tp = list.filter(x => typeof x.temp === 'number').map(x => ({ t: x.temp, y: x.ratio / famF(x.fam) }));
+    let b = 0, meanT = 0;
+    if (tp.length >= 15) {
+        meanT = tp.reduce((a, q) => a + q.t, 0) / tp.length; const meanY = tp.reduce((a, q) => a + q.y, 0) / tp.length;
+        const sxx = tp.reduce((a, q) => a + (q.t - meanT) ** 2, 0), syy = tp.reduce((a, q) => a + (q.y - meanY) ** 2, 0), sxy = tp.reduce((a, q) => a + (q.t - meanT) * (q.y - meanY), 0);
+        const r = sxx > 0 && syy > 0 ? sxy / Math.sqrt(sxx * syy) : 0;
+        if (Math.abs(r) >= 0.15) b = sxy / sxx;
+    }
+    const tF = t => Math.min(1.3, Math.max(0.7, 1 + b * ((typeof t === 'number' ? t : meanT) - meanT)));
+    return (f, t) => Math.min(1.6, Math.max(0.5, famF(f) * tF(t)));
+}
+// rows: registrazioni fino a oggi; remaining: date da stimare; fc: meteo previsto per data (o null); fallbackAvg: media del mese in corso
+function ingForecastCalc(rows, remaining, fc, fallbackAvg) {
+    const listN = buildMeteoDays(rows.filter(x => !isItHoliday(x.date))).map(x => ({ ...x, hol: false }));
+    const list = listN.concat(buildMeteoDays(rows.filter(x => isItHoliday(x.date))).map(x => ({ ...x, hol: true })));
+    const dayF = ingWeatherModel(listN);
+    list.forEach(x => { x.clean = x.tot / dayF(x.fam, x.temp); });
+    const nonHol = list.filter(x => !x.hol).sort((a, b) => (a.date < b.date ? 1 : -1));
+    const base = [], baseAll = [];
+    for (let wd = 0; wd < 7; wd++) {
+        const L = nonHol.filter(x => x.wd === wd);
+        baseAll[wd] = L.length ? L.reduce((a, x) => a + x.clean, 0) / L.length : null;
+        const R = L.slice(0, 10); let sw = 0, sv = 0; R.forEach((x, i) => { const w = Math.pow(0.85, i); sw += w; sv += w * x.clean; });
+        base[wd] = R.length >= 3 ? sv / sw : baseAll[wd];
+    }
+    const hol = list.filter(x => x.hol && x.wd !== 0 && baseAll[x.wd]);
+    const hR = hol.length ? hol.reduce((a, x) => a + x.clean / baseAll[x.wd], 0) / hol.length : 1;
+    let sum = 0, nHol = 0, nMeteo = 0, partial = false; const holDays = [];
+    remaining.forEach(ds => {
+        const wd = new Date(ds + 'T12:00:00').getDay(); let e = base[wd];
+        if (isItHoliday(ds) && wd !== 0) {
+            nHol++; holDays.push(ds);
+            const sun = base[0] != null ? base[0] : e, n = hol.length;
+            if (e != null && sun != null) e = (e * hR * n + sun * 2) / (n + 2); else if (sun != null) e = sun;
+        }
+        if (e == null) { e = fallbackAvg; partial = true; }
+        const w = fc && fc[ds];
+        if (w) { nMeteo++; e *= dayF(meteoFamily(meteoOptionFor(w.code)), w.t); }
+        sum += e;
+    });
+    return { sum, nHol, nMeteo, partial, hol: holDays };
+}
+window.ingForecastCalc = ingForecastCalc; window.isItHoliday = isItHoliday; window.itHolidays = itHolidays;
+
 // ---- Atteso prossimo giorno: base del giorno della settimana corretta con previsioni meteo e temperatura ----
 async function renderNextDayCard(tmr, tw, rows, last) {
     const el = document.getElementById('ov-next-body'); if (!el) return;
@@ -3117,41 +3284,26 @@ function renderOverviewKPI() {
     // Calculate total for full previous month
     const totalYoyFull = dYoyFullMonth.reduce((a,b)=>a+b.totale,0);
 
-    if(daysCurrent > 0) {
-        // Storico: tutti i dati passati (esclusi i giorni esclusi dalla media e il mese corrente stesso)
-        const histForForecast = dataIngressi.filter(x => !x.excludeStats && x.date.slice(0,7) !== currentMonthStr);
-
-        // Media storica per giorno della settimana (0=Dom...6=Sab), su tutti gli anni disponibili
-        const weekdaySums = new Array(7).fill(0);
-        const weekdayDayCounts = new Array(7).fill(0); // conta giorni-calendario unici per evitare doppio peso multi-fascia
-        const weekdaySeenDates = new Array(7).fill(null).map(() => new Set());
-        histForForecast.forEach(x => {
-            const wd = new Date(x.date).getDay();
-            weekdaySums[wd] += x.totale || 0;
-            weekdaySeenDates[wd].add(x.date);
-        });
-        for (let wd = 0; wd < 7; wd++) weekdayDayCounts[wd] = weekdaySeenDates[wd].size;
-        const weekdayAvg = weekdaySums.map((sum, wd) => weekdayDayCounts[wd] > 0 ? sum / weekdayDayCounts[wd] : null);
-
-        // Somma stimata per i giorni RIMANENTI del mese (da maxDay+1 a fine mese)
-        let estimatedRemaining = 0;
-        let hasHistoricalBasis = true;
-        for (let d = maxDay + 1; d <= daysInMonth; d++) {
-            const dt = new Date(currentYear, currentMonth - 1, d);
-            const wd = dt.getDay();
-            if (weekdayAvg[wd] !== null) {
-                estimatedRemaining += weekdayAvg[wd];
-            } else {
-                // Fallback: nessun dato storico per quel giorno della settimana -> usa media generale del mese in corso
-                hasHistoricalBasis = false;
-                estimatedRemaining += (totalCurrent / daysCurrent);
-            }
-        }
-
-        const forecastTotal = totalCurrent + estimatedRemaining;
-        document.getElementById('ov-forecast').innerText = forecastTotal.toFixed(0);
-        const basisLabel = hasHistoricalBasis ? 'su trend storico' : 'su trend storico (parziale)';
-        document.getElementById('ov-forecast-sub').innerHTML = `proiezione <span style="font-size:0.65rem; opacity:0.7">(${basisLabel})</span><br><span style="font-size:0.75rem; color:#7e22ce; opacity:0.8">vs ${totalYoyFull} (${targetYoyYear})</span>`;
+    if (daysCurrent > 0) {
+        const tok = window.__ingFcTok = (window.__ingFcTok || 0) + 1;
+        const anchor = `${currentYear}-${pad2(currentMonth)}-${pad2(maxDay)}`;
+        const rowsAll = dataIngressi.filter(x => !x.excludeStats && x.date && x.date <= anchor);
+        const remaining = [];
+        for (let d = maxDay + 1; d <= daysInMonth; d++) remaining.push(`${currentYear}-${pad2(currentMonth)}-${pad2(d)}`);
+        const show = (res) => {
+            if (tok !== window.__ingFcTok) return;
+            const tot = totalCurrent + res.sum;
+            document.getElementById('ov-forecast').innerText = tot.toFixed(0);
+            const parts = ['trend recente'];
+            if (res.nHol) parts.push(res.nHol + (res.nHol === 1 ? ' festivo' : ' festivi'));
+            if (res.nMeteo) parts.push('meteo previsto ' + res.nMeteo + ' gg');
+            const note = remaining.length ? `${parts.join(' · ')}${res.partial ? ' (parziale)' : ''}` : 'mese concluso';
+            document.getElementById('ov-forecast-sub').innerHTML = `proiezione <span style="font-size:0.65rem; opacity:0.7">(${note})</span><br><span style="font-size:0.75rem; color:#7e22ce; opacity:0.8">vs ${totalYoyFull} (${targetYoyYear})</span>`;
+            document.getElementById('ov-forecast-sub').title = res.hol.length ? 'Festivi nel resto del mese: ' + res.hol.map(h => h.slice(8) + '/' + h.slice(5, 7)).join(', ') : '';
+        };
+        const first = ingForecastCalc(rowsAll, remaining, null, totalCurrent / daysCurrent);
+        show(first);
+        if (remaining.length) ingFetchDaily(remaining).then(fc => { if (fc && Object.keys(fc).length) show(ingForecastCalc(rowsAll, remaining, fc, totalCurrent / daysCurrent)); }).catch(() => {});
     } else {
         document.getElementById('ov-forecast').innerText = "-";
         document.getElementById('ov-forecast-sub').innerText = "proiezione";
