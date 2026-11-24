@@ -6260,7 +6260,8 @@ window.renderIncassiArchive = (resetOpen) => {
             <td colspan="10" style="${pad}white-space:nowrap">${open ? '▾' : '▸'} ${label} <span style="font-weight:600; color:#64748b; font-size:0.75rem">· ${count} giorni</span></td></tr>`;
     };
     const dayRow = (d) => {
-        const dateLabel = d.date.split('-').reverse().join('/');
+        const wd = ['dom','lun','mar','mer','gio','ven','sab'][new Date(d.date + 'T12:00:00').getDay()];
+        const dateLabel = `<span style="display:inline-block; width:2.4em; color:#64748b; font-weight:500">${wd}</span> ` + d.date.split('-').reverse().join('/');
         return `<tr>
             <td style="font-weight:700; padding-left:48px">${dateLabel}</td>
             <td style="color:#ef4444">${fmtEUR(d.corsi_n4_tot)}</td>
