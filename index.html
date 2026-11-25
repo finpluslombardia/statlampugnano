@@ -241,7 +241,7 @@
 
     /* ===== BACHECA NOTE ===== */
     #note-board { background-color:#c8a171; background-image: radial-gradient(rgba(90,55,20,.22) 1px, transparent 1.6px), radial-gradient(rgba(255,255,255,.18) 1px, transparent 1.6px), radial-gradient(rgba(90,55,20,.12) 2px, transparent 2.6px); background-size: 7px 7px, 11px 11px, 17px 17px; background-position: 0 0, 3px 5px, 8px 2px; border: 12px solid #7c4a1e; border-radius: 14px; box-shadow: inset 0 0 40px rgba(60,30,5,.45), 0 6px 20px rgba(0,0,0,.25); padding: 34px 28px 40px; min-height: 360px; }
-    #note-feed { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 34px 26px; }
+    #note-feed, #note-done-feed { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 34px 26px; }
     .postit { position:relative; aspect-ratio:1/1; padding:26px 16px 12px; display:flex; flex-direction:column; gap:6px; border-radius:3px 3px 12px 3px; box-shadow: 2px 5px 10px rgba(0,0,0,.32), inset 0 -18px 22px -18px rgba(0,0,0,.12); transform: rotate(var(--rot, 0deg)); transition: transform .18s ease, box-shadow .18s ease; color:#1e293b; }
     .postit { cursor:pointer; }
     .postit .p-more { font-size:.7rem; font-weight:800; color:#92400e; text-align:center; margin-top:-2px; letter-spacing:.02em; }
@@ -388,7 +388,14 @@
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
     /* bacheca note in vetro */
     #note-board { background: none; border: 0; box-shadow: none; padding: 6px 0 30px; min-height: 0; }
-    #note-feed { gap: 22px; }
+    #note-feed, #note-done-feed { gap: 22px; }
+    #note-done-wrap { margin-top: 34px; border-radius: 26px; padding: 6px 22px 22px; border: 1px solid rgba(255,255,255,.8); background: linear-gradient(135deg, rgba(255,255,255,.55), rgba(255,255,255,.3)); box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 10px 30px rgba(60,80,140,.07); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+    #note-done-wrap.hidden { display: none; }
+    #note-done-wrap > summary { cursor: pointer; padding: 14px 4px; font-size: .95rem; font-weight: 600; color: #334155; list-style: none; }
+    #note-done-wrap > summary::-webkit-details-marker { display: none; }
+    #note-done-wrap > summary::before { content: '▸'; display: inline-block; margin-right: 8px; transition: transform .15s; color: #64748b; }
+    #note-done-wrap[open] > summary::before { transform: rotate(90deg); }
+    #note-done-wrap > #note-done-feed { margin-top: 10px; }
     #note-feed > div[style*="text-align:center"] { color: #64748b !important; text-shadow: none !important; }
     .postit { --bg: #fef08a; transform: none; aspect-ratio: 1/1; padding: 20px 18px 14px; border-radius: 26px; background: color-mix(in srgb, var(--bg) 58%, rgba(255,255,255,.45)); backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%); border: 1px solid rgba(255,255,255,.75); box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 10px 30px rgba(60,80,140,.09); }
     .postit:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255,255,255,.85), 0 18px 44px rgba(60,80,140,.15); z-index: 5; }
@@ -2110,7 +2117,7 @@
             </label>
             <button class="btn btn-primary" style="height:44px; padding:0 22px; margin-left:auto" onclick="openNoteModal()">+ Nuova Nota</button>
         </div>
-        <div id="note-board"><div id="note-feed"></div></div>
+        <div id="note-board"><div id="note-feed"></div><details id="note-done-wrap" class="hidden"><summary id="note-done-sum"></summary><div id="note-done-feed"></div></details></div>
     </div>
 </div>
 
@@ -3972,20 +3979,25 @@ window.renderNote = () => {
     const showExpired = document.getElementById('note-show-expired').checked;
     const todayStr = fmtDateISO(new Date());
 
-    let list = [...dataNote];
-    if (filterDest !== 'all') list = list.filter(n => n.destinatario === filterDest);
+    let all = [...dataNote];
+    if (filterDest !== 'all') all = all.filter(n => n.destinatario === filterDest);
+    const doneList = all.filter(n => n.completata).sort((a, b) => (b.completataAt || b.modificataAt || b.createdAt || '').localeCompare(a.completataAt || a.modificataAt || a.createdAt || ''));
+    let list = all.filter(n => !n.completata);
     if (!showExpired) list = list.filter(n => n.fissata || !n.scadenza || n.scadenza >= todayStr);
     list.sort((a, b) => ((b.fissata ? 1 : 0) - (a.fissata ? 1 : 0)) || (b.createdAt || '').localeCompare(a.createdAt || ''));
 
     const feed = document.getElementById('note-feed');
-    if (list.length === 0) {
+    const doneWrap = document.getElementById('note-done-wrap'), doneFeed = document.getElementById('note-done-feed');
+    if (doneWrap) { doneWrap.classList.toggle('hidden', !doneList.length); document.getElementById('note-done-sum').textContent = `Completate (${doneList.length})`; }
+    const isEmpty = list.length === 0;
+    if (isEmpty) {
         feed.style.display = 'block';
         feed.innerHTML = '<div style="text-align:center; color:#fff; font-weight:700; padding:60px 0; text-shadow:0 1px 3px rgba(0,0,0,.5)">📌 La bacheca è vuota.<br><span style="font-weight:500; opacity:.85">Premi “+ Nuova Nota” per appendere la prima nota.</span></div>';
-        return;
     }
-    feed.style.display = '';
+    if (!isEmpty) feed.style.display = '';
 
-    feed.innerHTML = list.map(n => {
+
+    const card = (n) => {
         const isPinned = !!n.fissata;
         const isExpired = n.scadenza && n.scadenza < todayStr;
         const isDone = !!n.completata;
@@ -4018,13 +4030,15 @@ window.renderNote = () => {
                 </div>
             </div>
         </div>`;
-    }).join('');
+    };
+    if (!isEmpty) feed.innerHTML = list.map(card).join('');
+    if (doneFeed) doneFeed.innerHTML = doneList.map(card).join('');
     noteMarkOverflow();
 };
 
 // note lunghe: segnalo "continua a leggere" e al click mostro il post-it ingrandito
 function noteMarkOverflow() {
-    document.querySelectorAll('#note-feed .postit').forEach(el => {
+    document.querySelectorAll('#note-board .postit').forEach(el => {
         const b = el.querySelector('.p-body'); if (!b) return;
         const old = el.querySelector('.p-more'); if (old) old.remove();
         b.classList.remove('has-more');
