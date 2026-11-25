@@ -1096,6 +1096,9 @@
                                 <div id="uov-recent" style="display:contents"></div>
                 </div>
             </div>
+            <div class="stat-section" style="--sc:124,58,237"><div class="stat-section-head"><h3>🧠 Analisi intelligente</h3><span>Previsione del mese, cosa incide sui consumi e anomalie (tenendo conto di ingressi e temperatura)</span></div>
+                <div class="ov-hl-grid" id="uov-ai" style="margin-bottom:0"></div>
+            </div>
             <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>🎯 Mese e stagione</h3><span>Consumi estremi, trend stagione, proiezioni ed efficienza</span></div>
                 <div class="ov-hl-grid" style="margin-bottom:0">
                 <div class="ov-card" style="--c:234,179,8">
@@ -1387,7 +1390,7 @@
             <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>📊 Mese in corso e record</h3><span>Mese in corso a confronto con lo scorso anno, record e regolarità</span></div>
                 <div class="ov-hl-grid" id="iov-month" style="margin-bottom:0"></div>
             </div>
-            <div class="stat-section" style="--sc:124,58,237"><div class="stat-section-head"><h3>🧠 Analisi intelligente</h3><span>Giornate fuori dal normale</span></div>
+            <div class="stat-section" style="--sc:124,58,237"><div class="stat-section-head"><h3>🧠 Analisi intelligente</h3><span>Previsione del mese, obiettivo, incasso per ingresso, pagamenti e giornate fuori dal normale</span></div>
                 <div class="ov-hl-grid" id="iov-ai" style="margin-bottom:0"></div>
             </div>
             <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>🎯 Obiettivi</h3><span>Imposta un obiettivo di incasso per il mese o la stagione e segui l&apos;avanzamento</span></div>
@@ -1911,6 +1914,7 @@
             <div class="table-wrap glass-card collab-box"><div style="overflow-x:auto"><table><thead><tr><th>Collaboratore</th><th class="cc-ab">Assistente bagnanti</th><th class="cc-sit">Istruttore</th><th class="cc-cm">Scad. CM</th><th class="cc-bl">Scad. BLSD</th><th></th></tr></thead><tbody id="collab-tbody"></tbody></table></div></div>
         </div>
         <div id="collab-v-scad" class="hidden">
+            <div class="ov-hl-grid" id="collab-ai" style="margin-bottom:16px"></div>
             <div class="glass-card collab-box row" style="padding:14px 18px; margin-bottom:14px; display:flex; flex-direction:row; gap:10px; flex-wrap:wrap; align-items:center">
                 <button class="btn btn-primary" id="collab-sf-exp" onclick="collabScadF('exp')">🔴 Scaduti</button>
                 <button class="btn" style="border:1px solid rgba(0,0,0,.12)" id="collab-sf-soon30" onclick="collabScadF('soon30')">🟠 In scadenza (30 gg)</button>
@@ -1964,6 +1968,15 @@
         </div>
     </div>
     <div class="scroll-area">
+        <div class="stat-section" style="--sc:124,58,237">
+            <div class="stat-section-head"><h3>📝 Riassunto del mese</h3><span>Un testo pronto da leggere o incollare, generato dalle analisi</span></div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px">
+                <div class="inp-field" style="width:190px"><label>Mese</label><input type="month" id="ai-sum-month" onchange="aiSummary()"></div>
+                <button class="btn btn-primary" onclick="aiSummary()" style="height:44px">Genera</button>
+                <button class="btn" onclick="aiSummaryCopy()" style="height:44px; border:1px solid rgba(0,0,0,.12)">📋 Copia</button>
+            </div>
+            <textarea id="ai-sum-out" readonly style="width:100%; min-height:200px; border-radius:18px; padding:16px 18px; border:1px solid rgba(255,255,255,.85); background:rgba(255,255,255,.6); font:inherit; font-size:.92rem; line-height:1.5; color:#0f172a; resize:vertical"></textarea>
+        </div>
         <div class="stat-section" style="--sc:37,99,235">
             <div class="stat-section-head"><h3>1 · Cosa confrontare</h3><span>Fonti, stagioni e mesi</span></div>
             <div class="ex-grid">
@@ -2960,7 +2973,7 @@ function aiAnomalies(pts, lastDays) {
     return { list, n: pts.length, last };
 }
 const aiWD3 = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
-const aiPct = (r) => (r >= 0 ? '+' : '−') + Math.abs(Math.round(r * 100)) + '%';
+const aiPct = (r) => { const v = Math.round(r * 100); return v === 0 ? '±0%' : (v > 0 ? '+' : '−') + Math.abs(v) + '%'; };
 const aiDM = (ds) => aiWD3[new Date(ds + 'T12:00:00').getDay()] + ' ' + ds.slice(8) + '/' + ds.slice(5, 7);
 let aiWhatIfPct = 0;
 window.aiWhatIf = (v) => {
@@ -2994,8 +3007,9 @@ function renderIngAI(rowsAll, bt, res, remDays) {
     cards.push(card('13,148,136', '🧪 Cosa fa variare gli ingressi', fac + lines.map(l => `<div class="ov-sub">${l}</div>`).join('') + `<div class="ov-sub" style="opacity:.65; font-size:.72rem">Giorno della settimana: scostamento dalla media dei giorni.</div>`));
     // 4. scenario e se
     cards.push(card('37,99,235', '🎚️ E se…', `<div class="ov-sub" style="margin-bottom:4px">Cambia gli ingressi nei giorni che restano:</div><input type="range" min="-30" max="30" step="5" value="${aiWhatIfPct}" oninput="aiWhatIf(this.value)" style="width:100%; accent-color:#2563eb"><div style="display:flex; justify-content:space-between; font-size:.7rem; color:#64748b"><span>−30%</span><span>0</span><span>+30%</span></div><div id="ai-whatif-out" style="margin-top:6px"></div>`));
-    box.innerHTML = cards.join('');
-    aiWhatIf(aiWhatIfPct);
+    let extra = ''; try { extra = aiIngExtraCards(rowsAll); } catch (e) { console.warn('analisi extra', e); }
+    box.innerHTML = cards.join('') + extra;
+    aiWhatIf(aiWhatIfPct); try { aiFillNext7(); } catch (e) {}
 }
 function renderIncAI() {
     const box = document.getElementById('iov-ai'); if (!box) return;
@@ -3004,7 +3018,265 @@ function renderIncAI() {
     const pts = Object.keys(by).map(ds => ({ date: ds, wd: new Date(ds + 'T12:00:00').getDay(), v: by[ds] }));
     const an = aiAnomalies(pts, 30), eur = (v) => '€ ' + Math.round(v).toLocaleString('it-IT');
     box.innerHTML = `<div class="ov-card" style="--c:220,38,38"><div class="ov-lab">🔎 Giorni anomali · ultimi 30 gg</div>${an.list.length ? an.list.slice(0, 6).map(x => `<div class="ov-sub"><b>${aiDM(x.p.date)}</b> · ${eur(x.p.v)}, atteso ~${eur(x.med)} <span class="${x.r >= 0 ? 'ov-up' : 'ov-down'}">${aiPct(x.r)}</span></div>`).join('') : `<div class="ov-sub">Nessuna giornata fuori dal normale${an.n < 20 ? ' (storico ancora breve)' : ''}.</div>`}<div class="ov-sub" style="opacity:.65; font-size:.72rem">Confronto con lo stesso giorno della settimana nelle ±12 settimane (festivi esclusi).</div></div>`;
+    try { box.innerHTML = renderIncAI2() + box.innerHTML; } catch (e) { console.warn('incassi AI', e); }
 }
+
+// ==== Analisi intelligenti (2) ====
+const aiCard = (c, lab, body) => `<div class="ov-card" style="--c:${c}"><div class="ov-lab">${lab}</div>${body}</div>`;
+const aiN = (v, d = 0) => (v == null || isNaN(v) ? '-' : Number(v).toLocaleString('it-IT', { minimumFractionDigits: d, maximumFractionDigits: d }));
+const aiEur = (v) => '€ ' + aiN(v);
+const aiAddD = (ds, k) => { const [y, m, d] = ds.split('-').map(Number); return fmtDateISO(new Date(y, m - 1, d + k)); };
+const aiMonthEnd = (mk) => fmtDateISO(new Date(+mk.slice(0, 4), +mk.slice(5, 7), 0));
+const AI_MESI = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+const aiMonthLab = (mk) => AI_MESI[+mk.slice(5, 7) - 1] + ' ' + mk.slice(0, 4);
+function aiNormCdf(z) { const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2), p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; }
+// regressione lineare (minimi quadrati con lieve ridge)
+function aiLinReg(X, y) {
+    const k = X[0].length, A = Array.from({ length: k }, () => new Array(k + 1).fill(0));
+    X.forEach((x, i) => { for (let a = 0; a < k; a++) { for (let b = 0; b < k; b++) A[a][b] += x[a] * x[b]; A[a][k] += x[a] * y[i]; } });
+    for (let a = 1; a < k; a++) A[a][a] += 1e-6 * (A[a][a] || 1);
+    for (let c = 0; c < k; c++) { let p = c; for (let r = c + 1; r < k; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r; [A[c], A[p]] = [A[p], A[c]]; if (Math.abs(A[c][c]) < 1e-12) return null; for (let r = 0; r < k; r++) if (r !== c) { const f = A[r][c] / A[c][c]; for (let q = c; q <= k; q++) A[r][q] -= f * A[c][q]; } }
+    return A.map((row, i) => row[k] / row[i]);
+}
+const aiBars = (vals, labels, color, fmt, hi) => { const mx = Math.max(...vals.map(v => v || 0), 1); return `<div class="ov-bars" style="--c:${color}; height:70px; gap:${vals.length > 9 ? 3 : 6}px">${vals.map((v, i) => `<div class="${hi && hi[i] ? 'last' : ''}" title="${labels[i]}: ${fmt ? fmt(v) : v}"><span style="font-size:.6rem; color:#475569">${v ? (fmt ? fmt(v) : v) : ''}</span><i style="height:${Math.max(3, (v || 0) / mx * 52)}px"></i>${labels[i]}</div>`).join('')}</div>`; };
+
+// ---------- UTENZE ----------
+const U_RES = [['e', '⚡ Elettricità', 'kWh', '234,179,8'], ['w', '💧 Acqua', 'm³', '59,130,246'], ['g', '🔥 Gas', 'm³', '239,68,68']];
+function aiTariffe() { try { return JSON.parse(localStorage.getItem('uTariffe') || '{}') || {}; } catch (e) { return {}; } }
+window.aiSetTariffa = (r) => {
+    const T = aiTariffe(), lab = U_RES.find(x => x[0] === r);
+    const v = prompt(`Costo per ${lab[2]} di ${lab[1].slice(2).trim()} (€, es. 0,25). Lascia vuoto per non mostrare i costi.`, T[r] != null ? String(T[r]).replace('.', ',') : '');
+    if (v === null) return; const n = parseFloat(String(v).replace(',', '.'));
+    if (v.trim() === '' || isNaN(n)) delete T[r]; else T[r] = n;
+    try { localStorage.setItem('uTariffe', JSON.stringify(T)); } catch (e) {}
+    renderUtAI();
+};
+function aiUtModel(days, r) {
+    const pts = days.filter(d => d[r] != null).slice(-180);
+    if (pts.length < 20) return null;
+    const mi = pts.filter(d => d.ingr != null).map(d => d.ingr), mt = pts.filter(d => d.temp != null).map(d => d.temp);
+    const mI = mi.length ? mi.reduce((a, b) => a + b, 0) / mi.length : 0, mT = mt.length ? mt.reduce((a, b) => a + b, 0) / mt.length : 12;
+    const useI = mi.length >= 15, useT = mt.length >= 15;
+    const feat = (d) => { const x = [1, d.wd === 0 || d.wd === 6 ? 1 : 0]; if (useI) x.push(((d.ingr != null ? d.ingr : mI) - mI) / 100); if (useT) x.push((d.temp != null ? d.temp : mT) - mT); return x; };
+    const beta = aiLinReg(pts.map(feat), pts.map(d => d[r])); if (!beta) return null;
+    const pred = (d) => Math.max(0, feat(d).reduce((a, x, i) => a + x * beta[i], 0));
+    const res = pts.map(d => d[r] - pred(d)), mr = aiMed(res), sig = Math.max(1e-6, 1.4826 * aiMed(res.map(e => Math.abs(e - mr))));
+    const mean = pts.reduce((a, d) => a + d[r], 0) / pts.length;
+    const sdI = useI ? Math.sqrt(mi.reduce((a, v) => a + (v - mI) ** 2, 0) / mi.length) : 0, sdT = useT ? Math.sqrt(mt.reduce((a, v) => a + (v - mT) ** 2, 0) / mt.length) : 0;
+    let bi = 2;
+    const effI = useI ? beta[bi++] : null, effT = useT ? beta[bi] : null;
+    return { pts, beta, pred, sig, mean, mI, mT, effI, effT, sdI, sdT, effW: beta[1] };
+}
+function renderUtAI() {
+    const box = document.getElementById('uov-ai'); if (!box) return;
+    if (!dataUtenze || !dataUtenze.length) { box.innerHTML = ''; return; }
+    const days = uBuildDays(); if (!days.length) { box.innerHTML = ''; return; }
+    const last = days[days.length - 1].date, mk = last.slice(0, 7), mEnd = aiMonthEnd(mk), T = aiTariffe();
+    const ingrAvg = (wd) => { const L = days.filter(d => d.wd === wd && d.ingr != null).slice(-8).map(d => d.ingr); return L.length ? L.reduce((a, b) => a + b, 0) / L.length : null; };
+    const tRecent = (() => { const L = days.slice(-7).filter(d => d.temp != null).map(d => d.temp); return L.length ? L.reduce((a, b) => a + b, 0) / L.length : null; })();
+    const byDate = {}; days.forEach(d => { byDate[d.date] = d; });
+    const cards = U_RES.map(([r, lab, u, col]) => {
+        const M = aiUtModel(days, r);
+        if (!M) return aiCard(col, lab + ' · analisi', `<div class="ov-sub">Servono almeno 20 giorni di letture consecutive per l'analisi.</div>`);
+        // previsione mese: giorni misurati + stima per i giorni mancanti
+        let tot = 0, nEst = 0, measured = 0;
+        for (let ds = mk + '-01'; ds <= mEnd; ds = aiAddD(ds, 1)) {
+            const d = byDate[ds];
+            if (d && d[r] != null) { tot += d[r]; measured++; continue; }
+            const wd = new Date(ds + 'T12:00:00').getDay();
+            tot += M.pred({ wd, ingr: ingrAvg(wd), temp: ds > last ? tRecent : (d && d.temp != null ? d.temp : tRecent) }); nEst++;
+        }
+        const half = 1.28 * M.sig * Math.sqrt(Math.max(1, nEst)) + 0.05 * tot * (nEst / 30);
+        const eur = T[r] != null ? ` · <b>${aiEur(tot * T[r])}</b>` : '';
+        // anomalie ultimi 14 gg
+        const from = aiAddD(last, -13);
+        const an = M.pts.filter(d => d.date >= from).map(d => { const p = M.pred(d); return { d, p, z: (d[r] - p) / M.sig, rel: p > 0 ? d[r] / p - 1 : 0 }; }).filter(x => Math.abs(x.z) >= 3 && Math.abs(x.rel) >= 0.2).reverse();
+        const eff = [];
+        if (M.effI != null && Math.abs(M.effI * M.sdI / 100) >= 0.04 * M.mean) eff.push(`ogni +100 ingressi: <b>${M.effI >= 0 ? '+' : '−'}${aiN(Math.abs(M.effI), 1)} ${u}</b>`);
+        if (M.effT != null && Math.abs(M.effT * M.sdT) >= 0.04 * M.mean) eff.push(`ogni +1 °C: <b>${M.effT >= 0 ? '+' : '−'}${aiN(Math.abs(M.effT), 1)} ${u}</b>`);
+        if (Math.abs(M.effW) >= 0.06 * M.mean) eff.push(`sabato e domenica: <b>${M.effW >= 0 ? '+' : '−'}${aiN(Math.abs(M.effW), 1)} ${u}</b> al giorno`);
+        return aiCard(col, `${lab} · ${AI_MESI[+mk.slice(5, 7) - 1]}`,
+            `<div class="ov-big">${aiN(tot)}<small>${u} previsti a fine mese${eur}</small></div>`
+            + `<div class="ov-sub">tra ${aiN(Math.max(0, tot - half))} e ${aiN(tot + half)} ${u} · ${measured} giorni misurati, ${nEst} stimati${T[r] == null ? ` · <a style="color:#2563eb; cursor:pointer" onclick="aiSetTariffa('${r}')">€ aggiungi tariffa</a>` : ` · <a style="color:#2563eb; cursor:pointer" onclick="aiSetTariffa('${r}')">tariffa ${aiN(T[r], 3)} €/${u}</a>`}</div>`
+            + `<div class="ov-sub" style="margin-top:4px">${eff.length ? 'Cosa incide: ' + eff.join(' · ') : 'Consumo stabile, poco legato a ingressi e temperatura.'}</div>`
+            + `<div class="ov-sub" style="margin-top:4px">${an.length ? '<b>Anomalie (14 gg):</b> ' + an.slice(0, 3).map(x => `${aiDM(x.d.date)} ${aiN(x.d[r], 1)} ${u} vs ~${aiN(x.p, 1)} <span class="${x.rel >= 0 ? 'ov-down' : 'ov-up'}">${aiPct(x.rel)}</span>`).join(' · ') : 'Nessuna anomalia negli ultimi 14 giorni, tenendo conto di ingressi, temperatura e weekend.'}</div>`);
+    });
+    box.innerHTML = cards.join('');
+}
+
+// ---------- INCASSI ----------
+function aiIncForecast(byDay, refDay) {
+    // stima per giorno: mediana degli ultimi 8 stessi giorni della settimana (festivi a parte)
+    const keys = Object.keys(byDay).sort();
+    const est = (ds, upTo) => {
+        const wd = new Date(ds + 'T12:00:00').getDay(), hol = isItHoliday(ds);
+        const L = keys.filter(k => k <= upTo && (hol ? isItHoliday(k) || new Date(k + 'T12:00:00').getDay() === 0 : new Date(k + 'T12:00:00').getDay() === wd && !isItHoliday(k))).slice(-8).map(k => byDay[k]);
+        return L.length ? aiMed(L) : 0;
+    };
+    const run = (mk, upTo) => { let done = 0, rem = 0; for (let ds = mk + '-01'; ds <= aiMonthEnd(mk); ds = aiAddD(ds, 1)) { if (ds <= upTo) done += byDay[ds] || 0; else rem += est(ds, upTo); } return { done, rem, tot: done + rem }; };
+    const mk = refDay.slice(0, 7), dayN = +refDay.slice(8), cur = run(mk, refDay);
+    const errs = [];
+    for (let k = 1; k <= 9; k++) {
+        const dt = new Date(+mk.slice(0, 4), +mk.slice(5, 7) - 1 - k, 1), pm = `${dt.getFullYear()}-${aiP2(dt.getMonth() + 1)}`, end = aiMonthEnd(pm);
+        const nd = keys.filter(x => x.startsWith(pm)).length; if (nd < (+end.slice(8)) * 0.6) continue;
+        const cut = `${pm}-${aiP2(Math.min(dayN, +end.slice(8) - 1))}`, f = run(pm, cut), act = run(pm, end).done;
+        if (act > 0) errs.push(f.tot / act - 1);
+    }
+    const rmse = errs.length >= 3 ? Math.max(0.03, Math.sqrt(errs.reduce((a, e) => a + e * e, 0) / errs.length)) : null;
+    return { ...cur, rmse, n: errs.length, mk, mape: errs.length ? errs.reduce((a, e) => a + Math.abs(e), 0) / errs.length : null };
+}
+function renderIncAI2(box) {
+    const docs = (dataIncassi || []).filter(d => d.date && (d.incasso_totale || 0) > 0);
+    if (docs.length < 20) return '';
+    const by = {}; docs.forEach(d => { by[d.date] = (by[d.date] || 0) + d.incasso_totale; });
+    const last = Object.keys(by).sort().pop(), today = fmtDateISO(new Date()), ref = today > last && today.slice(0, 7) === last.slice(0, 7) ? last : last;
+    const F = aiIncForecast(by, ref), out = [];
+    const sd = F.rmse != null ? F.rmse * F.tot : null, goal = dataObiettivi && dataObiettivi['m-' + F.mk] ? dataObiettivi['m-' + F.mk].importo : null;
+    let gHtml = '';
+    if (goal) {
+        if (F.done >= goal) gHtml = `<div class="ov-sub">🎯 Obiettivo di ${aiEur(goal)} <b class="ov-up">già raggiunto</b>.</div>`;
+        else if (sd) { const p = 1 - aiNormCdf((goal - F.tot) / Math.max(sd, 1)); gHtml = `<div class="ov-sub">🎯 Probabilità di raggiungere l'obiettivo (${aiEur(goal)}): <b class="${p >= 0.6 ? 'ov-up' : p < 0.3 ? 'ov-down' : ''}">${Math.round(p * 100)}%</b></div>`; }
+        else gHtml = `<div class="ov-sub">🎯 Obiettivo ${aiEur(goal)}: ${F.tot >= goal ? 'a questo ritmo <b class="ov-up">raggiungibile</b>' : `mancano circa <b>${aiEur(goal - F.tot)}</b>`}</div>`;
+    } else gHtml = `<div class="ov-sub" style="opacity:.75">Imposta un obiettivo del mese per vedere la probabilità di raggiungerlo.</div>`;
+    out.push(aiCard('22,163,74', `📈 Previsione · ${aiMonthLab(F.mk)}`, `<div class="ov-big">${aiEur(F.tot)}<small>a fine mese</small></div>`
+        + `<div class="ov-sub">${aiEur(F.done)} incassati + ${aiEur(F.rem)} stimati${sd ? ` · tra <b>${aiEur(F.tot - 1.28 * sd)}</b> e <b>${aiEur(F.tot + 1.28 * sd)}</b>` : ''}</div>`
+        + `<div class="ov-sub" style="opacity:.75">${F.mape != null ? `Errore medio nei ${F.n} mesi passati: ±${Math.round(F.mape * 100)}%.` : 'Storico ancora breve per misurare la precisione.'} Stima dai giorni della settimana delle ultime 8 settimane, festivi a parte.</div>` + gHtml));
+    // incasso per ingresso
+    const ing = {}; (dataIngressi || []).forEach(x => { if (x.date && !x.excludeStats) ing[x.date] = (ing[x.date] || 0) + (x.totale || 0); });
+    const mon = {}; docs.forEach(d => { const n = ing[d.date]; if (!n) return; const k = d.date.slice(0, 7), o = mon[k] || (mon[k] = { e: 0, n: 0 }); o.e += (d.ingressi_tot || 0) + (d.abbonamenti_tot || 0); o.n += n; });
+    const mks = Object.keys(mon).sort().filter(k => mon[k].e > 0).slice(-6);
+    if (mks.length >= 2) {
+        const v = k => mon[k] ? mon[k].e / mon[k].n : null, ck = mks[mks.length - 1], py = (+ck.slice(0, 4) - 1) + ck.slice(4);
+        const c = v(ck), p = v(mks[mks.length - 2]), y = v(py);
+        out.push(aiCard('13,148,136', '🎟️ Incasso per ingresso', `<div class="ov-big">€ ${aiN(c, 2)}<small>per ingresso · ${AI_MESI[+ck.slice(5, 7) - 1]}</small></div>`
+            + `<div class="ov-sub">${p ? `${aiPct(c / p - 1)} rispetto a ${AI_MESI[+mks[mks.length - 2].slice(5, 7) - 1]} (€ ${aiN(p, 2)})` : ''}${y ? ` · ${aiPct(c / y - 1)} rispetto a un anno fa (€ ${aiN(y, 2)})` : ''}</div>`
+            + aiBars(mks.map(k => Math.round(v(k) * 100) / 100), mks.map(k => AI_MESI[+k.slice(5, 7) - 1].slice(0, 3)), '13,148,136', x => aiN(x, 2), mks.map((k, i) => i === mks.length - 1))
+            + `<div class="ov-sub" style="opacity:.7; font-size:.72rem">Ingressi + abbonamenti incassati diviso gli ingressi di Nuoto Libero, solo nei giorni con entrambi i dati.</div>`));
+    }
+    // metodi di pagamento: ultimi 3 mesi vs 3 precedenti
+    const pay = d => ({ pos: (d.corsi_n4_pos || 0) + (d.iva_pos || 0), sat: (d.corsi_n4_satispay || 0) + (d.iva_satispay || 0), bon: (d.corsi_n4_bonifico || 0) + (d.iva_bonifico || 0), con: (d.corsi_n4_contanti || 0) + (d.iva_contanti || 0) });
+    const a3 = aiAddD(last, -90), b3 = aiAddD(last, -180), A = { pos: 0, sat: 0, bon: 0, con: 0 }, B = { pos: 0, sat: 0, bon: 0, con: 0 };
+    docs.forEach(d => { const q = pay(d), T = d.date > a3 ? A : d.date > b3 ? B : null; if (T) Object.keys(q).forEach(k => { T[k] += q[k]; }); });
+    const sA = Object.values(A).reduce((a, b) => a + b, 0), sB = Object.values(B).reduce((a, b) => a + b, 0);
+    if (sA > 0) {
+        const L = [['pos', 'POS', '37,99,235'], ['con', 'Contanti', '22,163,74'], ['sat', 'Satispay', '220,38,38'], ['bon', 'Bonifico', '124,58,237']];
+        out.push(aiCard('37,99,235', '💳 Metodi di pagamento · ultimi 3 mesi', `<div class="ov-seg">${L.map(([k, , c]) => `<i style="width:${A[k] / sA * 100}%; background:rgb(${c})"></i>`).join('')}</div>`
+            + L.map(([k, l, c]) => { const sa = A[k] / sA, sb = sB ? B[k] / sB : null, dp = sb != null ? Math.round((sa - sb) * 100) : null; return `<div class="ov-sub" style="display:flex; justify-content:space-between"><span><i style="display:inline-block; width:9px; height:9px; border-radius:50%; background:rgb(${c}); margin-right:6px"></i>${l}</span><span><b>${Math.round(sa * 100)}%</b>${dp != null && sB ? ` <span style="font-size:.72rem; ${dp > 0 ? 'color:#16a34a' : dp < 0 ? 'color:#dc2626' : 'color:#94a3b8'}">${dp > 0 ? '+' : dp < 0 ? '−' : '±'}${Math.abs(dp)} pt</span>` : ''}</span></div>`; }).join('')
+            + `<div class="ov-sub" style="opacity:.7; font-size:.72rem">Variazione in punti rispetto ai 3 mesi precedenti.</div>`));
+    }
+    return out.join('');
+}
+
+// ---------- NUOTO LIBERO ----------
+function aiIngExtraCards(rowsAll) {
+    const out = [];
+    // fasce: ultimi 30 gg vs 30 precedenti (media ingressi per giornata con quella fascia)
+    const rows = rowsAll.filter(r => r.date && r.fascia), lastD = rows.reduce((a, r) => (r.date > a ? r.date : a), '');
+    if (lastD) {
+        const a = aiAddD(lastD, -29), b = aiAddD(lastD, -59), F = {};
+        rows.forEach(r => { const p = r.date >= a ? 'a' : r.date >= b ? 'b' : null; if (!p) return; const o = F[r.fascia] || (F[r.fascia] = { a: 0, na: 0, b: 0, nb: 0 }); o[p] += r.totale || 0; o['n' + p]++; });
+        const L = Object.keys(F).filter(k => F[k].na >= 2).map(k => ({ k, a: F[k].a / F[k].na, b: F[k].nb ? F[k].b / F[k].nb : null })).sort((x, y) => y.a - x.a).slice(0, 6);
+        if (L.length) { const mx = Math.max(...L.map(x => x.a)); out.push(aiCard('219,39,119', '🕒 Fasce · media per giornata (30 gg)', `<div style="display:grid; gap:4px">${L.map(x => `<div class="ov-hbar" style="grid-template-columns:110px 1fr 74px"><span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${gsEsc(x.k)}</span><em><i style="width:${x.a / mx * 100}%"></i></em><span><b>${aiN(x.a)}</b>${x.b ? ` <span class="${x.a >= x.b ? 'ov-up' : 'ov-down'}" style="font-size:.7rem">${aiPct(x.a / x.b - 1)}</span>` : ''}</span></div>`).join('')}</div><div class="ov-sub" style="opacity:.7; font-size:.72rem">Variazione rispetto ai 30 giorni precedenti.</div>`)); }
+    }
+    // abbonamenti vs singoli per mese
+    const M = {}; rowsAll.forEach(r => { if (!r.date) return; const k = r.date.slice(0, 7), o = M[k] || (M[k] = { s: 0, a: 0, g: 0 }); o.s += (r.int || 0) + (r.rid || 0); o.a += (r.abb_int || 0) + (r.abb_rid || 0); o.g += r.grat || 0; });
+    const mks = Object.keys(M).sort().filter(k => M[k].s + M[k].a > 0).slice(-8);
+    if (mks.length >= 2) {
+        const sh = k => M[k].a / (M[k].s + M[k].a + M[k].g), ck = mks[mks.length - 1], py = (+ck.slice(0, 4) - 1) + ck.slice(4);
+        out.push(aiCard('79,70,229', '🎫 Abbonamenti sul totale', `<div class="ov-big">${Math.round(sh(ck) * 100)}%<small>degli ingressi · ${AI_MESI[+ck.slice(5, 7) - 1]}</small></div>`
+            + `<div class="ov-sub">${M[py] ? `Un anno fa: <b>${Math.round(sh(py) * 100)}%</b> · ` : ''}singoli ${aiN(M[ck].s)}, abbonati ${aiN(M[ck].a)}${M[ck].g ? `, gratuiti ${aiN(M[ck].g)}` : ''}</div>`
+            + aiBars(mks.map(k => Math.round(sh(k) * 100)), mks.map(k => AI_MESI[+k.slice(5, 7) - 1].slice(0, 3)), '79,70,229', x => x + '%', mks.map((k, i) => i === mks.length - 1))));
+    }
+    // prossimi 7 giorni (riempita in modo asincrono)
+    out.unshift(aiCard('2,132,199', '🔮 Prossimi 7 giorni', `<div id="ai-next7"><div class="ov-sub">Calcolo in corso…</div></div>`));
+    return out.join('');
+}
+function aiFillNext7() {
+    const el = document.getElementById('ai-next7'); if (!el) return;
+    const rows = (dataIngressi || []).filter(x => !x.excludeStats && x.date);
+    if (rows.length < 30) { el.innerHTML = '<div class="ov-sub">Storico ancora breve.</div>'; return; }
+    const last = rows.reduce((a, r) => (r.date > a ? r.date : a), ''), today = fmtDateISO(new Date()), start = aiAddD(today > last ? today : last, 1);
+    const ds = []; for (let i = 0; i < 7; i++) ds.push(aiAddD(start, i));
+    const draw = (fc) => {
+        const v = ds.map(d => Math.round(ingForecastCalc(rows, [d], fc, 0).sum)), tot = v.reduce((a, b) => a + b, 0);
+        const lab = ds.map(d => { const w = fc && fc[d]; const ic = w ? (meteoOptionFor(w.code) || '').split(' ')[0] : ''; return aiWD3[new Date(d + 'T12:00:00').getDay()] + (isItHoliday(d) ? '★' : '') + (ic ? '<br>' + ic : ''); });
+        el.innerHTML = `<div class="ov-big">${aiN(tot)}<small>ingressi attesi in 7 giorni</small></div>` + aiBars(v, lab, '2,132,199', null, ds.map(d => isItHoliday(d)))
+            + `<div class="ov-sub" style="opacity:.7; font-size:.72rem">${fc && Object.keys(fc).length ? 'Con meteo previsto' : 'Senza meteo previsto'} · ★ festivo · trend recente per giorno della settimana.</div>`;
+    };
+    draw(null);
+    ingFetchDaily(ds).then(fc => { if (fc && Object.keys(fc).length && document.getElementById('ai-next7') === el) draw(fc); }).catch(() => {});
+}
+
+// ---------- COLLABORATORI ----------
+function renderCollabAI() {
+    const box = document.getElementById('collab-ai'); if (!box) return;
+    const L = collabOfSeason(); if (!L.length) { box.innerHTML = ''; return; }
+    const today = fmtDateISO(new Date()), dN = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
+    const cards = [];
+    // calendario 13 settimane
+    const wk = new Array(13).fill(0), wkL = [];
+    for (let i = 0; i < 13; i++) { const d = aiAddD(today, i * 7); wkL.push(d.slice(8) + '/' + d.slice(5, 7)); }
+    L.forEach(c => COLLAB_SCAD.forEach(([k]) => { if (!collabIsoOk(c[k])) return; const n = dN(today, c[k]); if (n >= 0 && n < 91) wk[Math.floor(n / 7)]++; }));
+    const tot = wk.reduce((a, b) => a + b, 0), mxw = Math.max(...wk), iw = wk.indexOf(mxw);
+    cards.push(aiCard('234,88,12', '📅 Scadenze nei prossimi 90 giorni', `<div class="ov-big">${tot}<small>scadenze in 13 settimane</small></div>` + aiBars(wk, wkL.map((x, i) => (i % 2 ? '' : x)), '234,88,12', null, wk.map(v => v === mxw && v > 0))
+        + `<div class="ov-sub">${mxw > 0 ? `Settimana più carica: dal <b>${wkL[iw]}</b> (${mxw})` : 'Nessuna scadenza in arrivo.'}</div>`));
+    // copertura per ruolo, prossimi 6 mesi
+    const has = (c, m) => [c.mansione, c.mansione2, c.mansione3].some(x => String(x || '').toLowerCase().includes(m));
+    const ok = (c, k, d) => collabIsoOk(c[k]) && c[k] >= d;
+    const AB = L.filter(c => has(c, 'bagnant')), IS = L.filter(c => has(c, 'istrutt'));
+    const rows = []; for (let i = 0; i < 6; i++) { const dt = new Date(+today.slice(0, 4), +today.slice(5, 7) - 1 + i, i ? 1 : +today.slice(8)); const d = fmtDateISO(dt);
+        rows.push({ d, lab: i ? AI_MESI[dt.getMonth()].slice(0, 3) : 'oggi', ab: AB.filter(c => ok(c, 'scadBrevSalv', d) && ok(c, 'scadBlsd', d) && ok(c, 'scadCM', d)).length, is: IS.filter(c => ok(c, 'scadCM', d) && (!c.brevSit || /nessun/i.test(c.brevSit) || ok(c, 'scadBrevSit', d))).length }); }
+    const cell = (v, n) => `<b style="color:${n && v / n < 0.6 ? '#dc2626' : n && v / n < 0.8 ? '#ea580c' : '#0f172a'}">${v}</b><span style="opacity:.55">/${n}</span>`;
+    cards.push(aiCard('13,148,136', '🛟 Copertura in regola per ruolo', `<div style="display:grid; grid-template-columns:minmax(90px,1.4fr) repeat(6, minmax(0,1fr)); gap:6px 4px; font-size:.8rem; align-items:center"><span></span>${rows.map(r => `<span style="text-align:center; color:#64748b; font-size:.7rem">${r.lab}</span>`).join('')}<span>Bagnanti</span>${rows.map(r => `<span style="text-align:center">${cell(r.ab, AB.length)}</span>`).join('')}<span>Istruttori</span>${rows.map(r => `<span style="text-align:center">${cell(r.is, IS.length)}</span>`).join('')}</div>`
+        + `<div class="ov-sub" style="opacity:.7; font-size:.72rem; margin-top:4px">Bagnanti: brevetto salvamento, BLSD e certificato medico validi a inizio mese. Istruttori: certificato medico e brevetto SIT (se presente). Se nessuno rinnova.</div>`));
+    // priorità di rinnovo
+    const pr = L.map(c => { let s = 0; const why = [];
+        COLLAB_SCAD.forEach(([k, lab]) => { if (COLLAB_FORM_REQ.includes(k) && !collabIsoOk(c[k])) { s += 3; why.push(lab + ' mancante'); return; } if (!collabIsoOk(c[k])) return; const n = dN(today, c[k]); if (n < 0) { s += 3; why.push(lab + ' scaduto'); } else if (n <= 30) { s += 2; why.push(lab + ` tra ${n} gg`); } else if (n <= 60) { s += 1; why.push(lab + ` tra ${n} gg`); } });
+        if (has(c, 'bagnant')) s *= 1.2; return { c, s, why }; }).filter(x => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 6);
+    cards.push(aiCard('220,38,38', '🚩 Da sistemare per primi', pr.length ? pr.map(x => `<div class="ov-sub" style="cursor:pointer" onclick="collabView('${x.c.id}')"><b>${gsEsc(x.c.cognome || '')} ${gsEsc(x.c.nome || '')}</b> · <span style="opacity:.8">${gsEsc(x.why.slice(0, 3).join(', '))}${x.why.length > 3 ? '…' : ''}</span></div>`).join('') + `<div class="ov-sub" style="opacity:.7; font-size:.72rem">Ordinati per urgenza (scaduti e mancanti pesano di più, bagnanti in testa). Clic per aprire.</div>` : '<div class="ov-sub">Nessuno da sistemare 🎉</div>'));
+    box.innerHTML = cards.join('');
+}
+
+// ---------- RIASSUNTO DEL MESE ----------
+window.aiSummary = () => {
+    const inp = document.getElementById('ai-sum-month'), out = document.getElementById('ai-sum-out'); if (!inp || !out) return;
+    const mk = inp.value || fmtDateISO(new Date()).slice(0, 7), py = (+mk.slice(0, 4) - 1) + mk.slice(4), today = fmtDateISO(new Date());
+    const upTo = mk === today.slice(0, 7) ? today : aiMonthEnd(mk), cutPy = py + upTo.slice(7), partial = mk === today.slice(0, 7);
+    const P = [], cmp = (a, b) => (b ? ` (${aiPct(a / b - 1)} rispetto a ${AI_MESI[+mk.slice(5, 7) - 1]} ${py.slice(0, 4)}${partial ? ' allo stesso giorno' : ''})` : '');
+    P.push(`Riassunto di ${aiMonthLab(mk)}${partial ? ` (fino al ${upTo.slice(8)})` : ''}`);
+    // ingressi
+    const ing = {}; (dataIngressi || []).forEach(x => { if (x.date && !x.excludeStats) ing[x.date] = (ing[x.date] || 0) + (x.totale || 0); });
+    const iD = Object.keys(ing).filter(d => d.startsWith(mk) && d <= upTo);
+    if (iD.length) {
+        const t = iD.reduce((a, d) => a + ing[d], 0), tp = Object.keys(ing).filter(d => d.startsWith(py) && d <= cutPy).reduce((a, d) => a + ing[d], 0);
+        const best = iD.reduce((a, d) => (ing[d] > ing[a] ? d : a)), worst = iD.reduce((a, d) => (ing[d] < ing[a] ? d : a));
+        let s = `Nuoto Libero: ${aiN(t)} ingressi in ${iD.length} giorni, media ${aiN(t / iD.length)} al giorno${cmp(t, tp)}. Giorno migliore ${aiDM(best)} (${ing[best]}), più debole ${aiDM(worst)} (${ing[worst]}).`;
+        const listN = buildMeteoDays((dataIngressi || []).filter(x => !x.excludeStats && x.date <= upTo && !isItHoliday(x.date))), dayF = ingWeatherModel(listN);
+        const an = aiAnomalies(listN.map(x => ({ date: x.date, wd: x.wd, v: x.tot / dayF(x.fam, x.temp), tot: x.tot, f: dayF(x.fam, x.temp) })), 400).list.filter(x => x.p.date.startsWith(mk));
+        if (an.length) s += ` Giorni fuori dal normale: ${an.slice(0, 4).map(x => `${aiDM(x.p.date)} ${aiPct(x.r)}`).join(', ')}.`;
+        if (partial && window.__ingFc) s += ` Stima di fine mese: circa ${aiN(window.__ingFc.cur + window.__ingFc.rem)} ingressi.`;
+        P.push(s);
+    }
+    // incassi
+    const inc = {}, incN = {}; (dataIncassi || []).forEach(d => { if (d.date) { inc[d.date] = (inc[d.date] || 0) + (d.incasso_totale || 0); incN[d.date] = (incN[d.date] || 0) + (d.ingressi_tot || 0) + (d.abbonamenti_tot || 0); } });
+    const cD = Object.keys(inc).filter(d => d.startsWith(mk) && d <= upTo && inc[d] > 0);
+    if (cD.length) {
+        const t = cD.reduce((a, d) => a + inc[d], 0), tp = Object.keys(inc).filter(d => d.startsWith(py) && d <= cutPy).reduce((a, d) => a + inc[d], 0);
+        let s = `Incassi: ${aiEur(t)}${cmp(t, tp)}.`;
+        const both = cD.filter(d => ing[d]); if (both.length) { const e = both.reduce((a, d) => a + incN[d], 0), n = both.reduce((a, d) => a + ing[d], 0); if (e && n) s += ` Incasso medio per ingresso € ${aiN(e / n, 2)}.`; }
+        const g = dataObiettivi && dataObiettivi['m-' + mk]; if (g && g.importo) s += t >= g.importo ? ` Obiettivo di ${aiEur(g.importo)} raggiunto.` : ` Obiettivo di ${aiEur(g.importo)}: ${Math.round(t / g.importo * 100)}% raggiunto.`;
+        P.push(s);
+    }
+    // utenze
+    try { const days = uBuildDays(), parts = [];
+        U_RES.forEach(([r, lab, u]) => { const a = days.filter(d => d.date.startsWith(mk) && d.date <= upTo && d[r] != null), b = days.filter(d => d.date.startsWith(py) && d.date <= cutPy && d[r] != null); if (!a.length) return; const s = a.reduce((x, d) => x + d[r], 0), sb = b.reduce((x, d) => x + d[r], 0); const ma = s / a.length, mb = b.length ? sb / b.length : null; parts.push(`${lab.slice(2).trim().toLowerCase()} ${aiN(ma, 1)} ${u}/giorno${mb ? ` (${aiPct(ma / mb - 1)})` : ''}`); });
+        if (parts.length) P.push(`Utenze (media giornaliera, confronto con un anno fa): ${parts.join(', ')}.`); } catch (e) {}
+    // collaboratori
+    if (typeof exportAllowed !== 'undefined' && exportAllowed) { try { const al = collabAlerts(dataCollab.filter(d => d.stagione === getSeasonLabel(getSeasonStartYear(today)))); const sc = al.filter(a => a.days < 0).length, s30 = al.filter(a => a.days >= 0 && a.days <= 30).length; if (al.length) P.push(`Collaboratori: ${sc} documenti scaduti o mancanti, ${s30} in scadenza entro 30 giorni.`); } catch (e) {} }
+    if (P.length === 1) P.push('Nessun dato registrato per questo mese.');
+    out.value = P.join('\n\n');
+};
+window.aiSummaryCopy = () => { const o = document.getElementById('ai-sum-out'); if (!o || !o.value) return; navigator.clipboard.writeText(o.value).then(() => showToast('Riassunto copiato')).catch(() => { o.select(); document.execCommand('copy'); showToast('Riassunto copiato'); }); };
 
 // ---- Previsione ingressi: giorno della settimana (trend recente) + festività italiane + meteo previsto ----
 const __itHolCache = {};
@@ -4539,6 +4811,7 @@ window.collabMsgSend = (id, how) => {
 window.collabMsgPreview = (id) => { const m = collabMsg(id); if (m) alert(m.body); };
 window.collabRenderScad = () => {
     const tb = document.getElementById('collab-scad-tbody'); if (!tb) return;
+    try { renderCollabAI(); } catch (e) { console.warn('collab AI', e); }
     const T = collabTpl(), te = document.getElementById('collab-tpl-exp'), ts = document.getElementById('collab-tpl-soon');
     if (te && !te.dataset.init) { te.value = T.exp; ts.value = T.soon; te.dataset.init = '1'; }
     ['exp', 'soon30', 'soon', 'all'].forEach(f => { const b = document.getElementById('collab-sf-' + f); b.classList.toggle('btn-primary', f === collabScadFilter); b.style.border = f === collabScadFilter ? '' : '1px solid rgba(0,0,0,.12)'; });
@@ -7093,6 +7366,7 @@ window.renderUtenze = () => {
         document.getElementById('u-ytd-gas-pct').innerHTML = calcPct(ytdSum.gas, ytdPrevSum.gas);
     }
     try { renderUtenzeOverviewHighlights(); } catch (e) { console.error('renderUtenzeOverviewHighlights', e); }
+    try { renderUtAI(); } catch (e) { console.error('renderUtAI', e); }
     try { renderUtenzePerIngresso(); } catch (e) { console.error('renderUtenzePerIngresso', e); }
 
 
@@ -8050,7 +8324,7 @@ window.downloadRiepilogoCSV = () => {
     document.body.removeChild(link);
 };
 
-window.switchModule=(m)=>{ if ((m === 'esporta' || m === 'collab') && !exportAllowed) m = 'ingressi'; document.querySelectorAll('.module-container').forEach(e=>e.classList.add('hidden')); document.getElementById('module-'+m).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('nav-module-'+m).classList.add('active'); if(m==='ingressi')debouncedRefresh(); if(m==='dae')renderDae(); if(m==='utenze')renderUtenze(); if(m==='incassi'){ switchSubViewIncassi(isRestrictedIncassiUser ? 'archive' : 'overview'); } if(m==='note')renderNote(); if(m==='esporta')renderEsportaPanel(); if(m==='collab')collabRender(); };
+window.switchModule=(m)=>{ if ((m === 'esporta' || m === 'collab') && !exportAllowed) m = 'ingressi'; document.querySelectorAll('.module-container').forEach(e=>e.classList.add('hidden')); document.getElementById('module-'+m).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('nav-module-'+m).classList.add('active'); if(m==='ingressi')debouncedRefresh(); if(m==='dae')renderDae(); if(m==='utenze')renderUtenze(); if(m==='incassi'){ switchSubViewIncassi(isRestrictedIncassiUser ? 'archive' : 'overview'); } if(m==='note')renderNote(); if(m==='esporta'){ renderEsportaPanel(); try { const e = document.getElementById('ai-sum-month'); if (e && !e.value) { e.value = fmtDateISO(new Date()).slice(0, 7); } aiSummary(); } catch (err) { console.warn('riassunto', err); } } if(m==='collab')collabRender(); };
 
 // ============ METEO AUTOMATICO (Open-Meteo, Milano Lampugnano) ============
 const METEO_LAT = 45.495, METEO_LON = 9.126;
