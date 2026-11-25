@@ -742,6 +742,9 @@
             <div class="stat-section" style="--sc:13,148,136"><div class="stat-section-head"><h3>⚡ Giorni recenti</h3><span id="ov-hl-asof"></span></div>
                 <div class="ov-hl-grid" id="ov-highlights" style="margin-bottom:0"></div>
             </div>
+            <div class="stat-section" style="--sc:124,58,237"><div class="stat-section-head"><h3>🧠 Analisi intelligente</h3><span>Quanto è affidabile la stima, giorni anomali, cosa fa variare gli ingressi</span></div>
+                <div class="ov-hl-grid" id="ai-grid" style="margin-bottom:0"></div>
+            </div>
             <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>🎟️ Mese e stagione</h3><span>Chi entra, fasce, regolarità e stagione in corso</span></div>
                 <div class="ov-hl-grid" id="ov-highlights2" style="margin-bottom:0"></div>
             </div>
@@ -1383,6 +1386,9 @@
             </div>
             <div class="stat-section" style="--sc:234,88,12"><div class="stat-section-head"><h3>📊 Mese in corso e record</h3><span>Mese in corso a confronto con lo scorso anno, record e regolarità</span></div>
                 <div class="ov-hl-grid" id="iov-month" style="margin-bottom:0"></div>
+            </div>
+            <div class="stat-section" style="--sc:124,58,237"><div class="stat-section-head"><h3>🧠 Analisi intelligente</h3><span>Giornate fuori dal normale</span></div>
+                <div class="ov-hl-grid" id="iov-ai" style="margin-bottom:0"></div>
             </div>
             <div class="stat-section" style="--sc:22,163,74"><div class="stat-section-head"><h3>🎯 Obiettivi</h3><span>Imposta un obiettivo di incasso per il mese o la stagione e segui l&apos;avanzamento</span></div>
                 <div class="ov-hl-grid" id="iov-goals" style="margin-bottom:0"></div>
@@ -2912,6 +2918,94 @@ document.addEventListener('keydown', (e) => {
     else if (e.key === 'Enter') { e.preventDefault(); gsGo(gsSel); }
 });
 
+// ---- Analisi intelligente: precisione della stima, anomalie, fattori, scenari ----
+const aiMed = (a) => { if (!a.length) return null; const b = [...a].sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+const aiDayN = (ds) => Math.round(new Date(ds + 'T12:00:00').getTime() / 86400000);
+const aiP2 = (n) => String(n).padStart(2, '0');
+// Rifà la stima di mesi passati al "giorno a" del mese, usando solo i dati disponibili allora, e la confronta col totale reale
+function aiBacktest(rows, y, m, a) {
+    const byM = {}; rows.forEach(r => { if (r.date) (byM[r.date.slice(0, 7)] = byM[r.date.slice(0, 7)] || []).push(r); });
+    const curKey = `${y}-${aiP2(m)}`, out = [];
+    Object.keys(byM).filter(k => k < curKey).sort().slice(-9).forEach(k => {
+        const [yy, mm] = k.split('-').map(Number), D = new Date(yy, mm, 0).getDate(), rowsM = byM[k];
+        if (new Set(rowsM.map(r => r.date)).size < D * 0.8) return;
+        const aa = Math.min(a, D - 1), cut = `${k}-${aiP2(aa)}`;
+        const part = rowsM.filter(r => r.date <= cut), partTot = part.reduce((t, r) => t + (r.totale || 0), 0), actual = rowsM.reduce((t, r) => t + (r.totale || 0), 0);
+        if (!partTot || !actual) return;
+        const rem = []; for (let d = aa + 1; d <= D; d++) rem.push(`${k}-${aiP2(d)}`);
+        const f = ingForecastCalc(rows.filter(r => r.date <= cut), rem, null, partTot / Math.max(1, new Set(part.map(r => r.date)).size));
+        out.push({ k, pred: partTot + f.sum, actual, e: (partTot + f.sum - actual) / actual });
+    });
+    return out;
+}
+function aiBtSummary(errs) {
+    if (errs.length < 3) return null;
+    const n = errs.length, rmse = Math.sqrt(errs.reduce((t, x) => t + x.e * x.e, 0) / n), mape = errs.reduce((t, x) => t + Math.abs(x.e), 0) / n, bias = errs.reduce((t, x) => t + x.e, 0) / n;
+    return { n, mape, bias, half: Math.max(0.03, Math.min(0.35, 1.28 * rmse)) };
+}
+// Giorni "fuori dal normale": confronto con lo stesso giorno della settimana nelle ±12 settimane (mediana), soglia robusta (MAD)
+function aiAnomalies(pts, lastDays) {
+    pts = pts.filter(p => p.v > 0).sort((a, b) => (a.date < b.date ? -1 : 1));
+    if (pts.length < 20) return { list: [], n: pts.length };
+    const res = [];
+    pts.forEach(p => {
+        const peers = pts.filter(q => q !== p && q.wd === p.wd && Math.abs(aiDayN(q.date) - aiDayN(p.date)) <= 84);
+        if (peers.length < 4) return; const med = aiMed(peers.map(q => q.v)); if (!(med > 0)) return;
+        res.push({ p, med, r: p.v / med - 1 });
+    });
+    if (res.length < 15) return { list: [], n: pts.length };
+    const mr = aiMed(res.map(x => x.r)), sigma = Math.max(0.08, 1.4826 * aiMed(res.map(x => Math.abs(x.r - mr))));
+    const last = pts[pts.length - 1].date, from = aiDayN(last) - lastDays;
+    const list = res.filter(x => aiDayN(x.p.date) > from && Math.abs((x.r - mr) / sigma) >= 2.5 && Math.abs(x.r) >= 0.15).map(x => ({ ...x, z: (x.r - mr) / sigma })).sort((a, b) => (a.p.date < b.p.date ? 1 : -1));
+    return { list, n: pts.length, last };
+}
+const aiWD3 = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+const aiPct = (r) => (r >= 0 ? '+' : '−') + Math.abs(Math.round(r * 100)) + '%';
+const aiDM = (ds) => aiWD3[new Date(ds + 'T12:00:00').getDay()] + ' ' + ds.slice(8) + '/' + ds.slice(5, 7);
+let aiWhatIfPct = 0;
+window.aiWhatIf = (v) => {
+    aiWhatIfPct = +v; const c = window.__ingFc, o = document.getElementById('ai-whatif-out'); if (!c || !o) return;
+    const t = c.cur + c.rem * (1 + aiWhatIfPct / 100), d = t - (c.cur + c.rem);
+    o.innerHTML = `<div class="ov-big">${Math.round(t).toLocaleString('it-IT')}<small>ingressi a fine mese</small></div><div class="ov-sub"><b>${aiWhatIfPct >= 0 ? '+' : '−'}${Math.abs(aiWhatIfPct)}%</b> negli ultimi ${c.remDays} giorni del mese: <b class="${d >= 0 ? 'ov-up' : 'ov-down'}">${d >= 0 ? '+' : '−'}${Math.abs(Math.round(d)).toLocaleString('it-IT')}</b> rispetto alla stima (${Math.round(c.cur + c.rem).toLocaleString('it-IT')})</div>`;
+};
+function renderIngAI(rowsAll, bt, res, remDays) {
+    const box = document.getElementById('ai-grid'); if (!box) return;
+    const card = (c, lab, body) => `<div class="ov-card" style="--c:${c}"><div class="ov-lab">${lab}</div>${body}</div>`;
+    const cards = [];
+    // 1. affidabilità della stima
+    if (bt) cards.push(card('124,58,237', '🎯 Affidabilità della stima', `<div class="ov-big">±${Math.round(bt.mape * 100)}%<small>errore medio</small></div><div class="ov-sub">Rifacendo la stima di fine mese in ${bt.n} mesi passati, allo stesso giorno del mese, si è sbagliata in media del <b>${Math.round(bt.mape * 100)}%</b>${Math.abs(bt.bias) >= 0.02 ? ` (tende a ${bt.bias > 0 ? 'sovrastimare' : 'sottostimare'} del ${Math.round(Math.abs(bt.bias) * 100)}%)` : ' (senza una tendenza a sopra o sottostimare)'}.</div><div class="ov-sub">Intervallo usato per la stima attuale: <b>±${Math.round(bt.half * 100)}%</b> (circa 8 volte su 10).</div>`));
+    else cards.push(card('124,58,237', '🎯 Affidabilità della stima', `<div class="ov-sub">Servono almeno 3 mesi completi di storico per misurare quanto è precisa la stima.</div>`));
+    // 2. anomalie
+    const listN = buildMeteoDays(rowsAll.filter(x => !isItHoliday(x.date))), dayF = ingWeatherModel(listN);
+    const an = aiAnomalies(listN.map(x => ({ date: x.date, wd: x.wd, v: x.tot / dayF(x.fam, x.temp), tot: x.tot, f: dayF(x.fam, x.temp), fam: x.fam })), 30);
+    cards.push(card('220,38,38', '🔎 Giorni anomali · ultimi 30 gg', an.list.length ? an.list.slice(0, 5).map(x => `<div class="ov-sub"><b>${aiDM(x.p.date)}</b> · ${x.p.tot} ingressi, atteso ~${Math.round(x.med * x.p.f)} <span class="${x.r >= 0 ? 'ov-up' : 'ov-down'}">${aiPct(x.r)}</span>${x.p.fam ? ` · ${x.p.fam}` : ''}</div>`).join('') + (an.list.length > 5 ? `<div class="ov-sub" style="opacity:.7">+${an.list.length - 5} altri</div>` : '') : `<div class="ov-sub">Nessun giorno fuori dal normale${an.n < 20 ? ' (storico ancora breve)' : ''}. Il confronto è con lo stesso giorno della settimana, meteo compreso.</div>`));
+    // 3. fattori
+    const inf = res.info, wdv = [1, 2, 3, 4, 5, 6, 0].map(d => ({ d, v: inf.wd[d] })).filter(x => x.v != null);
+    let fac = '';
+    if (wdv.length >= 4) {
+        const mean = wdv.reduce((t, x) => t + x.v, 0) / wdv.length, mx = Math.max(...wdv.map(x => Math.abs(x.v / mean - 1)), 0.05);
+        fac += `<div style="display:grid; gap:3px; margin:4px 0 6px">` + wdv.map(x => { const r = x.v / mean - 1; return `<div class="ov-hbar" style="grid-template-columns:34px 1fr 42px"><span>${aiWD3[x.d]}</span><em style="--c:${r >= 0 ? '22,163,74' : '220,38,38'}"><i style="width:${Math.max(4, Math.abs(r) / mx * 100)}%"></i></em><b>${aiPct(r)}</b></div>`; }).join('') + `</div>`;
+    }
+    const lines = [];
+    if (inf.nH >= 2) lines.push(`Festivi (${inf.nH} nello storico): <b>${aiPct(inf.hR - 1)}</b> rispetto a un feriale tipico`);
+    inf.w.fams.filter(f => f.n >= 3).sort((a, b) => b.f - a.f).forEach(f => lines.push(`${f.fam}: <b class="${f.f >= 1 ? 'ov-up' : 'ov-down'}">${aiPct(f.f - 1)}</b> <span style="opacity:.6">(${f.n} gg)</span>`));
+    if (inf.w.b) lines.push(`Temperatura: <b>${aiPct(inf.w.b * 5)}</b> ogni +5 °C`);
+    else if (inf.w.nT >= 15) lines.push('Temperatura: nessun effetto rilevante');
+    cards.push(card('13,148,136', '🧪 Cosa fa variare gli ingressi', fac + lines.map(l => `<div class="ov-sub">${l}</div>`).join('') + `<div class="ov-sub" style="opacity:.65; font-size:.72rem">Giorno della settimana: scostamento dalla media dei giorni.</div>`));
+    // 4. scenario e se
+    cards.push(card('37,99,235', '🎚️ E se…', `<div class="ov-sub" style="margin-bottom:4px">Cambia gli ingressi nei giorni che restano:</div><input type="range" min="-30" max="30" step="5" value="${aiWhatIfPct}" oninput="aiWhatIf(this.value)" style="width:100%; accent-color:#2563eb"><div style="display:flex; justify-content:space-between; font-size:.7rem; color:#64748b"><span>−30%</span><span>0</span><span>+30%</span></div><div id="ai-whatif-out" style="margin-top:6px"></div>`));
+    box.innerHTML = cards.join('');
+    aiWhatIf(aiWhatIfPct);
+}
+function renderIncAI() {
+    const box = document.getElementById('iov-ai'); if (!box) return;
+    const docs = (dataIncassi || []).filter(d => d.date && (d.incasso_totale || 0) > 0 && !isItHoliday(d.date)), by = {};
+    docs.forEach(d => { by[d.date] = (by[d.date] || 0) + d.incasso_totale; });
+    const pts = Object.keys(by).map(ds => ({ date: ds, wd: new Date(ds + 'T12:00:00').getDay(), v: by[ds] }));
+    const an = aiAnomalies(pts, 30), eur = (v) => '€ ' + Math.round(v).toLocaleString('it-IT');
+    box.innerHTML = `<div class="ov-card" style="--c:220,38,38"><div class="ov-lab">🔎 Giorni anomali · ultimi 30 gg</div>${an.list.length ? an.list.slice(0, 6).map(x => `<div class="ov-sub"><b>${aiDM(x.p.date)}</b> · ${eur(x.p.v)}, atteso ~${eur(x.med)} <span class="${x.r >= 0 ? 'ov-up' : 'ov-down'}">${aiPct(x.r)}</span></div>`).join('') : `<div class="ov-sub">Nessuna giornata fuori dal normale${an.n < 20 ? ' (storico ancora breve)' : ''}.</div>`}<div class="ov-sub" style="opacity:.65; font-size:.72rem">Confronto con lo stesso giorno della settimana nelle ±12 settimane (festivi esclusi).</div></div>`;
+}
+
 // ---- Previsione ingressi: giorno della settimana (trend recente) + festività italiane + meteo previsto ----
 const __itHolCache = {};
 function itHolidays(y) {
@@ -2948,7 +3042,9 @@ function ingWeatherModel(list) {
         if (Math.abs(r) >= 0.15) b = sxy / sxx;
     }
     const tF = t => Math.min(1.3, Math.max(0.7, 1 + b * ((typeof t === 'number' ? t : meanT) - meanT)));
-    return (f, t) => Math.min(1.6, Math.max(0.5, famF(f) * tF(t)));
+    const fn = (f, t) => Math.min(1.6, Math.max(0.5, famF(f) * tF(t)));
+    fn.info = { fams: Object.keys(byF).map(k => ({ fam: k, n: byF[k].n, f: famF(k) })), b, meanT, nT: tp.length };
+    return fn;
 }
 // rows: registrazioni fino a oggi; remaining: date da stimare; fc: meteo previsto per data (o null); fallbackAvg: media del mese in corso
 function ingForecastCalc(rows, remaining, fc, fallbackAvg) {
@@ -2979,7 +3075,7 @@ function ingForecastCalc(rows, remaining, fc, fallbackAvg) {
         if (w) { nMeteo++; e *= dayF(meteoFamily(meteoOptionFor(w.code)), w.t); }
         sum += e;
     });
-    return { sum, nHol, nMeteo, partial, hol: holDays };
+    return { sum, nHol, nMeteo, partial, hol: holDays, info: { wd: baseAll, hR, nH: hol.length, w: dayF.info } };
 }
 window.ingForecastCalc = ingForecastCalc; window.isItHoliday = isItHoliday; window.itHolidays = itHolidays;
 
@@ -3297,7 +3393,7 @@ function renderOverviewKPI() {
         const rowsAll = dataIngressi.filter(x => !x.excludeStats && x.date && x.date <= anchor);
         const remaining = [];
         for (let d = maxDay + 1; d <= daysInMonth; d++) remaining.push(`${currentYear}-${pad2(currentMonth)}-${pad2(d)}`);
-        const show = (res) => {
+        let show = (res) => {
             if (tok !== window.__ingFcTok) return;
             const tot = totalCurrent + res.sum;
             document.getElementById('ov-forecast').innerText = tot.toFixed(0);
@@ -3308,6 +3404,11 @@ function renderOverviewKPI() {
             document.getElementById('ov-forecast-sub').innerHTML = `proiezione <span style="font-size:0.65rem; opacity:0.7">(${note})</span><br><span style="font-size:0.75rem; color:#7e22ce; opacity:0.8">vs ${totalYoyFull} (${targetYoyYear})</span>`;
             document.getElementById('ov-forecast-sub').title = res.hol.length ? 'Festivi nel resto del mese: ' + res.hol.map(h => h.slice(8) + '/' + h.slice(5, 7)).join(', ') : '';
         };
+        let btS = null; try { btS = aiBtSummary(aiBacktest(rowsAll, currentYear, currentMonth, maxDay)); } catch (e) { console.warn('backtest', e); }
+        const show0 = show;
+        show = (res) => { show0(res); if (tok !== window.__ingFcTok) return; window.__ingFc = { cur: totalCurrent, rem: res.sum, remDays: remaining.length };
+            if (btS && remaining.length) { const t = totalCurrent + res.sum, lo = t * (1 - btS.half), hi = t * (1 + btS.half); const e = document.getElementById('ov-forecast-sub'); e.innerHTML += `<br><span style="font-size:0.72rem; opacity:.85">tra ${Math.round(Math.min(lo, hi)).toLocaleString('it-IT')} e ${Math.round(Math.max(lo, hi)).toLocaleString('it-IT')}</span>`; }
+            try { renderIngAI(rowsAll, btS, res, remaining.length); } catch (e) { console.warn('analisi', e); } };
         const first = ingForecastCalc(rowsAll, remaining, null, totalCurrent / daysCurrent);
         show(first);
         if (remaining.length) ingFetchDaily(remaining).then(fc => { if (fc && Object.keys(fc).length) show(ingForecastCalc(rowsAll, remaining, fc, totalCurrent / daysCurrent)); }).catch(() => {});
@@ -4256,7 +4357,7 @@ window.renderIncassi = () => {
     const archiveVisible = !document.getElementById('sub-inc-archive').classList.contains('hidden');
     const registerVisible = !document.getElementById('sub-inc-register').classList.contains('hidden');
 
-    if (overviewVisible) { renderIncassiOverview(); try { renderIncassiOverviewHighlights(); renderIncassiGoals(); } catch (e) { console.error('renderIncassiOverviewHighlights', e); } renderIncassiWeekly(); }
+    if (overviewVisible) { renderIncassiOverview(); try { renderIncassiOverviewHighlights(); renderIncassiGoals(); renderIncAI(); } catch (e) { console.error('renderIncassiOverviewHighlights', e); } renderIncassiWeekly(); }
     if (seasonDetailVisible) renderIncassiSeasonDetail();
     if (statsVisible) renderIncassiStats();
     if (riepilogoVisible) renderRiepilogoIncassi();
